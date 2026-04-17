@@ -52,4 +52,55 @@
             </div>
             <div class="filter-row">
                 <div class="filter-group">
-                    <select id="filter-semester"><option value="">모든 학기
+                    <select id="filter-semester"><option value="">모든 학기</option></select>
+                    <select id="filter-examtype"><option value="">모든 시험</option></select>
+                    <input type="text" id="search-keyword" placeholder="키워드 검색..." autocomplete="off">
+                </div>
+                <div class="filter-actions">
+                    <button id="btn-reset-filter" class="btn-secondary">초기화</button>
+                    <span id="search-count" class="count-label">검색 결과: 0건</span>
+                </div>
+            </div>
+        </div>
+        <div id="exam-grid" class="grid-container"></div>
+    </div>
+
+    <div id="tab-mixer" class="app-panel">
+        <div class="mixer-header">
+            <div class="mixer-info">
+                <h3>출제 리스트</h3>
+                <span id="mixer-count" class="count-label">선택 없음</span>
+            </div>
+            <button id="btn-clear-cart" class="btn-secondary">전체 비우기</button>
+        </div>
+
+        <div class="mixer-settings">
+            <div class="setting-item">
+                <label for="exam-title">시험지 제목</label>
+                <input type="text" id="exam-title" placeholder="예: 2026 1학기 중간고사 대비">
+            </div>
+            <div class="setting-item">
+                <label for="select-qpp">단 구성</label>
+                <select id="select-qpp">
+                    <option value="1">1단 (크게 보기)</option>
+                    <option value="2" selected>2단 (표준)</option>
+                    <option value="3">3단 (조밀하게)</option>
+                </select>
+            </div>
+            <div class="info-msg">※ 엔진 문항만 통합 출제 가능합니다.</div>
+        </div>
+
+        <div id="mixer-list" class="list-container"></div>
+
+        <div class="mixer-actions">
+            <button id="btn-generate-exam" class="btn-primary">시험지 출력</button>
+            <button id="btn-generate-solution" class="btn-secondary">해설지 출력</button>
+            <button id="btn-generate-answer" class="btn-ghost">정답표</button>
+        </div>
+    </div>
+
+    <script src="data/schema.js"></script>
+    <script src="data/db.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
