@@ -518,9 +518,9 @@ async function loadData(dataUrl) {
                             };
                             document.head.appendChild(script);
                         });
-                        const loaded = (window.mainDB && Array.isArray(window.mainDB.exams) && window.mainDB.exams.length > 0)
-                                       ? window.mainDB.exams
-                                       : (Array.isArray(window.questionBank) ? window.questionBank : []);
+                        const loaded = (Array.isArray(window.questionBank) && window.questionBank.length > 0)
+                                       ? window.questionBank
+                                       : (window.mainDB && Array.isArray(window.mainDB.exams) ? window.mainDB.exams : []);
                         bank = [...bank, ...loaded];
                     } catch (e) { }
                 }
@@ -541,9 +541,9 @@ async function loadData(dataUrl) {
             script.onerror = (e) => { if (script.parentNode) script.parentNode.removeChild(script); reject(e); };
             document.head.appendChild(script);
         });
-        return (window.mainDB && Array.isArray(window.mainDB.exams) && window.mainDB.exams.length > 0)
-               ? window.mainDB.exams
-               : (Array.isArray(window.questionBank) ? window.questionBank : []);
+        return (Array.isArray(window.questionBank) && window.questionBank.length > 0)
+               ? window.questionBank
+               : (window.mainDB && Array.isArray(window.mainDB.exams) ? window.mainDB.exams : []);
     } catch (e) { console.error('Single load error:', e); return []; }
 }
 
