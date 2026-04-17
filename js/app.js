@@ -28,10 +28,23 @@ async function initializeDataLayer() {
 
     try {
         window.unifiedIndex = fetchEngineDB();
+        
+        // 히어로 통계 데이터 업데이트 (요청 반영)
+        const examStatEl = document.getElementById('stat-total-exam');
+        const schoolStatEl = document.getElementById('stat-total-school');
+        
+        if (examStatEl) {
+            examStatEl.innerText = window.unifiedIndex.length.toLocaleString() + '+';
+        }
+        if (schoolStatEl) {
+            const uniqueSchools = new Set(window.unifiedIndex.map(i => i.school).filter(Boolean)).size;
+            schoolStatEl.innerText = uniqueSchools.toLocaleString() + '+';
+        }
+
         initFilterOptions();
         renderExamGrid();
         updateGlobalCartCount();
-        renderMixerList();
+        renderMixerList(); 
     } catch (error) {
         console.error('데이터 초기화 실패:', error);
         if (grid) grid.innerHTML = '<div class="status-box error">데이터를 불러오지 못했습니다. 페이지를 새로고침해 주세요.</div>';
@@ -55,8 +68,8 @@ function fetchEngineDB() {
             school: item.school || '',
             subject: item.subject || '',
             grade: item.grade || '',
-            year: parseInt(item.year) || 0,
-            semester: item.semester || '',
+            year: item.year ? String(item.year) : '',
+            semester: item.semester ? String(item.semester) : '',
             examType: item.examType || '',
             sortKey: `${item.year}_${item.grade}_${item.school}_${item.subject}`
         };
@@ -123,47 +136,79 @@ function removeFromCart(sourceId) {
 }
 
 function initFilterOptions() {
-    const gSel = document.getElementById('filter-grade'), sSel = document.getElementById('filter-subject');
-    if (!gSel || !sSel) return;
+    const sels = {
+        grade: document.getElementById('filter-grade'),
+        subject: document.getElementById('filter-subject'),
+        school: document.getElementById('filter-school'),
+        year: document.getElementById('filter-year'),
+        semester: document.getElementById('filter-semester'),
+        examtype: document.getElementById('filter-examtype')
+    };
 
-    gSel.innerHTML = '<option value="">모든 학년</option>';
-    sSel.innerHTML = '<option value="">모든 과목</option>';
+    if (!sels.grade) return;
 
-    const gradeSet = new Set(), subjectSet = new Set();
-    window.unifiedIndex.forEach(item => {
-        if (item.grade) gradeSet.add(item.grade);
-        if (item.subject) subjectSet.add(item.subject);
+    Object.keys(sels).forEach(key => {
+        const labels = {
+            grade: '학년', subject: '과목', school: '학교', 
+            year: '연도', semester: '학기', examtype: '시험'
+        };
+        sels[key].innerHTML = `<option value="">모든 ${labels[key]}</option>`;
     });
 
-    Array.from(gradeSet).sort().forEach(g => gSel.appendChild(new Option(g, g)));
-    Array.from(subjectSet).sort().forEach(s => sSel.appendChild(new Option(s, s)));
+    const sets = { grade: new Set(), subject: new Set(), school: new Set(), year: new Set(), semester: new Set(), examtype: new Set() };
+
+    window.unifiedIndex.forEach(item => {
+        if (item.grade) sets.grade.add(item.grade);
+        if (item.subject) sets.subject.add(item.subject);
+        if (item.school) sets.school.add(item.school);
+        if (item.year) sets.year.add(item.year);
+        if (item.semester) sets.semester.add(item.semester);
+        if (item.examType) sets.examtype.add(item.examType);
+    });
+
+    Object.keys(sets).forEach(key => {
+        Array.from(sets[key]).sort().forEach(val => {
+            let text = val;
+            if (key === 'semester') text = val + '학기';
+            if (key === 'examtype') text = val === 'mid' ? '중간' : (val === 'final' ? '기말' : val);
+            sels[key].appendChild(new Option(text, val));
+        });
+    });
 }
 
 function bindSearchEvents() {
-    const gSel = document.getElementById('filter-grade');
-    const sSel = document.getElementById('filter-subject');
+    const filters = ['filter-grade', 'filter-subject', 'filter-school', 'filter-year', 'filter-semester', 'filter-examtype'];
+    filters.forEach(id => document.getElementById(id)?.addEventListener('change', renderExamGrid));
+    
     const kInp = document.getElementById('search-keyword');
-    const btnReset = document.getElementById('btn-reset-filter');
-
-    gSel?.addEventListener('change', renderExamGrid);
-    sSel?.addEventListener('change', renderExamGrid);
     kInp?.addEventListener('input', renderExamGrid);
     kInp?.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
-    btnReset?.addEventListener('click', resetSearchFilters);
+    
+    document.getElementById('btn-reset-filter')?.addEventListener('click', resetSearchFilters);
 }
 
 function renderExamGrid() {
     const grid = document.getElementById('exam-grid'), countSpan = document.getElementById('search-count');
     if (!grid) return;
 
-    const fG = document.getElementById('filter-grade')?.value || '';
-    const fS = document.getElementById('filter-subject')?.value || '';
-    const fK = document.getElementById('search-keyword')?.value.toLowerCase() || '';
+    const f = {
+        g: document.getElementById('filter-grade')?.value || '',
+        s: document.getElementById('filter-subject')?.value || '',
+        sch: document.getElementById('filter-school')?.value || '',
+        y: document.getElementById('filter-year')?.value || '',
+        sem: document.getElementById('filter-semester')?.value || '',
+        et: document.getElementById('filter-examtype')?.value || '',
+        k: document.getElementById('search-keyword')?.value.toLowerCase() || ''
+    };
 
     const filtered = window.unifiedIndex.filter(item =>
-        (!fG || item.grade === fG) &&
-        (!fS || item.subject === fS) &&
-        (item.displayTitle.toLowerCase().includes(fK) || item.school.toLowerCase().includes(fK))
+        (!f.g || item.grade === f.g) &&
+        (!f.s || item.subject === f.s) &&
+        (!f.sch || item.school === f.sch) &&
+        (!f.y || item.year === f.y) &&
+        (!f.sem || item.semester === f.sem) &&
+        (!f.et || item.examType === f.et) &&
+        (item.displayTitle.toLowerCase().includes(f.k) || item.school.toLowerCase().includes(f.k))
     );
 
     if (countSpan) countSpan.textContent = `검색 결과: ${filtered.length}건`;
@@ -279,8 +324,10 @@ function bindClearCart() {
 }
 
 function resetSearchFilters() {
-    const g = document.getElementById('filter-grade'), s = document.getElementById('filter-subject'), k = document.getElementById('search-keyword');
-    if (g) g.value = ''; if (s) s.value = ''; if (k) k.value = '';
+    const filters = ['filter-grade', 'filter-subject', 'filter-school', 'filter-year', 'filter-semester', 'filter-examtype'];
+    filters.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const kInp = document.getElementById('search-keyword');
+    if (kInp) kInp.value = '';
     renderExamGrid();
 }
 
