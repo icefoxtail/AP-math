@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>JS아카이브 엔진</title>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                packages: {'[+]': ['ams', 'boldsymbol']}
+            },
+            options: { enableMenu: false },
+            startup: { typeset: false }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+        @page { size: A4; margin: 0; }
+
+        body {
+            margin: 0;
+            font-family: 'Nanum Myeongjo', serif;
+            font-size: 9.5pt;
+            background: #f1f5f9;
+            padding-top: 54px;
+            color: #000;
+        }
+
+        #mode-ctrl {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            background: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+            box-sizing: border-box;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            gap: 16px;
+        }
+
+        #ctrl-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: white;
+            white-space: nowrap;
+            letter-spacing: -0.3px;
+            flex-shrink: 0;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(255,255,255,0.07);
+            padding: 4px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .mode-tab {
+            padding: 6px 16px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            transition: 0.18s;
+            font-family: inherit;
+            letter-spacing: -0.2px;
+        }
+
+        .mode-tab:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .mode-tab.active {
+            background: white;
+            color: #0f172a;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+        }
+
+        .ctrl-right {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .print-btn {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 7px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .print-btn.primary {
+            background: #378ADD;
+            color: white;
+        }
+
+        .print-btn.primary:hover {
+            background: #2e73c4;
+        }
+
+        .print-btn.ghost {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+        }
+
+        .print-btn.ghost:hover {
+            background: rgba(255,255,255,0.18);
+            color: white;
+        }
+
+        #print-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 15mm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+
+            body {
+                padding-top: 0;
+                margin: 0;
+                background: white;
+            }
+
+            #mode-ctrl {
+                display: none !important;
+            }
+
+            #print-area {
+                display: flex !important;
+                gap: 0;
+                padding: 0;
+            }
+
+            .page {
+                box-shadow: none;
+                page-break-after: always;
+            }
+
+            #pdf-container {
+                display: block !important;
+                position: fixed;
+                inset: 0;
+                width: 100vw;
+                height: 100vh;
+                background: white;
+                z-index: 9999;
+                margin: 0;
+                padding: 0;
+            }
+
+            #pdf-viewer {
+                width: 100%;
+                height: 100%;
+                border: none;
+            }
+
+            body:not(.mode-pdf) #pdf-container {
+                display: none !important;
+            }
+
+            body.mode-pdf #print-area {
+                display: none !important;
+            }
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        #pdf-container {
+            display: none;
+            width: 100%;
+            height: calc(100vh - 54px);
+            background: #525659;
+            overflow: hidden;
+        }
+
+        #pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .grid-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .grid-container::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: #000;
+        }
+
+        .grid-col {
+            display: flex;
+            flex-direction: column;
+            padding: 0 12px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .q-box {
+            flex: 1 1 0;
+            min-height: 0;
+            padding: 10px 0;
+            border-bottom: 0.5px solid #ccc;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            word-break: keep-all;
+            overflow-wrap: anywhere;
+            line-height: 1.58;
+            font-size: 9.5pt;
+        }
+
+        .q-box:last-child {
+            border-bottom: none;
+        }
+
+        .q-num {
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+
+        .q-content {
+            min-height: 0;
+        }
+
+        .box {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin: 6px 0;
+            background: #f9f9f9;
+            font-size: 9pt;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .answer-box {
+            flex: 1;
+            border: 1px dashed #bbb;
+            margin-top: 8px;
+            background: #fafafa;
+        }
+
+        .choices {
+            margin-top: 7px;
+            line-height: 1.72;
+        }
+
+        .q-box.fit-tight {
+            font-size: 9.0pt;
+            line-height: 1.40;
+        }
+
+        .q-box.fit-tight .q-num {
+            font-size: 10.5pt;
+            margin-bottom: 4px;
+        }
+
+        .q-box.fit-tight .choices {
+            margin-top: 5px;
+            line-height: 1.54;
+        }
+
+        .q-box.fit-tighter {
+            font-size: 8.6pt;
+            line-height: 1.31;
+        }
+
+        .q-box.fit-tighter .q-num {
+            font-size: 10pt;
+            margin-bottom: 3px;
+        }
+
+        .q-box.fit-tighter .choices {
+            margin-top: 4px;
+            line-height: 1.42;
+        }
+
+        .q-box.fit-micro {
+            font-size: 8.1pt;
+            line-height: 1.23;
+        }
+
+        .q-box.fit-micro .q-num {
+            font-size: 9.5pt;
+            margin-bottom: 2px;
+        }
+
+        .q-box.fit-micro .choices {
+            margin-top: 2px;
+            line-height: 1.30;
+        }
+
+        .sol-box {
+            padding: 0;
+            border-bottom: none;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .sol-head {
+            padding: 8px 0 4px 0;
+            width: 100%;
+            font-size: 9pt;
+            line-height: 1.5;
+        }
+
+        .sol-head .q-num {
+            margin-bottom: 0;
+        }
+
+        .sol-frag {
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .sol-step {
+            padding-left: 8px;
+            border-left: 2px solid #e2e8f0;
+            margin-bottom: 4px;
+            font-size: 9pt;
+            line-height: 1.5;
+            word-break: keep-all;
+            overflow-wrap: anywhere;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .sol-divider {
+            border-bottom: 0.5px solid #eee;
+            margin: 8px 0 36px 0;
+        }
+
+        .ans-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 24px;
+            row-gap: 2px;
+            margin-top: 5px;
+        }
+
+        .ans-cell {
+            padding: 4px 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border-bottom: 0.1px solid #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mode-ctrl">
+        <span id="ctrl-title">JS아카이브</span>
+        <div class="mode-tabs" id="modeTabs">
+            <button class="mode-tab" data-mode="exam" onclick="switchMode('exam')">시험지</button>
+            <button class="mode-tab" data-mode="sol" onclick="switchMode('sol')">해설지</button>
+            <button class="mode-tab" data-mode="ans" onclick="switchMode('ans')">정답표</button>
+        </div>
+        <div class="ctrl-right">
+            <button class="print-btn ghost" id="pdf-open-btn" style="display:none;">↗ PDF 새 탭</button>
+            <button class="print-btn primary" onclick="window.print()">🖨 인쇄</button>
+        </div>
+    </div>
+
+    <div id="pdf-container">
+        <iframe id="pdf-viewer" src=""></iframe>
+    </div>
+
+    <div id="print-area"></div>
+    <div id="staging" style="position:absolute;top:-9999px;left:0;visibility:hidden;width:85mm;"></div>
+
+<script>
+const AppState = { title: 'JS아카이브', data: [], mode: 'exam', qpp: 4 };
+let pageCount = 0;
+
+function esc(str) {
+    if (!str) return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(str).replace(/[&<>"']/g, m => map[m]);
+}
+
+function injectHeaderAndStyles() {
+    if (!document.getElementById('engine-custom-style')) {
+        const style = document.createElement('style');
+        style.id = 'engine-custom-style';
+        style.innerHTML = `
+            .print-header { margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #000; font-family: sans-serif; }
+            .print-header-title { font-size:24px; font-weight:800; text-align:center; word-break: break-all; }
+            .print-header-meta { display:flex; justify-content:space-between; margin-top:10px; font-size:14px; font-weight:600; }
+            .ans-sheet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding: 10px 0; }
+            .ans-unit { display: flex; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; font-size: 14px; background: #fff; height: 32px; align-items: center; }
+            .ans-idx { background: #f8fafc; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 800; border-right: 1px solid #cbd5e1; color: #475569; flex-shrink: 0; }
+            .ans-text { flex: 1; text-align: center; font-weight: 600; color: #1e293b; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .sol-missing-msg { color: #94a3b8; font-size: 0.9em; font-style: italic; margin-top: 5px; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const target = document.getElementById('print-area');
+    if (!target || target.querySelector('.print-header')) return;
+
+    const modeLabel = AppState.mode === 'exam' ? '시험지' : AppState.mode === 'sol' ? '해설지' : '정답표';
+    const qppLabel = AppState.mode === 'exam' ? AppState.qpp + '단 구성' : '';
+
+    const headerHtml = `
+        <div class="print-header">
+            <div class="print-header-title">${esc(AppState.title)}</div>
+            <div class="print-header-meta">
+                <span>출력 모드: ${modeLabel}</span>
+                <span>${qppLabel}</span>
+            </div>
+        </div>
+    `;
+    target.insertAdjacentHTML('afterbegin', headerHtml);
+}
+
+function renderAnswerSheetOnly() {
+    const target = document.getElementById('print-area');
+    if (!target) return;
+    target.innerHTML = '';
+
+    const grid = document.createElement('div');
+    grid.className = 'ans-sheet-grid';
+    AppState.data.forEach((item, idx) => {
+        const unit = document.createElement('div');
+        unit.className = 'ans-unit';
+        unit.innerHTML = `
+            <div class="ans-idx">${idx + 1}</div>
+            <div class="ans-text">${esc(item.answer) || ''}</div>
+        `;
+        grid.appendChild(unit);
+    });
+    target.appendChild(grid);
+}
+
+
+async function loadData(dataUrl) {
+    if (dataUrl === 'mixed') {
+        let bank = [];
+        try {
+            const raw = sessionStorage.getItem('mixedQuestions') || localStorage.getItem('mixedQuestions');
+            if (!raw) return [];
+            const tasks = JSON.parse(raw);
+            if (Array.isArray(tasks)) {
+                const seenSourceRefs = new Set();
+                for (const task of tasks) {
+                    if (!task.sourceRef || seenSourceRefs.has(task.sourceRef)) continue;
+                    seenSourceRefs.add(task.sourceRef);
+
+                    window.mainDB = { exams: [] };
+                    window.questionBank = [];
+                    try {
+                        await new Promise((resolve) => {
+                            const script = document.createElement('script');
+                            script.src = encodeURI(decodeURI(task.sourceRef));
+                            script.onload = () => { resolve(); if (script.parentNode) script.parentNode.removeChild(script); };
+                            script.onerror = () => {
+                                if (script.parentNode) script.parentNode.removeChild(script);
+                                console.warn(`Resource skip: ${task.sourceRef}`);
+                                resolve();
+                            };
+                            document.head.appendChild(script);
+                        });
+                        const loaded = (window.mainDB && Array.isArray(window.mainDB.exams) && window.mainDB.exams.length > 0)
+                                       ? window.mainDB.exams
+                                       : (Array.isArray(window.questionBank) ? window.questionBank : []);
+                        bank = [...bank, ...loaded];
+                    } catch (e) { }
+                }
+            }
+        } catch (e) { console.error('Mixed data parse error:', e); }
+        window.mainDB = { exams: [] };
+        window.questionBank = [];
+        return bank;
+    }
+
+    window.mainDB = { exams: [] };
+    window.questionBank = [];
+    try {
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = encodeURI(decodeURI(dataUrl));
+            script.onload = () => { resolve(); if (script.parentNode) script.parentNode.removeChild(script); };
+            script.onerror = (e) => { if (script.parentNode) script.parentNode.removeChild(script); reject(e); };
+            document.head.appendChild(script);
+        });
+        return (window.mainDB && Array.isArray(window.mainDB.exams) && window.mainDB.exams.length > 0)
+               ? window.mainDB.exams
+               : (Array.isArray(window.questionBank) ? window.questionBank : []);
+    } catch (e) { console.error('Single load error:', e); return []; }
+}
+
+async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const dataUrl = params.get('data');
+    const fileUrl = params.get('file');
+    AppState.data_url = dataUrl;
+    AppState.mode = params.get('mode') || 'exam';
+
+    if (dataUrl === 'mixed') {
+        try {
+            const rawMeta = sessionStorage.getItem('mixedMeta') || localStorage.getItem('mixedMeta');
+            if (rawMeta) {
+                const mixedMeta = JSON.parse(rawMeta);
+                if (mixedMeta.title) AppState.title = mixedMeta.title;
+                if (mixedMeta.qpp) AppState.qpp = parseInt(mixedMeta.qpp) || AppState.qpp;
+            }
+        } catch (e) { console.error("MixedMeta load failed:", e); }
+    }
+
+    if (params.has('title')) AppState.title = params.get('title');
+    const rawQpp = parseInt(params.get('qpp') || (dataUrl === 'mixed' ? AppState.qpp : null) || AppState.qpp);
+    AppState.qpp = Math.max(1, Math.min(8, isNaN(rawQpp) ? 2 : rawQpp));
+
+    const pdfContainer = document.getElementById('pdf-container');
+    if (pdfContainer) pdfContainer.style.display = 'none';
+
+    const printArea = document.getElementById('print-area');
+    if (printArea) printArea.style.display = 'flex';
+
+    const titleEl = document.getElementById('ctrl-title');
+    if (titleEl) titleEl.innerText = AppState.title;
+    updateTabs(AppState.mode);
+
+    if (AppState.mode === 'pdf' || fileUrl) {
+        if (printArea) {
+            printArea.innerHTML = '<div style="flex:1; padding:150px 0; text-align:center; color:#d32f2f; font-size:1.1em; background:#fff; font-weight:bold;">PDF 출력 기능은 현재 비활성화되어 있습니다.<br><span style="color:#666; font-weight:normal; font-size:0.9em; margin-top:10px; display:block;">JS 문항 기반의 시험지/해설지/정답표 출력을 이용해 주세요.</span></div>';
+        }
+        return;
+    }
+
+    if (dataUrl) {
+        const rawData = await loadData(dataUrl);
+
+        if (AppState.mode === 'sol') {
+            AppState.data = rawData.map(item => ({
+                ...item,
+                answer: (item.answer !== undefined && item.answer !== null) ? String(item.answer) : '',
+                solution: item.solution || '<div class="sol-missing-msg">해설이 제공되지 않는 문항입니다.</div>'
+            }));
+        } else if (AppState.mode === 'exam') {
+            AppState.data = rawData.map(item => ({
+                ...item,
+                content: item.content || '(문항 내용 없음)',
+                choices: Array.isArray(item.choices) ? item.choices : []
+            }));
+        } else {
+            AppState.data = rawData;
+        }
+
+        if (dataUrl === 'mixed' && AppState.data.length === 0) {
+            if (printArea) {
+                printArea.innerHTML = '<div style="flex:1; padding:150px 0; text-align:center; color:#999; font-size:1.1em; background:#fff;">선택된 문항이 없습니다. 믹서에서 문항을 추가한 후 다시 시도해 주세요.</div>';
+            }
+            return;
+        }
+
+        if (AppState.mode === 'ans') {
+            renderAnswerSheetOnly();
+            injectHeaderAndStyles();
+        } else {
+            await renderEngine();
+            if (!document.querySelector('#print-area .print-header')) {
+                injectHeaderAndStyles();
+            }
+        }
+    }
+}
+
+function updateTabs(mode) {
+    document.querySelectorAll('.mode-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+}
+
+function switchMode(mode) {
+    if (mode === AppState.mode) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', mode);
+    url.searchParams.set('qpp', AppState.qpp);
+    window.location.href = url.toString();
+}
+
+async function renderEngine() {
+    const area = document.getElementById('print-area');
+    area.innerHTML = '';
+    pageCount = 0;
+
+    if (AppState.mode === 'ans') {
+        renderAnsGrid(area, AppState.data);
+    } else if (AppState.mode === 'sol') {
+        await renderSol(area, AppState.data);
+    } else {
+        await renderExam(area, AppState.data);
+    }
+}
+
+async function renderExam(area, bank) {
+    const perCol = Math.ceil(AppState.qpp / 2);
+    const staging = document.getElementById('staging');
+    staging.style.width = '85mm';
+    staging.innerHTML = '';
+
+    const boxes = bank.map((q, i) => {
+        const el = document.createElement('div');
+        el.className = 'q-box';
+        el.innerHTML = buildExamBox(q, i);
+        staging.appendChild(el);
+        return el;
+    });
+
+    if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([staging]);
+    await raf();
+
+    for (let start = 0; start < boxes.length; start += AppState.qpp) {
+        const chunk = boxes.slice(start, start + AppState.qpp);
+        const page = makePage(area, 'exam');
+
+        const leftItems = chunk.slice(0, perCol).map(el => el.cloneNode(true));
+        const rightItems = chunk.slice(perCol).map(el => el.cloneNode(true));
+
+        leftItems.forEach(el => page.cols[0].appendChild(el));
+        rightItems.forEach(el => page.cols[1].appendChild(el));
+
+        if (window.MathJax?.typesetPromise) {
+            await MathJax.typesetPromise([page.cols[0], page.cols[1]]);
+        }
+        await raf();
+
+        fitExamColumn(page.cols[0]);
+        fitExamColumn(page.cols[1]);
+
+        if (window.MathJax?.typesetPromise) {
+            await MathJax.typesetPromise([page.cols[0], page.cols[1]]);
+        }
+        await raf();
+    }
+}
+
+function extractChoice(c) {
+    if (c === null || c === undefined) return '';
+    if (typeof c === 'object') {
+        return c.text || c.content || c.value || c.answer || Object.values(c)[0] || '';
+    }
+    return String(c);
+}
+
+function buildExamBox(q, i) {
+    const circled = ['①','②','③','④','⑤'];
+    const isMultipleChoice =
+        Array.isArray(q.choices) &&
+        q.choices.length > 0 &&
+        q.choices[0] !== "주관식" &&
+        q.choices.some(c => extractChoice(c).trim() !== "");
+
+    const choicesHTML = isMultipleChoice
+        ? `<div class="choices">${q.choices.map((c, ci) =>
+              `<div>${circled[ci] || (ci + 1) + ')'} ${wrapLatex(extractChoice(c))}</div>`).join('')}</div>`
+        : `<div class="answer-box"></div>`;
+
+    return `
+        <div class="q-num">${i + 1}.</div>
+        <div class="q-content">${wrapLatex(q.content || q.question || '')}</div>
+        ${choicesHTML}
+    `;
+}
+
+function fitExamColumn(col) {
+    const boxes = [...col.querySelectorAll('.q-box')];
+    boxes.forEach(box => fitQuestionBox(box));
+}
+
+function fitQuestionBox(box) {
+    const fitClasses = ['', 'fit-tight', 'fit-tighter', 'fit-micro'];
+
+    for (const cls of fitClasses) {
+        box.classList.remove('fit-tight', 'fit-tighter', 'fit-micro');
+        if (cls) box.classList.add(cls);
+
+        if (box.scrollHeight <= box.clientHeight + 1) {
+            return;
+        }
+    }
+
+    const choices = box.querySelector('.choices');
+    if (choices) {
+        choices.style.lineHeight = '1.2';
+        choices.style.marginTop = '1px';
+    }
+
+    const qnum = box.querySelector('.q-num');
+    if (qnum) {
+        qnum.style.marginBottom = '1px';
+    }
+}
+
+function buildSolHeader(q, i) {
+    return `
+        <div class="sol-head">
+            <div class="q-num">${i + 1}.
+                <span style="font-size:9pt;font-weight:normal;">
+                    ${wrapLatex(q.content || q.question || '')}
+                </span>
+            </div>
+        </div>
+    `;
+}
+
+function buildSolFragments(q) {
+    if (q.solution_steps?.length) {
+        return q.solution_steps.map((s, si) => `
+            <div class="sol-frag">
+                <div class="sol-step"><b>[${si + 1}단계]</b> ${wrapLatexPreserveBlocks(stripCite(s))}</div>
+            </div>
+        `);
+    }
+
+    if (q.solution) {
+        const raw = stripCite(q.solution);
+
+        const hasStructuredMath =
+            /\\begin\{(array|aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases)\}/.test(raw) ||
+            /\\multicolumn|\\cline|\\hline/.test(raw);
+
+        if (hasStructuredMath) {
+            return [
+                `<div class="sol-frag"><div class="sol-step">${wrapLatexPreserveBlocks(raw)}</div></div>`
+            ];
+        }
+
+        const lines = raw
+            .split(/\n+/)
+            .map(v => v.trim())
+            .filter(Boolean);
+
+        return lines.map(line => `
+            <div class="sol-frag">
+                <div class="sol-step">${wrapLatexPreserveBlocks(line)}</div>
+            </div>
+        `);
+    }
+
+    return [
+        `<div class="sol-frag"><div class="sol-step" style="color:#94a3b8;font-size:8pt;">해설 없음</div></div>`
+    ];
+}
+
+async function renderSol(area, bank) {
+    let p = makePage(area, 'sol');
+    let colIdx = 0;
+
+    async function ensureFitOrAdvance(targetCol, node) {
+        targetCol.appendChild(node);
+
+        if (window.MathJax?.typesetPromise) {
+            await MathJax.typesetPromise([targetCol]);
+        }
+        await raf();
+
+        const overflowed = targetCol.scrollHeight > targetCol.clientHeight + 1;
+
+        if (!overflowed) return true;
+
+        node.remove();
+
+        if (colIdx === 0) {
+            colIdx = 1;
+        } else {
+            p = makePage(area, 'sol');
+            colIdx = 0;
+        }
+        return false;
+    }
+
+    for (let i = 0; i < bank.length; i++) {
+        const q = bank[i];
+
+        const headWrap = document.createElement('div');
+        headWrap.innerHTML = buildSolHeader(q, i).trim();
+        const headEl = headWrap.firstElementChild;
+
+        let placedHeader = false;
+        while (!placedHeader) {
+            const targetCol = p.cols[colIdx];
+            placedHeader = await ensureFitOrAdvance(targetCol, headEl.cloneNode(true));
+        }
+
+        const fragments = buildSolFragments(q);
+
+        for (const fragHTML of fragments) {
+            const fragWrap = document.createElement('div');
+            fragWrap.innerHTML = fragHTML.trim();
+            const fragEl = fragWrap.firstElementChild;
+
+            let placedFrag = false;
+            while (!placedFrag) {
+                const targetCol = p.cols[colIdx];
+                placedFrag = await ensureFitOrAdvance(targetCol, fragEl.cloneNode(true));
+            }
+        }
+
+        const divider = document.createElement('div');
+        divider.className = 'sol-divider';
+
+        let placedDivider = false;
+        while (!placedDivider) {
+            const targetCol = p.cols[colIdx];
+            placedDivider = await ensureFitOrAdvance(targetCol, divider.cloneNode(true));
+        }
+    }
+}
+
+function renderAnsGrid(area, bank) {
+    const p = makePage(area, 'ans');
+    const grid = document.createElement('div');
+    grid.className = 'ans-grid';
+
+    const splitIndex = Math.ceil(bank.length / 2);
+    const orderedItems = [];
+
+    for (let i = 0; i < splitIndex; i++) {
+        orderedItems.push({ q: bank[i], qNum: i + 1 });
+        if (bank[splitIndex + i]) {
+            orderedItems.push({ q: bank[splitIndex + i], qNum: splitIndex + i + 1 });
+        }
+    }
+
+    orderedItems.forEach(({ q, qNum }) => {
+        const cell = document.createElement('div');
+        cell.className = 'ans-cell';
+        const rawAns = String(q.answer ?? '–');
+        const displayAns = (rawAns.includes('sqrt') || rawAns.includes('/') || rawAns.includes('^'))
+            ? wrapLatex(rawAns)
+            : rawAns;
+
+        cell.innerHTML = `<b style="font-size:10.5pt;min-width:35px;">${qNum}.</b>
+                          <span style="font-size:10.5pt;">${wrapLatex(displayAns)}</span>`;
+        grid.appendChild(cell);
+    });
+
+    p.body.appendChild(grid);
+    if (window.MathJax?.typesetPromise) MathJax.typesetPromise([p.body]);
+}
+
+function makePage(area, type) {
+    pageCount++;
+    const page = document.createElement('div');
+    page.className = 'page';
+
+    const header = document.createElement('div');
+    header.className = 'page-header';
+    header.innerHTML = `<span>${AppState.title}</span><span>- ${pageCount} -</span>`;
+    page.appendChild(header);
+
+    if (type === 'ans') {
+        const body = document.createElement('div');
+        body.style.flex = '1';
+        page.appendChild(body);
+        area.appendChild(page);
+        return { page, body };
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'grid-container';
+
+    const left = document.createElement('div');
+    left.className = 'grid-col';
+
+    const right = document.createElement('div');
+    right.className = 'grid-col';
+
+    grid.appendChild(left);
+    grid.appendChild(right);
+    page.appendChild(grid);
+    area.appendChild(page);
+
+    return { page, cols: [left, right] };
+}
+
+function wrapLatex(text) {
+    return wrapLatexPreserveBlocks(text);
+}
+
+function wrapLatexPreserveBlocks(text) {
+    if (!text) return text;
+    let s = String(text);
+
+    s = s.replace(/\^\[([^\]]+)\]/g, '^{$1}').replace(/_\[([^\]]+)\]/g, '_{$1}');
+    s = s.replace(//g, '(').replace(//g, ')').replace(//g, '');
+    s = s.replace(/²/g, '^2').replace(/³/g, '^3');
+    s = s.replace(/√\s*\(([^\)]+)\)/g, '\\sqrt{$1}').replace(/√\s*([0-9a-zA-Z]+)/g, '\\sqrt{$1}');
+    s = s.replace(/sqrt\(([^)]+)\)/g, '\\sqrt{$1}').replace(/frac\(([^,]+),([^)]+)\)/g, '\\frac{$1}{$2}');
+    s = s.replace(/\\frac\[([^\]]+)\]\[([^\]]+)\]/g, '\\frac{$1}{$2}').replace(/\\dot\[([^\]]+)\]/g, '\\dot{$1}');
+
+    if (/\\begin\{(array|aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases)\}/.test(s) || /\\multicolumn|\\cline|\\hline/.test(s)) {
+        return `$$${s}$$`;
+    }
+
+    if (/^\s*\$\$[\s\S]*\$\$\s*$/.test(s) || /^\s*\$[\s\S]*\$\s*$/.test(s)) return s;
+
+    const parts = s.split(/(<[^>]+>)/g);
+    return parts.map(p => {
+        if (!p) return '';
+        if (p.startsWith('<')) return p;
+
+        let t = p.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+        const trimmed = t.trim();
+
+        const hasKorean = /[가-힣]/.test(trimmed);
+        const hasDollar = /\$/.test(trimmed);
+
+        const looksLikeMath =
+            !hasKorean &&
+            !hasDollar &&
+            (
+                /\\[a-zA-Z]+/.test(trimmed) ||
+                (/^[0-9a-zA-Z\s\+\-\*\/\=\^\_\{\}\(\)\[\]\.,:;|\\]+$/.test(trimmed) && trimmed.length > 0)
+            );
+
+        if (looksLikeMath && !t.includes('<br>')) return `$${trimmed}$`;
+        return t;
+    }).join('');
+}
+
+function stripCite(text) {
+    if (!text) return text;
+    return text.replace(/【[^】]*】/g, '').trim();
+}
+
+function raf() {
+    return new Promise(r => requestAnimationFrame(r));
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
