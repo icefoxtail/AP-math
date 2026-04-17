@@ -590,19 +590,19 @@ async function init() {
         const rawData = await loadData(dataUrl);
 
         if (AppState.mode === 'sol') {
-            AppState.data = rawData.map(item => ({
+            AppState.data = rawData.filter(item => item != null).map(item => ({
                 ...item,
                 answer: (item.answer !== undefined && item.answer !== null) ? String(item.answer) : '',
                 solution: item.solution || '<div class="sol-missing-msg">해설이 제공되지 않는 문항입니다.</div>'
             }));
         } else if (AppState.mode === 'exam') {
-            AppState.data = rawData.map(item => ({
+            AppState.data = rawData.filter(item => item != null).map(item => ({
                 ...item,
                 content: item.content || '(문항 내용 없음)',
                 choices: Array.isArray(item.choices) ? item.choices : []
             }));
         } else {
-            AppState.data = rawData;
+            AppState.data = rawData.filter(item => item != null);
         }
 
         if (dataUrl === 'mixed' && AppState.data.length === 0) {
