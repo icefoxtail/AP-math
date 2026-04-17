@@ -11,10 +11,12 @@ function fmtExamType(semester, examType) {
 }
 
 window.unifiedIndex = [];
+let _selectedGrade = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
     restoreMixerDrafts();
     await initializeDataLayer();
+    initGradeTabs();
     initAppNavigation();
     bindMixedOutputActions();
     bindClearCart();
@@ -28,23 +30,19 @@ async function initializeDataLayer() {
 
     try {
         window.unifiedIndex = fetchEngineDB();
-        
-        // 히어로 통계 데이터 업데이트 (요청 반영)
-        const examStatEl = document.getElementById('stat-total-exam');
-        const schoolStatEl = document.getElementById('stat-total-school');
-        
-        if (examStatEl) {
-            examStatEl.innerText = window.unifiedIndex.length.toLocaleString() + '+';
-        }
-        if (schoolStatEl) {
-            const uniqueSchools = new Set(window.unifiedIndex.map(i => i.school).filter(Boolean)).size;
-            schoolStatEl.innerText = uniqueSchools.toLocaleString() + '+';
-        }
+
+        // stat pills
+        const examEl = document.getElementById('stat-total-exam');
+        const schoolEl = document.getElementById('stat-total-school');
+        const yearEl = document.getElementById('stat-total-year');
+        if (examEl) examEl.innerText = window.unifiedIndex.length;
+        if (schoolEl) schoolEl.innerText = new Set(window.unifiedIndex.map(i => i.school).filter(Boolean)).size;
+        if (yearEl) yearEl.innerText = new Set(window.unifiedIndex.map(i => i.year).filter(Boolean)).size;
 
         initFilterOptions();
         renderExamGrid();
         updateGlobalCartCount();
-        renderMixerList(); 
+        renderMixerList();
     } catch (error) {
         console.error('데이터 초기화 실패:', error);
         if (grid) grid.innerHTML = '<div class="status-box error">데이터를 불러오지 못했습니다. 페이지를 새로고침해 주세요.</div>';
@@ -58,8 +56,8 @@ function fetchEngineDB() {
     return rawExams.map(item => {
         const fileName = item.file || '';
         const safePath = fileName.startsWith('data/exams/') ? fileName : 'data/exams/' + fileName;
-        let safeId = fileName.replace(/\.js$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
-        if (!safeId) safeId = `eng_${Math.random().toString(36).slice(2, 11)}`;
+        const safeId = fileName.replace(/\.js$/, '') || `eng_${Math.random().toString(36).slice(2, 11)}`;
+        const courseName = window.AppSchema ? window.AppSchema.getCourseName(item.grade, item.subject) : '';
         return {
             type: 'engine',
             sourceRef: safePath,
@@ -71,11 +69,25 @@ function fetchEngineDB() {
             year: item.year ? String(item.year) : '',
             semester: item.semester ? String(item.semester) : '',
             examType: item.examType || '',
+            courseName: courseName,
             sortKey: `${item.year}_${item.grade}_${item.school}_${item.subject}`
         };
     });
 }
 
+// ── 학년탭 ──────────────────────────────────────────────────
+function initGradeTabs() {
+    document.querySelectorAll('.gtab').forEach(tab => {
+        tab.addEventListener('click', e => {
+            document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            _selectedGrade = e.currentTarget.getAttribute('data-grade');
+            renderExamGrid();
+        });
+    });
+}
+
+// ── 카트 ─────────────────────────────────────────────────────
 function getSearchCart() {
     try {
         const data = localStorage.getItem('searchCart') || sessionStorage.getItem('searchCart');
@@ -85,7 +97,10 @@ function getSearchCart() {
 }
 
 function saveSearchCart(cart) {
-    const clean = Array.isArray(cart) ? cart.filter(item => item && item.sourceId) : [];
+    const validIds = new Set(window.unifiedIndex.map(i => i.sourceId));
+    const clean = Array.isArray(cart)
+        ? cart.filter(item => item && item.sourceId && validIds.has(item.sourceId))
+        : [];
     const cartString = JSON.stringify(clean);
     localStorage.setItem('searchCart', cartString);
     sessionStorage.setItem('searchCart', cartString);
@@ -93,38 +108,19 @@ function saveSearchCart(cart) {
 }
 
 function updateGlobalCartCount() {
-    const countEl = document.getElementById('global-cart-count');
-    if (countEl) countEl.innerText = getSearchCart().length;
+    const el = document.getElementById('global-cart-count');
+    if (el) el.innerText = getSearchCart().length;
 }
 
 function updateMixerActionState() {
     const cart = getSearchCart();
-    const engineCount = cart.filter(item => item && item.type === 'engine').length;
-
+    const engineCount = cart.filter(i => i && i.type === 'engine').length;
     const clearBtn = document.getElementById('btn-clear-cart');
     if (clearBtn) clearBtn.disabled = cart.length === 0;
-
     ['btn-generate-exam', 'btn-generate-solution', 'btn-generate-answer'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.disabled = engineCount === 0;
     });
-}
-
-function bindDraftPersist() {
-    const titleInp = document.getElementById('exam-title');
-    const qppSel = document.getElementById('select-qpp');
-    titleInp?.addEventListener('input', e => localStorage.setItem('mixerDraftTitle', e.target.value));
-    qppSel?.addEventListener('change', e => localStorage.setItem('mixerDraftQpp', e.target.value));
-}
-
-function restoreMixerDrafts() {
-    const savedTitle = localStorage.getItem('mixerDraftTitle');
-    const savedQpp = localStorage.getItem('mixerDraftQpp');
-    const titleInp = document.getElementById('exam-title');
-    const qppSel = document.getElementById('select-qpp');
-    if (titleInp && savedTitle !== null) titleInp.value = savedTitle;
-    if (qppSel && savedQpp !== null) qppSel.value = savedQpp;
-    updateMixerActionState();
 }
 
 function removeFromCart(sourceId) {
@@ -135,83 +131,75 @@ function removeFromCart(sourceId) {
     if (document.getElementById('tab-search')?.classList.contains('active')) renderExamGrid();
 }
 
+// ── 필터 ─────────────────────────────────────────────────────
 function initFilterOptions() {
-    const sels = {
-        grade: document.getElementById('filter-grade'),
-        subject: document.getElementById('filter-subject'),
-        school: document.getElementById('filter-school'),
-        year: document.getElementById('filter-year'),
-        semester: document.getElementById('filter-semester'),
-        examtype: document.getElementById('filter-examtype')
-    };
+    const subjectSel = document.getElementById('filter-subject');
+    const yearSel = document.getElementById('filter-year');
+    const examtypeSel = document.getElementById('filter-examtype');
+    if (!subjectSel || !yearSel || !examtypeSel) return;
 
-    if (!sels.grade) return;
+    subjectSel.innerHTML = '<option value="">모든 과목</option>';
+    yearSel.innerHTML = '<option value="">모든 연도</option>';
+    examtypeSel.innerHTML = '<option value="">모든 시험</option>';
 
-    Object.keys(sels).forEach(key => {
-        const labels = {
-            grade: '학년', subject: '과목', school: '학교', 
-            year: '연도', semester: '학기', examtype: '시험'
-        };
-        sels[key].innerHTML = `<option value="">모든 ${labels[key]}</option>`;
-    });
-
-    const sets = { grade: new Set(), subject: new Set(), school: new Set(), year: new Set(), semester: new Set(), examtype: new Set() };
-
+    const subjects = new Set(), years = new Set(), examtypes = new Set();
     window.unifiedIndex.forEach(item => {
-        if (item.grade) sets.grade.add(item.grade);
-        if (item.subject) sets.subject.add(item.subject);
-        if (item.school) sets.school.add(item.school);
-        if (item.year) sets.year.add(item.year);
-        if (item.semester) sets.semester.add(item.semester);
-        if (item.examType) sets.examtype.add(item.examType);
+        if (item.subject) subjects.add(item.subject);
+        if (item.year) years.add(item.year);
+        if (item.examType) examtypes.add(item.examType);
     });
 
-    Object.keys(sets).forEach(key => {
-        Array.from(sets[key]).sort().forEach(val => {
-            let text = val;
-            if (key === 'semester') text = val + '학기';
-            if (key === 'examtype') text = val === 'mid' ? '중간' : (val === 'final' ? '기말' : val);
-            sels[key].appendChild(new Option(text, val));
-        });
+    Array.from(subjects).sort().forEach(v => subjectSel.appendChild(new Option(v, v)));
+    Array.from(years).sort((a, b) => b - a).forEach(v => yearSel.appendChild(new Option(v + '년', v)));
+    Array.from(examtypes).sort().forEach(v => {
+        const text = v === 'mid' ? '중간' : v === 'final' ? '기말' : v;
+        examtypeSel.appendChild(new Option(text, v));
     });
 }
 
 function bindSearchEvents() {
-    const filters = ['filter-grade', 'filter-subject', 'filter-school', 'filter-year', 'filter-semester', 'filter-examtype'];
-    filters.forEach(id => document.getElementById(id)?.addEventListener('change', renderExamGrid));
-    
+    ['filter-subject', 'filter-year', 'filter-examtype'].forEach(id =>
+        document.getElementById(id)?.addEventListener('change', renderExamGrid)
+    );
     const kInp = document.getElementById('search-keyword');
     kInp?.addEventListener('input', renderExamGrid);
     kInp?.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
-    
     document.getElementById('btn-reset-filter')?.addEventListener('click', resetSearchFilters);
 }
 
+function resetSearchFilters() {
+    ['filter-subject', 'filter-year', 'filter-examtype'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const k = document.getElementById('search-keyword');
+    if (k) k.value = '';
+    _selectedGrade = '';
+    document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.gtab[data-grade=""]')?.classList.add('active');
+    renderExamGrid();
+}
+
+// ── 그리드 렌더링 ─────────────────────────────────────────────
 function renderExamGrid() {
-    const grid = document.getElementById('exam-grid'), countSpan = document.getElementById('search-count');
+    const grid = document.getElementById('exam-grid');
+    const countSpan = document.getElementById('search-count');
     if (!grid) return;
 
-    const f = {
-        g: document.getElementById('filter-grade')?.value || '',
-        s: document.getElementById('filter-subject')?.value || '',
-        sch: document.getElementById('filter-school')?.value || '',
-        y: document.getElementById('filter-year')?.value || '',
-        sem: document.getElementById('filter-semester')?.value || '',
-        et: document.getElementById('filter-examtype')?.value || '',
-        k: document.getElementById('search-keyword')?.value.toLowerCase() || ''
-    };
+    const fS = document.getElementById('filter-subject')?.value || '';
+    const fY = document.getElementById('filter-year')?.value || '';
+    const fET = document.getElementById('filter-examtype')?.value || '';
+    const fK = document.getElementById('search-keyword')?.value.toLowerCase() || '';
 
     const filtered = window.unifiedIndex.filter(item =>
-        (!f.g || item.grade === f.g) &&
-        (!f.s || item.subject === f.s) &&
-        (!f.sch || item.school === f.sch) &&
-        (!f.y || item.year === f.y) &&
-        (!f.sem || item.semester === f.sem) &&
-        (!f.et || item.examType === f.et) &&
-        (item.displayTitle.toLowerCase().includes(f.k) || item.school.toLowerCase().includes(f.k))
+        (!_selectedGrade || item.grade === _selectedGrade) &&
+        (!fS || item.subject === fS) &&
+        (!fY || item.year === fY) &&
+        (!fET || item.examType === fET) &&
+        (!fK || item.displayTitle.toLowerCase().includes(fK) || item.school.toLowerCase().includes(fK))
     );
 
-    if (countSpan) countSpan.textContent = `검색 결과: ${filtered.length}건`;
+    if (countSpan) countSpan.textContent = `${filtered.length}건`;
     grid.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -226,37 +214,54 @@ function renderExamGrid() {
         const card = document.createElement('div');
         card.className = 'exam-card';
         card.innerHTML = `
-            <div class="card-header"><span class="badge engine">엔진</span><span class="year-label">${esc(item.year)}년</span></div>
+            <div class="card-top"></div>
             <div class="card-body">
+                <div class="card-grade-label">${esc(item.grade)} · ${esc(item.year)}년</div>
                 <div class="card-school">${esc(item.school)}</div>
-                <div class="card-meta">
-                    <span class="meta-chip">${esc(item.grade)}</span>
-                    <span class="meta-chip">${esc(item.subject)}</span>
-                    ${examLabel ? `<span class="meta-chip accent">${esc(examLabel)}</span>` : ''}
+                <div class="card-sub">${esc(item.subject)}${examLabel ? ' · ' + esc(examLabel) : ''}</div>
+                <div class="card-chips">
+                    <span class="chip blue">엔진기출</span>
+                    ${item.courseName ? `<span class="chip">${esc(item.courseName)}</span>` : ''}
                 </div>
             </div>
-            <div class="card-footer"><button class="cart-toggle-btn ${inCart ? 'in-cart' : ''}" data-id="${esc(item.sourceId)}">${inCart ? '제거' : '담기'}</button></div>
+            <div class="card-actions">
+                <button class="action-btn" data-action="exam" data-id="${esc(item.sourceId)}">시험</button>
+                <button class="action-btn" data-action="sol" data-id="${esc(item.sourceId)}">해설</button>
+                <button class="action-btn" data-action="ans" data-id="${esc(item.sourceId)}">정답</button>
+                <button class="action-btn cart-btn ${inCart ? 'in-cart' : ''}" data-action="cart" data-id="${esc(item.sourceId)}">${inCart ? '제거' : '담기'}</button>
+            </div>
         `;
         grid.appendChild(card);
     });
 
-    grid.querySelectorAll('.cart-toggle-btn').forEach(btn => {
+    grid.querySelectorAll('.action-btn').forEach(btn => {
         btn.addEventListener('click', e => {
-            const id = e.target.getAttribute('data-id'), item = window.unifiedIndex.find(i => i.sourceId === id);
+            const id = e.currentTarget.getAttribute('data-id');
+            const action = e.currentTarget.getAttribute('data-action');
+            const item = window.unifiedIndex.find(i => i.sourceId === id);
             if (!item) return;
-            const currentCart = getSearchCart(), idx = currentCart.findIndex(c => c.sourceId === id);
-            if (idx > -1) currentCart.splice(idx, 1); else currentCart.push(item);
-            saveSearchCart(currentCart);
-            updateGlobalCartCount();
-            const isAdded = currentCart.some(c => c.sourceId === id);
-            e.target.textContent = isAdded ? '제거' : '담기';
-            e.target.classList.toggle('in-cart', isAdded);
+
+            if (action === 'cart') {
+                const currentCart = getSearchCart();
+                const idx = currentCart.findIndex(c => c.sourceId === id);
+                if (idx > -1) currentCart.splice(idx, 1);
+                else currentCart.push(item);
+                saveSearchCart(currentCart);
+                updateGlobalCartCount();
+                const isAdded = currentCart.some(c => c.sourceId === id);
+                e.currentTarget.textContent = isAdded ? '제거' : '담기';
+                e.currentTarget.classList.toggle('in-cart', isAdded);
+            } else {
+                window.open(`engine.html?mode=${action}&data=${encodeURIComponent(item.sourceRef)}&title=${encodeURIComponent(item.displayTitle)}&qpp=4`, '_blank');
+            }
         });
     });
 }
 
+// ── 믹서 ─────────────────────────────────────────────────────
 function renderMixerList() {
-    const container = document.getElementById('mixer-list'), countSpan = document.getElementById('mixer-count');
+    const container = document.getElementById('mixer-list');
+    const countSpan = document.getElementById('mixer-count');
     if (!container || !countSpan) return;
 
     const cart = getSearchCart();
@@ -274,7 +279,8 @@ function renderMixerList() {
 
     cart.forEach(item => {
         if (!item) return;
-        const examLabel = fmtExamType(item.semester, item.examType), row = document.createElement('div');
+        const examLabel = fmtExamType(item.semester, item.examType);
+        const row = document.createElement('div');
         row.className = 'mixer-item';
         row.innerHTML = `
             <div class="item-desc">
@@ -286,23 +292,35 @@ function renderMixerList() {
         container.appendChild(row);
     });
 
-    container.querySelectorAll('.btn-remove').forEach(btn => btn.addEventListener('click', e => removeFromCart(e.target.getAttribute('data-id'))));
+    container.querySelectorAll('.btn-remove').forEach(btn =>
+        btn.addEventListener('click', e => removeFromCart(e.currentTarget.getAttribute('data-id')))
+    );
     updateMixerActionState();
 }
 
+// ── 출력 payload ──────────────────────────────────────────────
 function buildMixedOutputPayload() {
     const cart = getSearchCart();
     const uniqueEngines = [];
     const seenIds = new Set();
-    cart.forEach(item => { if (item && item.type === 'engine' && !seenIds.has(item.sourceId)) { seenIds.add(item.sourceId); uniqueEngines.push(item); } });
+    cart.forEach(item => {
+        if (item && item.type === 'engine' && !seenIds.has(item.sourceId)) {
+            seenIds.add(item.sourceId);
+            uniqueEngines.push(item);
+        }
+    });
 
     if (uniqueEngines.length === 0) { alert('출제할 엔진 문항이 없습니다.'); return null; }
-    const title = document.getElementById('exam-title')?.value.trim() || '통합 기출 시험지', qpp = document.getElementById('select-qpp')?.value || '2';
+
+    const title = document.getElementById('exam-title')?.value.trim() || '통합 기출 시험지';
+    const qpp = document.getElementById('select-qpp')?.value || '2';
     const mixedQuestions = uniqueEngines.map(item => ({ sourceRef: item.sourceRef, sourceId: item.sourceId }));
     const mixedMeta = { title, count: mixedQuestions.length, qpp, generatedAt: new Date().toISOString() };
 
-    localStorage.setItem('mixedQuestions', JSON.stringify(mixedQuestions)); sessionStorage.setItem('mixedQuestions', JSON.stringify(mixedQuestions));
-    localStorage.setItem('mixedMeta', JSON.stringify(mixedMeta)); sessionStorage.setItem('mixedMeta', JSON.stringify(mixedMeta));
+    const qData = JSON.stringify(mixedQuestions);
+    const mData = JSON.stringify(mixedMeta);
+    localStorage.setItem('mixedQuestions', qData); sessionStorage.setItem('mixedQuestions', qData);
+    localStorage.setItem('mixedMeta', mData); sessionStorage.setItem('mixedMeta', mData);
     return { qpp };
 }
 
@@ -319,28 +337,42 @@ function bindMixedOutputActions() {
 
 function bindClearCart() {
     document.getElementById('btn-clear-cart')?.addEventListener('click', () => {
-        if (confirm('비우시겠습니까?')) { saveSearchCart([]); updateGlobalCartCount(); renderMixerList(); if (document.getElementById('tab-search')?.classList.contains('active')) renderExamGrid(); }
+        if (!confirm('비우시겠습니까?')) return;
+        saveSearchCart([]); updateGlobalCartCount(); renderMixerList();
+        if (document.getElementById('tab-search')?.classList.contains('active')) renderExamGrid();
     });
 }
 
-function resetSearchFilters() {
-    const filters = ['filter-grade', 'filter-subject', 'filter-school', 'filter-year', 'filter-semester', 'filter-examtype'];
-    filters.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    const kInp = document.getElementById('search-keyword');
-    if (kInp) kInp.value = '';
-    renderExamGrid();
+// ── 드래프트 복원 ─────────────────────────────────────────────
+function bindDraftPersist() {
+    document.getElementById('exam-title')?.addEventListener('input', e => localStorage.setItem('mixerDraftTitle', e.target.value));
+    document.getElementById('select-qpp')?.addEventListener('change', e => localStorage.setItem('mixerDraftQpp', e.target.value));
 }
 
+function restoreMixerDrafts() {
+    const savedTitle = localStorage.getItem('mixerDraftTitle');
+    const savedQpp = localStorage.getItem('mixerDraftQpp');
+    const titleInp = document.getElementById('exam-title');
+    const qppSel = document.getElementById('select-qpp');
+    if (titleInp && savedTitle !== null) titleInp.value = savedTitle;
+    if (qppSel && savedQpp !== null) qppSel.value = savedQpp;
+    updateMixerActionState();
+}
+
+// ── 탭 네비 ──────────────────────────────────────────────────
 function initAppNavigation() {
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', e => {
-            e.preventDefault();
-            const target = e.currentTarget.getAttribute('data-tab');
-            document.querySelectorAll('.app-panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(target)?.classList.add('active');
-            e.currentTarget.classList.add('active');
-            if (target === 'tab-mixer') renderMixerList();
-        });
+    // 믹서 버튼
+    document.getElementById('btn-go-mixer')?.addEventListener('click', () => {
+        switchTab('tab-mixer');
     });
+    // 목록으로 버튼
+    document.getElementById('btn-back-search')?.addEventListener('click', () => {
+        switchTab('tab-search');
+    });
+}
+
+function switchTab(targetId) {
+    document.querySelectorAll('.app-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(targetId)?.classList.add('active');
+    if (targetId === 'tab-mixer') renderMixerList();
 }
