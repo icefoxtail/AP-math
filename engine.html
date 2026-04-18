@@ -226,21 +226,14 @@
         .grid-container {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr 1fr;
             position: relative;
             overflow: hidden;
             min-height: 0;
         }
 
-        .grid-container::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background: #000;
-        }
+        .grid-container.cols-2 { grid-template-columns: 1fr 1fr; }
+        .grid-container.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .grid-container.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
 
         .grid-col {
             display: flex;
@@ -248,6 +241,11 @@
             padding: 0 12px;
             overflow: hidden;
             min-height: 0;
+            border-right: 1px solid #000;
+        }
+
+        .grid-col:last-child {
+            border-right: none;
         }
 
         .q-box {
@@ -390,17 +388,18 @@
         .ans-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            column-gap: 24px;
-            row-gap: 2px;
+            column-gap: 32px;
+            row-gap: 0;
             margin-top: 5px;
+            border-top: 1px solid #000;
         }
 
         .ans-cell {
-            padding: 4px 8px;
+            padding: 7px 8px;
             display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            border-bottom: 0.1px solid #f0f0f0;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 0.5px solid #ccc;
         }
     </style>
 </head>
@@ -456,16 +455,9 @@ function injectHeaderAndStyles() {
     const target = document.getElementById('print-area');
     if (!target || target.querySelector('.print-header')) return;
 
-    const modeLabel = AppState.mode === 'exam' ? '시험지' : AppState.mode === 'sol' ? '해설지' : '정답표';
-    const qppLabel = AppState.mode === 'exam' ? AppState.qpp + '단 구성' : '';
-
     const headerHtml = `
         <div class="print-header">
             <div class="print-header-title">${esc(AppState.title)}</div>
-            <div class="print-header-meta">
-                <span>출력 모드: ${modeLabel}</span>
-                <span>${qppLabel}</span>
-            </div>
         </div>
     `;
     target.insertAdjacentHTML('afterbegin', headerHtml);
@@ -569,6 +561,13 @@ async function init() {
     const rawQpp = parseInt(params.get('qpp') || (dataUrl === 'mixed' ? AppState.qpp : null) || AppState.qpp);
     AppState.qpp = Math.max(1, Math.min(8, isNaN(rawQpp) ? 2 : rawQpp));
 
+    const colsParam = parseInt(params.get('cols') || '0');
+    if (colsParam >= 2 && colsParam <= 4) {
+        AppState.cols = colsParam;
+    } else {
+        AppState.cols = AppState.qpp <= 4 ? 2 : AppState.qpp <= 6 ? 3 : 4;
+    }
+
     const pdfContainer = document.getElementById('pdf-container');
     if (pdfContainer) pdfContainer.style.display = 'none';
 
@@ -613,7 +612,8 @@ async function init() {
         }
 
         if (AppState.mode === 'ans') {
-            renderAnswerSheetOnly();
+            const area = document.getElementById('print-area');
+            renderAnsGrid(area, AppState.data);
             injectHeaderAndStyles();
         } else {
             await renderEngine();
@@ -635,6 +635,7 @@ function switchMode(mode) {
     const url = new URL(window.location.href);
     url.searchParams.set('mode', mode);
     url.searchParams.set('qpp', AppState.qpp);
+    url.searchParams.set('cols', AppState.cols || 2);
     window.location.href = url.toString();
 }
 
@@ -653,9 +654,13 @@ async function renderEngine() {
 }
 
 async function renderExam(area, bank) {
-    const perCol = Math.ceil(AppState.qpp / 2);
+    const numCols = AppState.cols || 2;
+    const perCol = Math.ceil(AppState.qpp / numCols);
     const staging = document.getElementById('staging');
-    staging.style.width = '85mm';
+    
+    const colWidthMap = { 1: '170mm', 2: '85mm', 3: '56mm', 4: '42mm' };
+    staging.style.width = colWidthMap[numCols] || '85mm';
+    
     staging.innerHTML = '';
 
     const boxes = bank.map((q, i) => {
@@ -673,22 +678,20 @@ async function renderExam(area, bank) {
         const chunk = boxes.slice(start, start + AppState.qpp);
         const page = makePage(area, 'exam');
 
-        const leftItems = chunk.slice(0, perCol).map(el => el.cloneNode(true));
-        const rightItems = chunk.slice(perCol).map(el => el.cloneNode(true));
-
-        leftItems.forEach(el => page.cols[0].appendChild(el));
-        rightItems.forEach(el => page.cols[1].appendChild(el));
+        for (let c = 0; c < numCols; c++) {
+            const colItems = chunk.slice(c * perCol, (c + 1) * perCol).map(el => el.cloneNode(true));
+            colItems.forEach(el => page.cols[c].appendChild(el));
+        }
 
         if (window.MathJax?.typesetPromise) {
-            await MathJax.typesetPromise([page.cols[0], page.cols[1]]);
+            await MathJax.typesetPromise(page.cols);
         }
         await raf();
 
-        fitExamColumn(page.cols[0]);
-        fitExamColumn(page.cols[1]);
+        page.cols.forEach(col => fitExamColumn(col));
 
         if (window.MathJax?.typesetPromise) {
-            await MathJax.typesetPromise([page.cols[0], page.cols[1]]);
+            await MathJax.typesetPromise(page.cols);
         }
         await raf();
     }
@@ -872,28 +875,26 @@ function renderAnsGrid(area, bank) {
     const grid = document.createElement('div');
     grid.className = 'ans-grid';
 
-    const splitIndex = Math.ceil(bank.length / 2);
-    const orderedItems = [];
+    const half = Math.ceil(bank.length / 2);
 
-    for (let i = 0; i < splitIndex; i++) {
-        orderedItems.push({ q: bank[i], qNum: i + 1 });
-        if (bank[splitIndex + i]) {
-            orderedItems.push({ q: bank[splitIndex + i], qNum: splitIndex + i + 1 });
-        }
+    for (let i = 0; i < half; i++) {
+        // 왼쪽 열
+        const leftCell = document.createElement('div');
+        leftCell.className = 'ans-cell';
+        const leftAns = bank[i] ? wrapLatex(String(bank[i].answer ?? '–')) : '';
+        leftCell.innerHTML = `<b style="font-size:10.5pt;min-width:28px;">${i + 1}.</b><span style="font-size:10.5pt;">${leftAns}</span>`;
+        grid.appendChild(leftCell);
+
+        // 오른쪽 열
+        const rightCell = document.createElement('div');
+        rightCell.className = 'ans-cell';
+        const rIdx = half + i;
+        const rightAns = bank[rIdx] ? wrapLatex(String(bank[rIdx].answer ?? '–')) : '';
+        rightCell.innerHTML = bank[rIdx]
+            ? `<b style="font-size:10.5pt;min-width:28px;">${rIdx + 1}.</b><span style="font-size:10.5pt;">${rightAns}</span>`
+            : '';
+        grid.appendChild(rightCell);
     }
-
-    orderedItems.forEach(({ q, qNum }) => {
-        const cell = document.createElement('div');
-        cell.className = 'ans-cell';
-        const rawAns = String(q.answer ?? '–');
-        const displayAns = (rawAns.includes('sqrt') || rawAns.includes('/') || rawAns.includes('^'))
-            ? wrapLatex(rawAns)
-            : rawAns;
-
-        cell.innerHTML = `<b style="font-size:10.5pt;min-width:35px;">${qNum}.</b>
-                          <span style="font-size:10.5pt;">${wrapLatex(displayAns)}</span>`;
-        grid.appendChild(cell);
-    });
 
     p.body.appendChild(grid);
     if (window.MathJax?.typesetPromise) MathJax.typesetPromise([p.body]);
@@ -917,21 +918,30 @@ function makePage(area, type) {
         return { page, body };
     }
 
+    if (type === 'sol') {
+        const grid = document.createElement('div');
+        grid.className = 'grid-container cols-2';
+        const left = document.createElement('div'); left.className = 'grid-col';
+        const right = document.createElement('div'); right.className = 'grid-col';
+        grid.appendChild(left); grid.appendChild(right);
+        page.appendChild(grid);
+        area.appendChild(page);
+        return { page, cols: [left, right] };
+    }
+
+    const numCols = AppState.cols || 2;
     const grid = document.createElement('div');
-    grid.className = 'grid-container';
-
-    const left = document.createElement('div');
-    left.className = 'grid-col';
-
-    const right = document.createElement('div');
-    right.className = 'grid-col';
-
-    grid.appendChild(left);
-    grid.appendChild(right);
+    grid.className = `grid-container cols-${numCols}`;
+    const cols = [];
+    for (let i = 0; i < numCols; i++) {
+        const col = document.createElement('div');
+        col.className = 'grid-col';
+        grid.appendChild(col);
+        cols.push(col);
+    }
     page.appendChild(grid);
     area.appendChild(page);
-
-    return { page, cols: [left, right] };
+    return { page, cols };
 }
 
 function wrapLatex(text) {
