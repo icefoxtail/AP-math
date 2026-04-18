@@ -31,7 +31,6 @@ async function initializeDataLayer() {
     try {
         window.unifiedIndex = fetchEngineDB();
 
-        // stat pills
         const examEl = document.getElementById('stat-total-exam');
         const schoolEl = document.getElementById('stat-total-school');
         const yearEl = document.getElementById('stat-total-year');
@@ -75,7 +74,6 @@ function fetchEngineDB() {
     });
 }
 
-// ── 학년탭 ──────────────────────────────────────────────────
 function initGradeTabs() {
     document.querySelectorAll('.gtab').forEach(tab => {
         tab.addEventListener('click', e => {
@@ -87,7 +85,6 @@ function initGradeTabs() {
     });
 }
 
-// ── 카트 ─────────────────────────────────────────────────────
 function getSearchCart() {
     try {
         const data = localStorage.getItem('searchCart') || sessionStorage.getItem('searchCart');
@@ -131,7 +128,6 @@ function removeFromCart(sourceId) {
     if (document.getElementById('tab-search')?.classList.contains('active')) renderExamGrid();
 }
 
-// ── 필터 ─────────────────────────────────────────────────────
 function initFilterOptions() {
     const subjectSel = document.getElementById('filter-subject');
     const yearSel = document.getElementById('filter-year');
@@ -180,7 +176,6 @@ function resetSearchFilters() {
     renderExamGrid();
 }
 
-// ── 그리드 렌더링 ─────────────────────────────────────────────
 function renderExamGrid() {
     const grid = document.getElementById('exam-grid');
     const countSpan = document.getElementById('search-count');
@@ -252,13 +247,20 @@ function renderExamGrid() {
                 e.currentTarget.textContent = isAdded ? '제거' : '담기';
                 e.currentTarget.classList.toggle('in-cart', isAdded);
             } else {
-                window.open(`engine.html?mode=${action}&data=${encodeURIComponent(item.sourceRef)}&title=${encodeURIComponent(item.displayTitle)}&qpp=4`, '_blank');
+                if (action === 'exam') {
+                    const cols = prompt('단 구성을 선택하세요 (2단/3단/4단)\n2 = 2단 (기본)\n3 = 3단\n4 = 4단', '2');
+                    if (!cols) return;
+                    const colsNum = Math.min(4, Math.max(2, parseInt(cols) || 2));
+                    const qppMap = { 2: 4, 3: 6, 4: 8 };
+                    window.open(`engine.html?mode=exam&data=${encodeURIComponent(item.sourceRef)}&title=${encodeURIComponent(item.displayTitle)}&qpp=${qppMap[colsNum]}&cols=${colsNum}`, '_blank');
+                } else {
+                    window.open(`engine.html?mode=${action}&data=${encodeURIComponent(item.sourceRef)}&title=${encodeURIComponent(item.displayTitle)}&qpp=4`, '_blank');
+                }
             }
         });
     });
 }
 
-// ── 믹서 ─────────────────────────────────────────────────────
 function renderMixerList() {
     const container = document.getElementById('mixer-list');
     const countSpan = document.getElementById('mixer-count');
@@ -298,7 +300,6 @@ function renderMixerList() {
     updateMixerActionState();
 }
 
-// ── 출력 payload ──────────────────────────────────────────────
 function buildMixedOutputPayload() {
     const cart = getSearchCart();
     const uniqueEngines = [];
@@ -313,20 +314,23 @@ function buildMixedOutputPayload() {
     if (uniqueEngines.length === 0) { alert('출제할 엔진 문항이 없습니다.'); return null; }
 
     const title = document.getElementById('exam-title')?.value.trim() || '통합 기출 시험지';
-    const qpp = document.getElementById('select-qpp')?.value || '2';
+    const qppVal = document.getElementById('select-qpp')?.value || '2';
+    const colsMap = { '1': {qpp:2,cols:1}, '2': {qpp:4,cols:2}, '3': {qpp:6,cols:3} };
+    const mapped = colsMap[qppVal] || {qpp:4,cols:2};
+    
     const mixedQuestions = uniqueEngines.map(item => ({ sourceRef: item.sourceRef, sourceId: item.sourceId }));
-    const mixedMeta = { title, count: mixedQuestions.length, qpp, generatedAt: new Date().toISOString() };
+    const mixedMeta = { title, count: mixedQuestions.length, qpp: mapped.qpp, cols: mapped.cols, generatedAt: new Date().toISOString() };
 
     const qData = JSON.stringify(mixedQuestions);
     const mData = JSON.stringify(mixedMeta);
     localStorage.setItem('mixedQuestions', qData); sessionStorage.setItem('mixedQuestions', qData);
     localStorage.setItem('mixedMeta', mData); sessionStorage.setItem('mixedMeta', mData);
-    return { qpp };
+    return { qpp: mapped.qpp, cols: mapped.cols };
 }
 
 function openMixedEngine(mode) {
     const payload = buildMixedOutputPayload();
-    if (payload) window.open(`engine.html?mode=${mode}&data=mixed&qpp=${payload.qpp}`, '_blank');
+    if (payload) window.open(`engine.html?mode=${mode}&data=mixed&qpp=${payload.qpp}&cols=${payload.cols}`, '_blank');
 }
 
 function bindMixedOutputActions() {
@@ -343,7 +347,6 @@ function bindClearCart() {
     });
 }
 
-// ── 드래프트 복원 ─────────────────────────────────────────────
 function bindDraftPersist() {
     document.getElementById('exam-title')?.addEventListener('input', e => localStorage.setItem('mixerDraftTitle', e.target.value));
     document.getElementById('select-qpp')?.addEventListener('change', e => localStorage.setItem('mixerDraftQpp', e.target.value));
@@ -359,13 +362,10 @@ function restoreMixerDrafts() {
     updateMixerActionState();
 }
 
-// ── 탭 네비 ──────────────────────────────────────────────────
 function initAppNavigation() {
-    // 믹서 버튼
     document.getElementById('btn-go-mixer')?.addEventListener('click', () => {
         switchTab('tab-mixer');
     });
-    // 목록으로 버튼
     document.getElementById('btn-back-search')?.addEventListener('click', () => {
         switchTab('tab-search');
     });

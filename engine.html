@@ -208,6 +208,17 @@
             flex-shrink: 0;
         }
 
+        .page-footer {
+            display: flex;
+            justify-content: center;
+            padding-top: 6px;
+            margin-top: 8px;
+            border-top: 0.5px solid #ccc;
+            font-size: 9pt;
+            color: #666;
+            flex-shrink: 0;
+        }
+
         #pdf-container {
             display: none;
             width: 100%;
@@ -440,14 +451,48 @@ function injectHeaderAndStyles() {
         const style = document.createElement('style');
         style.id = 'engine-custom-style';
         style.innerHTML = `
-            .print-header { margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #000; font-family: sans-serif; }
-            .print-header-title { font-size:24px; font-weight:800; text-align:center; word-break: break-all; }
-            .print-header-meta { display:flex; justify-content:space-between; margin-top:10px; font-size:14px; font-weight:600; }
+            .print-header {
+                margin-bottom: 16px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #000;
+                font-family: 'Nanum Myeongjo', serif;
+            }
+            .print-header-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                margin-bottom: 6px;
+            }
+            .print-header-title {
+                font-size: 20px;
+                font-weight: 800;
+                letter-spacing: -0.5px;
+            }
+            .print-header-fields {
+                display: flex;
+                gap: 20px;
+                font-size: 10pt;
+            }
+            .print-header-field {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .print-header-field span {
+                display: inline-block;
+                border-bottom: 1px solid #000;
+                min-width: 60px;
+            }
+            .print-header-meta {
+                font-size: 9pt;
+                color: #444;
+                text-align: right;
+            }
+            .sol-missing-msg { color: #94a3b8; font-size: 0.9em; font-style: italic; margin-top: 5px; }
             .ans-sheet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding: 10px 0; }
             .ans-unit { display: flex; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; font-size: 14px; background: #fff; height: 32px; align-items: center; }
             .ans-idx { background: #f8fafc; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 800; border-right: 1px solid #cbd5e1; color: #475569; flex-shrink: 0; }
             .ans-text { flex: 1; text-align: center; font-weight: 600; color: #1e293b; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .sol-missing-msg { color: #94a3b8; font-size: 0.9em; font-style: italic; margin-top: 5px; }
         `;
         document.head.appendChild(style);
     }
@@ -455,9 +500,18 @@ function injectHeaderAndStyles() {
     const target = document.getElementById('print-area');
     if (!target || target.querySelector('.print-header')) return;
 
+    const modeLabel = AppState.mode === 'sol' ? '해설지' : AppState.mode === 'ans' ? '정답표' : '';
     const headerHtml = `
         <div class="print-header">
-            <div class="print-header-title">${esc(AppState.title)}</div>
+            <div class="print-header-top">
+                <div class="print-header-title">${esc(AppState.title)}</div>
+                ${AppState.mode === 'exam' ? `
+                <div class="print-header-fields">
+                    <div class="print-header-field">학년/반: <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
+                    <div class="print-header-field">번호: <span>&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
+                    <div class="print-header-field">이름: <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
+                </div>` : `<div class="print-header-meta">${modeLabel}</div>`}
+            </div>
         </div>
     `;
     target.insertAdjacentHTML('afterbegin', headerHtml);
@@ -878,14 +932,12 @@ function renderAnsGrid(area, bank) {
     const half = Math.ceil(bank.length / 2);
 
     for (let i = 0; i < half; i++) {
-        // 왼쪽 열
         const leftCell = document.createElement('div');
         leftCell.className = 'ans-cell';
         const leftAns = bank[i] ? wrapLatex(String(bank[i].answer ?? '–')) : '';
         leftCell.innerHTML = `<b style="font-size:10.5pt;min-width:28px;">${i + 1}.</b><span style="font-size:10.5pt;">${leftAns}</span>`;
         grid.appendChild(leftCell);
 
-        // 오른쪽 열
         const rightCell = document.createElement('div');
         rightCell.className = 'ans-cell';
         const rIdx = half + i;
@@ -905,15 +957,16 @@ function makePage(area, type) {
     const page = document.createElement('div');
     page.className = 'page';
 
-    const header = document.createElement('div');
-    header.className = 'page-header';
-    header.innerHTML = `<span>${AppState.title}</span><span>- ${pageCount} -</span>`;
-    page.appendChild(header);
-
     if (type === 'ans') {
         const body = document.createElement('div');
         body.style.flex = '1';
         page.appendChild(body);
+        
+        const footer = document.createElement('div');
+        footer.className = 'page-footer';
+        footer.innerHTML = `- ${pageCount} -`;
+        page.appendChild(footer);
+        
         area.appendChild(page);
         return { page, body };
     }
@@ -925,6 +978,12 @@ function makePage(area, type) {
         const right = document.createElement('div'); right.className = 'grid-col';
         grid.appendChild(left); grid.appendChild(right);
         page.appendChild(grid);
+        
+        const footer = document.createElement('div');
+        footer.className = 'page-footer';
+        footer.innerHTML = `- ${pageCount} -`;
+        page.appendChild(footer);
+        
         area.appendChild(page);
         return { page, cols: [left, right] };
     }
@@ -940,6 +999,12 @@ function makePage(area, type) {
         cols.push(col);
     }
     page.appendChild(grid);
+    
+    const footer = document.createElement('div');
+    footer.className = 'page-footer';
+    footer.innerHTML = `- ${pageCount} -`;
+    page.appendChild(footer);
+    
     area.appendChild(page);
     return { page, cols };
 }
