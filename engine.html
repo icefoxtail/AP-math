@@ -471,7 +471,7 @@ function injectHeaderAndStyles() {
             .print-header-fields {
                 display: flex;
                 gap: 20px;
-                font-size: 10pt;
+                font-size: 20px;
             }
             .print-header-field {
                 display: flex;
@@ -484,7 +484,7 @@ function injectHeaderAndStyles() {
                 min-width: 60px;
             }
             .print-header-meta {
-                font-size: 9pt;
+                font-size: 20px;
                 color: #444;
                 text-align: right;
             }
@@ -507,8 +507,6 @@ function injectHeaderAndStyles() {
                 <div class="print-header-title">${esc(AppState.title)}</div>
                 ${AppState.mode === 'exam' ? `
                 <div class="print-header-fields">
-                    <div class="print-header-field">학년/반: <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
-                    <div class="print-header-field">번호: <span>&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
                     <div class="print-header-field">이름: <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
                 </div>` : `<div class="print-header-meta">${modeLabel}</div>`}
             </div>
@@ -536,7 +534,6 @@ function renderAnswerSheetOnly() {
     target.appendChild(grid);
 }
 
-
 async function loadData(dataUrl) {
     if (dataUrl === 'mixed') {
         let bank = [];
@@ -544,32 +541,39 @@ async function loadData(dataUrl) {
             const raw = sessionStorage.getItem('mixedQuestions') || localStorage.getItem('mixedQuestions');
             if (!raw) return [];
             const tasks = JSON.parse(raw);
-            if (Array.isArray(tasks)) {
-                const seenSourceRefs = new Set();
-                for (const task of tasks) {
-                    if (!task.sourceRef || seenSourceRefs.has(task.sourceRef)) continue;
-                    seenSourceRefs.add(task.sourceRef);
+            
+            if (!Array.isArray(tasks)) return [];
 
-                    window.mainDB = { exams: [] };
-                    window.questionBank = [];
-                    try {
-                        await new Promise((resolve) => {
-                            const script = document.createElement('script');
-                            script.src = encodeURI(decodeURI(task.sourceRef));
-                            script.onload = () => { resolve(); if (script.parentNode) script.parentNode.removeChild(script); };
-                            script.onerror = () => {
-                                if (script.parentNode) script.parentNode.removeChild(script);
-                                console.warn(`Resource skip: ${task.sourceRef}`);
-                                resolve();
-                            };
-                            document.head.appendChild(script);
-                        });
-                        const loaded = (Array.isArray(window.questionBank) && window.questionBank.length > 0)
-                                       ? window.questionBank
-                                       : (window.mainDB && Array.isArray(window.mainDB.exams) ? window.mainDB.exams : []);
-                        bank = [...bank, ...loaded];
-                    } catch (e) { }
-                }
+            // ▼ 새 믹서 형식: 전체 문항 객체 배열 → 그대로 반환
+            if (tasks[0] && (tasks[0].content !== undefined || tasks[0].question !== undefined)) {
+                return tasks;
+            }
+
+            // ▼ 기존 형식: sourceRef 배열 → 스크립트 로드
+            const seenSourceRefs = new Set();
+            for (const task of tasks) {
+                if (!task.sourceRef || seenSourceRefs.has(task.sourceRef)) continue;
+                seenSourceRefs.add(task.sourceRef);
+
+                window.mainDB = { exams: [] };
+                window.questionBank = [];
+                try {
+                    await new Promise((resolve) => {
+                        const script = document.createElement('script');
+                        script.src = encodeURI(decodeURI(task.sourceRef));
+                        script.onload = () => { resolve(); if (script.parentNode) script.parentNode.removeChild(script); };
+                        script.onerror = () => {
+                            if (script.parentNode) script.parentNode.removeChild(script);
+                            console.warn(`Resource skip: ${task.sourceRef}`);
+                            resolve();
+                        };
+                        document.head.appendChild(script);
+                    });
+                    const loaded = (Array.isArray(window.questionBank) && window.questionBank.length > 0)
+                                   ? window.questionBank
+                                   : (window.mainDB && Array.isArray(window.mainDB.exams) ? window.mainDB.exams : []);
+                    bank = [...bank, ...loaded];
+                } catch (e) { }
             }
         } catch (e) { console.error('Mixed data parse error:', e); }
         window.mainDB = { exams: [] };
@@ -615,12 +619,8 @@ async function init() {
     const rawQpp = parseInt(params.get('qpp') || (dataUrl === 'mixed' ? AppState.qpp : null) || AppState.qpp);
     AppState.qpp = Math.max(1, Math.min(8, isNaN(rawQpp) ? 2 : rawQpp));
 
-    const colsParam = parseInt(params.get('cols') || '0');
-    if (colsParam >= 2 && colsParam <= 4) {
-        AppState.cols = colsParam;
-    } else {
-        AppState.cols = AppState.qpp <= 4 ? 2 : AppState.qpp <= 6 ? 3 : 4;
-    }
+    // 다단 구성 대신 2단 고정 레이아웃 사용
+    AppState.cols = 2;
 
     const pdfContainer = document.getElementById('pdf-container');
     if (pdfContainer) pdfContainer.style.display = 'none';
@@ -646,7 +646,7 @@ async function init() {
             AppState.data = rawData.filter(item => item != null).map(item => ({
                 ...item,
                 answer: (item.answer !== undefined && item.answer !== null) ? String(item.answer) : '',
-                solution: item.solution || '<div class="sol-missing-msg">해설이 제공되지 않는 문항입니다.</div>'
+                solution: item.solution || '<div class="sol-missing-msg">해설이 제공되지 문항입니다.</div>'
             }));
         } else if (AppState.mode === 'exam') {
             AppState.data = rawData.filter(item => item != null).map(item => ({
