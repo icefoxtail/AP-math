@@ -34,7 +34,6 @@
     </header>
 
     <div id="tab-search" class="app-panel active">
-
         <section class="hero">
             <div class="hero-grid-bg"></div>
             <div class="hero-deco">
@@ -88,41 +87,154 @@
         <div class="content-wrap">
             <div id="exam-grid" class="card-grid"></div>
         </div>
-
     </div>
 
     <div id="tab-mixer" class="app-panel">
-        <div class="mixer-header">
-            <div class="mixer-info">
+        <div class="mixer-wrap">
+          
+          <div class="mx-panel" id="mx-panel-exams">
+            <div class="mx-panel-header">
+              <div class="mixer-info">
                 <button class="back-btn" id="btn-back-search">← 목록으로</button>
-                <h3>출제 믹서</h3>
-                <span id="mixer-count" class="count-label">선택 없음</span>
+                <span class="mx-panel-title">시험지 목록</span>
+              </div>
+              <div class="mx-panel-meta">
+                선택 <span id="selected-exam-count">0</span>개
+                <span id="selected-exam-meta" style="color:#94a3b8; margin-left:6px;"></span>
+              </div>
             </div>
-            <button id="btn-clear-cart" class="btn-secondary">전체 비우기</button>
-        </div>
-
-        <div class="mixer-settings">
-            <div class="setting-item">
-                <label for="exam-title">시험지 제목</label>
-                <input type="text" id="exam-title" placeholder="예: 2026 1학기 중간고사 대비">
-            </div>
-            <div class="setting-item">
-                <label for="select-qpp">단 구성</label>
-                <select id="select-qpp">
-                    <option value="1">1단 (크게 보기)</option>
-                    <option value="2" selected>2단 (표준)</option>
-                    <option value="3">3단 (조밀하게)</option>
+            <div class="mx-filter">
+              <div class="mx-search-wrap">
+                <input type="text" id="mx-search" placeholder="학교명 검색..." autocomplete="off">
+              </div>
+              <div class="mx-filter-row">
+                <select id="mx-grade"><option value="">모든 학년</option></select>
+                <select id="mx-year"><option value="">모든 연도</option></select>
+                <select id="mx-exam">
+                    <option value="">모든 시험</option>
+                    <option value="1학기중간">1학기 중간</option>
+                    <option value="1학기기말">1학기 기말</option>
+                    <option value="2학기중간">2학기 중간</option>
+                    <option value="2학기기말">2학기 기말</option>
                 </select>
+              </div>
             </div>
-            <div class="info-msg">※ 엔진 문항만 통합 출제 가능합니다.</div>
+            <div class="mx-list-scroll">
+              <div id="mx-exam-list"></div>
+            </div>
+            <div class="mx-bulk-bar">
+              <div class="mx-bulk-top">
+                <span>선택 시험지 출제 source</span>
+              </div>
+              <div class="mx-bulk-actions">
+                <button class="mx-action-btn" id="mx-btn-select-all">필터 전체 선택</button>
+                <button class="mx-action-btn" id="mx-btn-deselect">선택 해제</button>
+                <button class="mx-action-btn primary" id="mx-btn-load-pool">선택 시험지 불러오기</button>
+              </div>
+            </div>
+          </div>
+      
+          <div class="mx-panel" id="mx-panel-questions">
+            <div class="mx-panel-header">
+              <span class="mx-panel-title">문항 목록</span>
+              <div class="mx-panel-tools">
+                <select id="mx-source-mode">
+                  <option value="activeExam">현재 시험지</option>
+                  <option value="selectedExams">선택 pool</option>
+                </select>
+                <select id="mx-q-standard-filter"><option value="">표준단원 전체</option></select>
+                <button class="mx-action-btn primary" id="mx-btn-load-pool2">현재 표준단원 전체 담기</button>
+              </div>
+            </div>
+            <div class="mx-auto-bar">
+              <div class="mx-auto-row">
+                <select id="mx-auto-start-unit"><option value="">시작 단원</option></select>
+                <span>~</span>
+                <select id="mx-auto-end-unit"><option value="">끝 단원</option></select>
+                <input type="number" id="mx-auto-count" value="24" min="1" max="100" style="width:60px;">
+                <select id="mx-auto-level">
+                  <option value="all">난이도 전체</option>
+                  <option value="하">하</option>
+                  <option value="중">중</option>
+                  <option value="상">상</option>
+                  <option value="balanced">균형</option>
+                </select>
+                <button class="mx-action-btn primary" id="mx-btn-auto-replace">자동 추출(교체)</button>
+                <button class="mx-action-btn" id="mx-btn-auto-append">자동 추출(추가)</button>
+              </div>
+              <div id="mx-auto-summary" class="mx-auto-summary">자동출제 대기 중</div>
+            </div>
+            <div class="mx-list-scroll">
+              <div id="mx-question-list">
+                <div class="mx-empty">시험지를 선택해주세요.</div>
+              </div>
+            </div>
+            <div class="mx-q-count" id="mx-q-count-info"></div>
+          </div>
+      
+          <div class="mx-panel" id="mx-panel-cart">
+            <div class="mx-panel-header">
+              <span class="mx-panel-title">선택 바구니</span>
+              <span id="mx-cart-total-top" class="mx-panel-meta">0문항</span>
+            </div>
+            <div class="mx-list-scroll">
+              <div id="mx-cart-list">
+                <div class="mx-empty">담긴 문항이 없습니다.</div>
+              </div>
+            </div>
+            <div class="mx-cart-footer">
+              <div class="mx-cart-stats">
+                총 <span id="mx-cart-total">0</span>문항 선택됨
+              </div>
+              <div id="mx-cart-meta-note" style="font-size:12px; color:#94a3b8; text-align:center; margin-bottom:12px;"></div>
+              <div class="mx-setting-row">
+                <label>시험지 제목</label>
+                <select id="mx-print-title-mode">
+                  <option value="auto">제목 자동</option>
+                  <option value="daily">일일평가</option>
+                  <option value="weekly">주간평가</option>
+                  <option value="exam">시험지</option>
+                </select>
+              </div>
+              <input type="text" id="mx-custom-title" placeholder="제목 직접 입력 (선택)" style="width:100%; margin:8px 0; padding:8px; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit; font-size:13px;">
+              <div class="mx-setting-row">
+                <label>단 구성</label>
+                <select id="mx-print-qpp">
+                  <option value="4">4문항 (2×2)</option>
+                  <option value="6">6문항 (2×3)</option>
+                  <option value="8">8문항 (2×4)</option>
+                </select>
+              </div>
+              <div class="mx-btn-group">
+                <button class="mx-btn-print primary" id="mx-btn-exam">시험지 출력</button>
+                <button class="mx-btn-print sub" id="mx-btn-sol">해설지 출력</button>
+                <button class="mx-btn-print ghost" id="mx-btn-ans">정답표</button>
+                <button class="mx-btn-print danger" id="mx-btn-reset-cart">바구니 비우기</button>
+              </div>
+            </div>
+          </div>
         </div>
+    </div>
 
-        <div id="mixer-list" class="list-container"></div>
-
-        <div class="mixer-actions">
-            <button id="btn-generate-exam" class="btn-primary">시험지 출력</button>
-            <button id="btn-generate-solution" class="btn-secondary">해설지 출력</button>
-            <button id="btn-generate-answer" class="btn-ghost">정답표</button>
+    <div id="qpp-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:20px; padding:32px 28px; width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+          <div style="font-size:18px; font-weight:800; color:#0f172a; margin-bottom:8px;">시험지 출력 형식</div>
+          <div style="font-size:13px; color:#64748b; margin-bottom:24px;">한 페이지에 몇 문항을 배치할까요?</div>
+          <div style="display:flex; gap:10px; justify-content:center; margin-bottom:24px;">
+            <button class="qpp-opt" data-qpp="4" style="flex:1; padding:20px 8px; border:1.5px solid #e2e8f0; border-radius:14px; background:#fff; cursor:pointer; font-family:inherit;">
+              <div style="font-size:28px; font-weight:800; color:#0f172a;">4</div>
+              <div style="font-size:11px; color:#64748b; margin-top:4px;">2 × 2 배열</div>
+            </button>
+            <button class="qpp-opt" data-qpp="6" style="flex:1; padding:20px 8px; border:1.5px solid #e2e8f0; border-radius:14px; background:#fff; cursor:pointer; font-family:inherit;">
+              <div style="font-size:28px; font-weight:800; color:#0f172a;">6</div>
+              <div style="font-size:11px; color:#64748b; margin-top:4px;">2 × 3 배열</div>
+            </button>
+            <button class="qpp-opt" data-qpp="8" style="flex:1; padding:20px 8px; border:1.5px solid #e2e8f0; border-radius:14px; background:#fff; cursor:pointer; font-family:inherit;">
+              <div style="font-size:28px; font-weight:800; color:#0f172a;">8</div>
+              <div style="font-size:11px; color:#64748b; margin-top:4px;">2 × 4 배열</div>
+            </button>
+          </div>
+          <button id="qpp-cancel" style="background:none; border:none; font-size:14px; color:#94a3b8; cursor:pointer; font-family:inherit; font-weight:600;">취소</button>
         </div>
     </div>
 
