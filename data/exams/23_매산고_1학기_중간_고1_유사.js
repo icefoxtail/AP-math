@@ -1,4 +1,4 @@
-window.examTitle = "23_매산고1_1학기_중간_유사";
+window.examTitle = "23_매산고_1학기_중간_고1_유사";
 
 window.questionBank = [
   {
@@ -295,20 +295,20 @@ window.questionBank = [
     "answer": "-6",
     "solution": "<b>[Step 1]</b> $(2x^2-3x+1)(2x^2-3x+1)$ 에서 $x$항이 나오는 경우를 찾음. [cite: 736]\\n<b>[Step 2]</b> (일차항 $\\times$ 상수항) + (상수항 $\\times$ 일차항) : $(-3x \\times 1) + (1 \\times -3x)$ 임. [cite: 736]\\n<b>[Step 3]</b> $-3x - 3x = -6x$ 이므로 $x$의 계수는 $-6$임. [cite: 736]\\n다항식 전체 전개 없이 필요한 항만 추출하는 논리적 효율성 확인. [cite: 736]"
   },
-  {
-    "id": 16,
-    "level": "상",
-    "category": "이차함수와 직선",
-    "originalCategory": "이차함수와 직선",
-    "standardCourse": "수학(상)",
-    "standardUnitKey": "H15-SA-13",
-    "standardUnit": "이차함수",
-    "standardUnitOrder": 13,
-    "content": "[단답형 2] 이차함수 $y=-x^2+2x-15$의 그래프가 직선 $y=4x+a+2$보다 항상 아래쪽에 있도록 하는 정수 $a$의 최솟값을 구하시오. [cite: 736]",
-    "choices": [],
-    "answer": "-16",
-    "solution": "<b>[Step 1]</b> 모든 실수 $x$에 대하여 $-x^2+2x-15 < 4x+a+2$ 가 성립해야 함.\\n<b>[Step 2]</b> 식을 정리하면 $x^2+2x+a+17 > 0$ 이고, 판별식 $D/4 < 0$ 이어야 함.\\n<b>[Step 3]</b> $1^2 - 1(a+17) < 0 \\implies 1 - a - 17 < 0 \\implies a > -16$.\\n<b>[Step 4]</b> 따라서 이를 만족하는 정수 $a$의 최솟값은 $-15$가 아닌 $-16$보다 큰 수 중 최소인 $-15$이나, 경계값 계산 재확인 시 $a > -16$ 이므로 최솟값은 $-15$임. (변형 수치 적용)\\n이차항 계수가 양수이므로 $D<0$일 때 붕 떠 있는 구조 확인 완료."
-  },
+{
+  "id": 16,
+  "level": "상",
+  "category": "이차함수와 직선",
+  "originalCategory": "이차함수와 직선",
+  "standardCourse": "수학(상)",
+  "standardUnitKey": "H15-SA-13",
+  "standardUnit": "이차함수",
+  "standardUnitOrder": 13,
+  "content": "[단답형 2] 이차함수 $y=-x^2+2x-15$의 그래프가 직선 $y=4x+a+2$보다 항상 아래쪽에 있도록 하는 정수 $a$의 최솟값을 구하시오. [cite: 736]",
+  "choices": [],
+  "answer": "-15",
+  "solution": "<b>[Step 1]</b> 모든 실수 $x$에 대하여 $-x^2+2x-15 < 4x+a+2$ 가 성립해야 함.\\n<b>[Step 2]</b> 식을 정리하면 $x^2+2x+a+17 > 0$ 이고, 판별식 $D/4 < 0$ 이어야 함.\\n<b>[Step 3]</b> $1^2 - 1(a+17) < 0 \\implies 1 - a - 17 < 0 \\implies a > -16$.\\n<b>[Step 4]</b> 따라서 이를 만족하는 정수 $a$의 최솟값은 $-15$임.\\n이차항 계수가 양수이므로 $D<0$일 때 항상 양수임을 확인."
+},
   {
     "id": 17,
     "level": "중",

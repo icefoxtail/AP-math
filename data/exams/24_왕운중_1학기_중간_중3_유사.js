@@ -1,9 +1,9 @@
-window.examTitle = "24_왕운중3_1학기_중간_중3유사";
+window.examTitle = "24_왕운중_1학기_중간_중3_유사";
 
 window.questionBank = [
   {
     "id": 1,
-    "level": "하",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -23,7 +23,7 @@ window.questionBank = [
   },
   {
     "id": 2,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -43,7 +43,7 @@ window.questionBank = [
   },
   {
     "id": 3,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -63,7 +63,7 @@ window.questionBank = [
   },
   {
     "id": 4,
-    "level": "하",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -83,7 +83,7 @@ window.questionBank = [
   },
   {
     "id": 5,
-    "level": "상",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -103,7 +103,7 @@ window.questionBank = [
   },
   {
     "id": 6,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -123,7 +123,7 @@ window.questionBank = [
   },
   {
     "id": 7,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -143,7 +143,7 @@ window.questionBank = [
   },
   {
     "id": 8,
-    "level": "상",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -159,11 +159,11 @@ window.questionBank = [
       "\\\\(\\\\sqrt{10}\\\\)은 두 점 P, Q 사이에 있는 무리수이다."
     ],
     "answer": "②, ⑤",
-    "solution": "[Solution] \\\\\\\\ 점 \\\\(A, B, C\\\\)의 좌표는 \\\\(A(-1, 0), B(-3, 0), C(-3, -2)\\\\)이다. \\\\\\\\ 먼저 원의 반지름인 \\\\(\\\\overline{AC}\\\\)의 길이를 구하기 위해 밑변 \\\\(\\\\overline{AB}\\\\)와 높이 \\\\(\\\\overline{BC}\\\\)의 길이를 계산한다. \\\\\\\\ \\\\(\\\\overline{AB} = |-1 - (-3)| = 2\\\\), \\\\(\\\\overline{BC} = |0 - (-2)| = 2\\\\) \\\\\\\\ 직각삼각형 \\\\(ABC\\\\)에서 피타고라스 정리에 의해 빗변의 길이는 다음과 같다. \\\\\\\\ \\\\(\\\\overline{AC} = \\\\sqrt{2^2 + 2^2} = \\\\sqrt{8} = 2\\\\sqrt{2}\\\\) \\\\\\\\ 원의 정의에 의해 중심 \\\\(A\\\\)로부터 같은 거리에 있는 점 \\\\(P, Q\\\\)에 대하여 \\\\(\\\\overline{AP} = \\\\overline{AQ} = \\\\overline{AC} = \\\\sqrt{8}\\\\)이 성립한다. \\\\\\\\ 이를 수직선 위의 좌표로 변환하면 다음과 같다. \\\\\\\\ 점 \\\\(P\\\\)의 좌표: (중심 \\\\(A\\\\)의 \\\\(x\\\\)좌표) + (반지름) \\\\(= -1 + \\\\sqrt{8}\\\\) \\\\\\\\ 점 \\\\(Q\\\\)의 좌표: (중심 \\\\(A\\\\)의 \\\\(x\\\\)좌표) - (반지름) \\\\(= -1 - \\\\sqrt{8}\\\\) \\\\\\\\ 각 보기를 검증하면: \\\\\\\\ ① \\\\(\\\\overline{AP} = \\\\sqrt{8}, \\\\overline{QA} = \\\\sqrt{8}\\\\)로 두 선분의 길이는 같다. (참) \\\\\\\\ ② 점 \\\\(P\\\\)에 대응하는 수는 \\\\(-1 + \\\\sqrt{8}\\\\) 이다. (거짓) \\\\\\\\ ③ \\\\(\\\\overline{AC}\\\\)의 길이는 \\\\(\\\\sqrt{8}\\\\) 이다. (참) \\\\\\\\ ④ 점 \\\\(Q\\\\)에 대응하는 수는 \\\\(-1 - \\\\sqrt{8}\\\\) 이다. (참) \\\\\\\\ ⑤ \\\\(\\\\sqrt{8} < \\\\sqrt{10} < \\\\sqrt{16}\\\\) 에서 \\\\(2.828 < 3.162 < 4\\\\) 이므로, \\\\(P \\\\approx 1.828\\\\) 보다 \\\\(\\\\sqrt{10} \\\\approx 3.162\\\\) 가 더 크다. 따라서 \\\\(\\\\sqrt{10}\\\\)은 점 \\\\(P\\\\)의 오른쪽에 위치하여 \\\\(P, Q\\\\) 사이에 존재하지 않는다. (거짓) \\\\\\\\ --- \\\\\\\\ [Conclusion] \\\\\\\\ Answer: ②, ⑤",
+    "solution": "[Solution] \\\\\\\\ 점 \\\\(A, B, C\\\\)의 좌표는 \\\\(A(-1, 0), B(-3, 0), C(-3, -2)\\\\)이다. \\\\\\\\ 먼저 원의 반지름인 \\\\(\\\\overline{AC}\\\\)의 길이를 구하기 위해 밑변 \\\\(\\\\overline{AB}\\\\)와 높이 \\\\(\\\\overline{BC}\\\\)의 길이를 계산한다. \\\\\\\\ \\\\(\\\\overline{AB} = |-1 - (-3)| = 2\\\\), \\\\(\\\\overline{BC} = |0 - (-2)| = 2\\\\) \\\\\\\\ 직각삼각형 \\\\(ABC\\\\)에서 피타고라스 정리에 의해 빗변의 길이는 다음과 같다. \\\\\\\\ \\\\(\\\\overline{AC} = \\\\sqrt{2^2 + 2^2} = \\\\sqrt{8} = 2\\\\sqrt{2}\\\\) \\\\\\\\ 원의 정의에 의해 중심 \\\\(A\\\\)로부터 같은 거리에 있는 점 \\\\(P, Q\\\\)에 대하여 \\\\(\\\\overline{AP} = \\\\overline{AQ} = \\\\overline{AC} = \\\\sqrt{8}\\\\)이 성립한다. \\\\\\\\ 이를 수직선 위의 좌표로 변환하면 다음과 같다. \\\\\\\\ 점 \\\\(P\\\\)의 좌표: (중심 \\\\(A\\\\)의 \\\\(x\\\\)좌표) + (반지름) \\\\(= -1 + \\\\sqrt{8}\\\\) \\\\\\\\ 점 \\\\(Q\\\\)의 좌표: (중심 \\\\(A\\\\)의 \\\\(x\\\\)좌표) - (반지름) \\\\(= -1 - \\\\sqrt{8}\\\\) \\\\\\\\ 각 보기를 검증하면: \\\\\\\\ ① \\\\(\\\\overline{AP} = \\\\sqrt{8}, \\\\overline{QA} = \\\\sqrt{8}\\\\)로 두 선분의 길이는 같다. (참) \\\\\\\\ ② 점 \\\\(P\\\\)에 대응하는 수는 \\\\(-1 + \\\\sqrt{8}\\\\) 이다. (거짓) \\\\\\\\ ③ \\\\(\\\\overline{AC}\\\\)의 길이는 \\\\(\\\\sqrt{8}\\\\) 이다. (참) \\\\\\\\ ④ 점 \\\\(Q\\\\)에 대응하는 수는 \\\\(-1 - \\\\sqrt{8}\\\\) 이다. (참) \\\\\\\\ ⑤ \\\\(\\\\sqrt{8} < \\\\sqrt{10} < \\\\sqrt{16}\\\\) 에서 \\\\(2.828 < 3.162 < 4\\\\) 이므로, \\\\(P \\\\approx 1.828\\\\) 보다 \\\\(\\\\sqrt{10} \\\\approx 3.162\\\\) 가 더 크다. 따라서 \\\\(\\\\sqrt{10}\\\\)은 점 \\\\(P\\\\)의 오른쪽에 위치하여 \\\\(P, Q\\\\) 사이에 존재하지 않는다. (거짓) \\\\\\\\ --- \\\\\\\\ [Conclusion] \\\\\\\\ Answer: ②, ⑤"
   },
   {
     "id": 9,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -183,7 +183,7 @@ window.questionBank = [
   },
   {
     "id": 10,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -203,7 +203,7 @@ window.questionBank = [
   },
   {
     "id": 11,
-    "level": "상",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -223,7 +223,7 @@ window.questionBank = [
   },
   {
     "id": 12,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -243,7 +243,7 @@ window.questionBank = [
   },
   {
     "id": 13,
-    "level": "하",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -263,7 +263,7 @@ window.questionBank = [
   },
   {
     "id": 14,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -283,7 +283,7 @@ window.questionBank = [
   },
   {
     "id": 15,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -303,7 +303,7 @@ window.questionBank = [
   },
   {
     "id": 16,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -323,7 +323,7 @@ window.questionBank = [
   },
   {
     "id": 17,
-    "level": "하",
+    "level": "",
     "category": "다항식의 곱셈",
     "originalCategory": "다항식의 곱셈",
     "standardCourse": "중3 수학",
@@ -343,7 +343,7 @@ window.questionBank = [
   },
   {
     "id": 18,
-    "level": "중",
+    "level": "",
     "category": "다항식의 곱셈",
     "originalCategory": "다항식의 곱셈",
     "standardCourse": "중3 수학",
@@ -363,7 +363,7 @@ window.questionBank = [
   },
   {
     "id": 19,
-    "level": "상",
+    "level": "",
     "category": "다항식의 곱셈",
     "originalCategory": "다항식의 곱셈",
     "standardCourse": "중3 수학",
@@ -383,7 +383,7 @@ window.questionBank = [
   },
   {
     "id": 20,
-    "level": "상",
+    "level": "",
     "category": "다항식의 곱셈",
     "originalCategory": "다항식의 곱셈",
     "standardCourse": "중3 수학",
@@ -403,7 +403,7 @@ window.questionBank = [
   },
   {
     "id": 21,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -417,7 +417,7 @@ window.questionBank = [
   },
   {
     "id": 22,
-    "level": "중",
+    "level": "",
     "category": "제곱근과 실수",
     "originalCategory": "제곱근과 실수",
     "standardCourse": "중3 수학",
@@ -431,7 +431,7 @@ window.questionBank = [
   },
   {
     "id": 23,
-    "level": "상",
+    "level": "",
     "category": "다항식의 곱셈",
     "originalCategory": "다항식의 곱셈",
     "standardCourse": "중3 수학",
