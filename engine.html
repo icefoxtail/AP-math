@@ -2,14 +2,10 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>JS아카이브 엔진</title>
+    <title>JS아카이브 엔진 - Stage E v1.6.9 (Unified Rulebook Build + UI/UX Upgrade)</title>
     <script>
         window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$']],
-                displayMath: [['$$', '$$']],
-                packages: {'[+]': ['ams', 'boldsymbol']}
-            },
+            tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']], packages: {'[+]': ['ams', 'boldsymbol']} },
             options: { enableMenu: false },
             startup: { typeset: false }
         };
@@ -19,13 +15,28 @@
         @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
         @page { size: A4; margin: 0; }
 
+        :root {
+            --navy: #0f172a;
+            --navy-2: #162338;
+            --blue: #378ADD;
+            --blue-2: #60a5fa;
+            --slate-1: #f1f5f9;
+            --slate-2: #e2e8f0;
+            --slate-3: #cbd5e1;
+            --text-sub: #94a3b8;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --red: #dc2626;
+            --shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+        }
+
         body {
             margin: 0;
             font-family: 'Nanum Myeongjo', serif;
             font-size: 9.5pt;
-            background: #f1f5f9;
-            padding-top: 54px;
-            color: #000;
+            background:
+                linear-gradient(180deg, #e8eef7 0%, #f1f5f9 120px, #f1f5f9 100%);
+            padding-top: 72px;
         }
 
         #mode-ctrl {
@@ -33,1036 +44,854 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 56px;
-            background: #0f172a;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 24px;
+            min-height: 72px;
+            background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.18);
             z-index: 1000;
             box-sizing: border-box;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 10px 18px;
+        }
+
+        .ctrl-shell {
+            display: flex;
+            align-items: center;
             gap: 16px;
+            justify-content: space-between;
+        }
+
+        .ctrl-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .ctrl-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 3px;
+            padding: 6px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+            flex-shrink: 0;
+        }
+
+        .ctrl-logo div { background: white; border-radius: 1px; }
+        .ctrl-logo div:last-child { background: rgba(255,255,255,0.65); }
+
+        .ctrl-title-wrap {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ctrl-kicker {
+            color: rgba(255,255,255,0.60);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            line-height: 1;
         }
 
         #ctrl-title {
-            font-size: 14px;
-            font-weight: 800;
             color: white;
+            font-weight: 800;
+            font-size: 15px;
+            line-height: 1.2;
             white-space: nowrap;
-            letter-spacing: -0.3px;
-            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 520px;
         }
+
+        .ctrl-meta {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .ctrl-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.82);
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .ctrl-chip strong { color: white; font-weight: 800; }
+        .ctrl-chip.source-mixed { background: rgba(16,185,129,0.16); color: #d1fae5; }
+        .ctrl-chip.source-single { background: rgba(59,130,246,0.16); color: #dbeafe; }
 
         .mode-tabs {
             display: flex;
             gap: 4px;
             background: rgba(255,255,255,0.07);
             padding: 4px;
-            border-radius: 10px;
+            border-radius: 12px;
             flex-shrink: 0;
         }
 
         .mode-tab {
-            padding: 6px 16px;
-            border-radius: 7px;
+            padding: 7px 16px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             border: none;
             background: transparent;
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.52);
             transition: 0.18s;
             font-family: inherit;
-            letter-spacing: -0.2px;
         }
 
-        .mode-tab:hover {
-            color: white;
-            background: rgba(255,255,255,0.1);
-        }
-
+        .mode-tab:hover { color: white; background: rgba(255,255,255,0.08); }
         .mode-tab.active {
             background: white;
-            color: #0f172a;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+            color: var(--navy);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
         }
 
         .ctrl-right {
             display: flex;
+            align-items: center;
             gap: 8px;
             flex-shrink: 0;
         }
 
-        .print-btn {
-            padding: 7px 16px;
-            border: none;
-            border-radius: 7px;
-            font-family: inherit;
+        .mini-label {
+            color: rgba(255,255,255,0.74);
+            font-size: 11px;
             font-weight: 700;
+            margin-right: -2px;
+        }
+
+        .ctrl-select {
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.09);
+            color: white;
             font-size: 12px;
+            font-weight: 700;
+            font-family: inherit;
             cursor: pointer;
-            transition: 0.15s;
+            outline: none;
         }
 
-        .print-btn.primary {
-            background: #378ADD;
+        .ctrl-select option { color: #111827; }
+
+        .ctrl-btn {
+            height: 34px;
+            padding: 0 13px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.16s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .ctrl-btn.ghost {
+            background: rgba(255,255,255,0.09);
+            color: rgba(255,255,255,0.90);
+        }
+        .ctrl-btn.ghost:hover { background: rgba(255,255,255,0.15); }
+
+        .ctrl-btn.primary {
+            background: var(--blue);
             color: white;
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,0.15);
         }
-
-        .print-btn.primary:hover {
-            background: #2e73c4;
-        }
-
-        .print-btn.ghost {
-            background: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.8);
-        }
-
-        .print-btn.ghost:hover {
-            background: rgba(255,255,255,0.18);
-            color: white;
-        }
+        .ctrl-btn.primary:hover { background: #2f79c5; }
 
         #print-area {
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
-            padding: 20px 0;
+            padding: 20px 0 28px;
+        }
+
+        .status-card {
+            width: min(860px, calc(100vw - 32px));
+            margin: 14px auto 0;
+            background: white;
+            border: 1px solid var(--slate-2);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 48px 28px;
+            text-align: center;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
         }
 
         .page {
             width: 210mm;
             height: 297mm;
             background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 12px rgba(0,0,0,0.12);
             padding: 15mm;
+            padding-bottom: 20mm;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-        }
-
-        @media print {
-            @page {
-                size: A4;
-                margin: 0;
-            }
-
-            body {
-                padding-top: 0;
-                margin: 0;
-                background: white;
-            }
-
-            #mode-ctrl {
-                display: none !important;
-            }
-
-            #print-area {
-                display: flex !important;
-                gap: 0;
-                padding: 0;
-            }
-
-            .page {
-                box-shadow: none;
-                page-break-after: always;
-            }
-
-            #pdf-container {
-                display: block !important;
-                position: fixed;
-                inset: 0;
-                width: 100vw;
-                height: 100vh;
-                background: white;
-                z-index: 9999;
-                margin: 0;
-                padding: 0;
-            }
-
-            #pdf-viewer {
-                width: 100%;
-                height: 100%;
-                border: none;
-            }
-
-            body:not(.mode-pdf) #pdf-container {
-                display: none !important;
-            }
-
-            body.mode-pdf #print-area {
-                display: none !important;
-            }
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 2px solid #000;
-            padding-bottom: 5px;
-            margin-bottom: 12px;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .page-footer {
-            display: flex;
-            justify-content: center;
-            padding-top: 6px;
-            margin-top: 8px;
-            border-top: 0.5px solid #ccc;
-            font-size: 9pt;
-            color: #666;
-            flex-shrink: 0;
-        }
-
-        #pdf-container {
-            display: none;
-            width: 100%;
-            height: calc(100vh - 54px);
-            background: #525659;
-            overflow: hidden;
-        }
-
-        #pdf-viewer {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: white;
-        }
-
-        .grid-container {
-            flex: 1;
-            display: grid;
             position: relative;
-            overflow: hidden;
-            min-height: 0;
+            border-radius: 2px;
         }
 
-        .grid-container.cols-2 { grid-template-columns: 1fr 1fr; }
-        .grid-container.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-        .grid-container.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .page-header { display: flex; align-items: flex-end; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 12px; font-weight: bold; font-size: 10pt; }
 
-        .grid-col {
-            display: flex;
-            flex-direction: column;
-            padding: 0 12px;
-            overflow: hidden;
-            min-height: 0;
-            border-right: 1px solid #000;
-        }
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; position: relative; gap: 0; min-height: 0; }
+        .grid-container::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #000; }
+        .grid-col { display: flex; flex-direction: column; padding: 0 12px; overflow: hidden; height: 100%; min-height: 0; }
 
-        .grid-col:last-child {
-            border-right: none;
-        }
+        .q-box { flex: 1; padding: 10px 0; border-bottom: none; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .q-box.sol-box { flex: none; border-bottom: 0.5px solid #eee; padding-bottom: 2.2em; margin-bottom: 2.2em; }
+        .q-num { font-weight: bold; font-size: 11pt; margin-bottom: 6px; }
+        .q-content { line-height: 1.62; word-break: keep-all; overflow-wrap: anywhere; }
 
-        .q-box {
-            flex: 1 1 0;
-            min-height: 0;
-            padding: 10px 0;
-            border-bottom: 0.5px solid #ccc;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            word-break: keep-all;
-            overflow-wrap: anywhere;
-            line-height: 1.58;
-            font-size: 9.5pt;
-        }
-
-        .q-box:last-child {
-            border-bottom: none;
-        }
-
-        .q-num {
-            font-weight: bold;
-            font-size: 11pt;
-            margin-bottom: 6px;
-            flex-shrink: 0;
-        }
-
-        .q-content {
-            min-height: 0;
-        }
-
-        .box {
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 8px 10px;
-            margin: 6px 0;
-            background: #f9f9f9;
-            font-size: 9pt;
-            line-height: 1.5;
-            overflow-x: auto;
-        }
-
-        .answer-box {
-            flex: 1;
-            border: 1px dashed #bbb;
-            margin-top: 8px;
-            background: #fafafa;
-        }
-
-        .choices {
-            margin-top: 7px;
-            line-height: 1.72;
-        }
-
-        .q-box.fit-tight {
-            font-size: 9.0pt;
-            line-height: 1.40;
-        }
-
-        .q-box.fit-tight .q-num {
-            font-size: 10.5pt;
-            margin-bottom: 4px;
-        }
-
-        .q-box.fit-tight .choices {
-            margin-top: 5px;
-            line-height: 1.54;
-        }
-
-        .q-box.fit-tighter {
-            font-size: 8.6pt;
-            line-height: 1.31;
-        }
-
-        .q-box.fit-tighter .q-num {
-            font-size: 10pt;
-            margin-bottom: 3px;
-        }
-
-        .q-box.fit-tighter .choices {
-            margin-top: 4px;
-            line-height: 1.42;
-        }
-
-        .q-box.fit-micro {
-            font-size: 8.1pt;
-            line-height: 1.23;
-        }
-
-        .q-box.fit-micro .q-num {
-            font-size: 9.5pt;
-            margin-bottom: 2px;
-        }
-
-        .q-box.fit-micro .choices {
-            margin-top: 2px;
-            line-height: 1.30;
-        }
-
-        .sol-box {
-            padding: 0;
-            border-bottom: none;
-            width: 100%;
-            margin-bottom: 0;
-        }
-
-        .sol-head {
-            padding: 8px 0 4px 0;
-            width: 100%;
-            font-size: 9pt;
-            line-height: 1.5;
-        }
-
-        .sol-head .q-num {
-            margin-bottom: 0;
-        }
-
-        .sol-frag {
-            width: 100%;
-            margin-bottom: 4px;
-        }
-
-        .sol-step {
-            padding-left: 8px;
-            border-left: 2px solid #e2e8f0;
-            margin-bottom: 4px;
-            font-size: 9pt;
-            line-height: 1.5;
-            word-break: keep-all;
-            overflow-wrap: anywhere;
+        .q-content img, .q-image-wrap img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 8px auto;
             break-inside: avoid;
             page-break-inside: avoid;
         }
 
-        .sol-divider {
-            border-bottom: 0.5px solid #eee;
-            margin: 8px 0 36px 0;
+        .q-content img.img-fit-tight, .q-image-wrap img.img-fit-tight { max-width: 92%; max-height: 120px; }
+        .q-content img.img-fit-tighter, .q-image-wrap img.img-fit-tighter { max-width: 84%; max-height: 105px; }
+        .q-content img.img-fit-micro, .q-image-wrap img.img-fit-micro { max-width: 76%; max-height: 90px; }
+
+        .choices { margin-top: 10px; font-size: 9pt; }
+        .choice-item { display: flex; align-items: flex-start; line-height: 1.5; }
+        .choice-no { width: 20px; flex-shrink: 0; font-weight: bold; }
+        .choice-text { flex: 1; word-break: keep-all; overflow-wrap: anywhere; }
+
+        .choices-compact { display: flex; flex-wrap: wrap; gap: 4px 15px; }
+        .choices-compact .choice-item { min-width: 15%; }
+
+        .choices-block { display: flex; flex-direction: column; gap: 5px; }
+        .choices-block .choice-item {
+            padding: 0;
+            background: transparent;
+            border: none;
+            border-radius: 0;
         }
 
-        .ans-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            column-gap: 32px;
-            row-gap: 0;
-            margin-top: 5px;
-            border-top: 1px solid #000;
+        .answer-box { flex: 1; border: none; margin-top: 10px; background: transparent; }
+
+        table.question-table { border-collapse: collapse; width: 100%; max-width: 280px; table-layout: fixed; font-size: 8.6pt; line-height: 1.35; margin: 8px 0; margin-left: 0; margin-right: auto; text-align: left; }
+        table.question-table th, table.question-table td { border: 1px solid #000; padding: 3px 5px; text-align: center; vertical-align: middle; word-break: break-word; }
+        table.question-table th { font-weight: 700; }
+
+        .question-table-wrap { margin: 8px 0 10px 0; }
+
+        .question-note-box,
+        .box {
+            margin: 8px 0 10px 0;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #f8fafc;
+            line-height: 1.55;
         }
 
-        .ans-cell {
-            padding: 7px 8px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-bottom: 0.5px solid #ccc;
+        .ans-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 20px; width: 100%; }
+        .ans-cell { border-bottom: 1px solid #eee; display: flex; height: 40px; align-items: center; padding: 0 10px; }
+        .ans-n { width: 40px; font-weight: bold; color: #1d4ed8; font-size: 10pt; }
+        .ans-v { flex: 1; font-weight: bold; font-size: 10.5pt; }
+
+        .fit-tight { font-size: 9.1pt !important; line-height: 1.45 !important; }
+        .fit-tighter { font-size: 8.6pt !important; line-height: 1.35 !important; }
+        .fit-micro { font-size: 8.1pt !important; line-height: 1.25 !important; }
+
+        @media (max-width: 1280px) {
+            #ctrl-title { max-width: 360px; }
+        }
+
+        @media (max-width: 980px) {
+            body { padding-top: 116px; }
+            #mode-ctrl { min-height: 116px; padding: 10px 14px; }
+            .ctrl-shell {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .ctrl-left { order: 1; }
+            .mode-tabs { order: 2; justify-self: start; }
+            .ctrl-right { order: 3; justify-self: start; flex-wrap: wrap; }
+            #ctrl-title { max-width: calc(100vw - 64px); }
+        }
+
+        @media (max-width: 640px) {
+            body { padding-top: 128px; }
+            #mode-ctrl { min-height: 128px; }
+            .ctrl-logo { width: 30px; height: 30px; }
+            #ctrl-title { font-size: 13px; }
+            .ctrl-kicker { font-size: 10px; }
+            .mode-tab { padding: 7px 12px; font-size: 11px; }
+            .ctrl-btn, .ctrl-select { height: 32px; }
+            .ctrl-right { gap: 6px; }
+            .ctrl-chip { font-size: 10px; }
+        }
+
+        @media print {
+            #mode-ctrl { display: none; }
+            body { margin: 0 !important; padding: 0 !important; background: white; }
+            #print-area { display: block !important; padding: 0 !important; }
+            .page { box-shadow: none; height: 296.5mm; overflow: hidden; page-break-after: always; }
+            .page:last-child { page-break-after: avoid; }
+            #staging { display: none; }
         }
     </style>
 </head>
 <body>
-
     <div id="mode-ctrl">
-        <span id="ctrl-title">JS아카이브</span>
-        <div class="mode-tabs" id="modeTabs">
-            <button class="mode-tab" data-mode="exam" onclick="switchMode('exam')">시험지</button>
-            <button class="mode-tab" data-mode="sol" onclick="switchMode('sol')">해설지</button>
-            <button class="mode-tab" data-mode="ans" onclick="switchMode('ans')">정답표</button>
-        </div>
-        <div class="ctrl-right">
-            <button class="print-btn ghost" id="pdf-open-btn" style="display:none;">↗ PDF 새 탭</button>
-            <button class="print-btn primary" onclick="window.print()">🖨 인쇄</button>
-        </div>
-    </div>
+        <div class="ctrl-shell">
+            <div class="ctrl-left">
+                <div class="ctrl-logo" aria-hidden="true"><div></div><div></div><div></div><div></div></div>
+                <div class="ctrl-title-wrap">
+                    <div class="ctrl-kicker">JS아카이브 통합 엔진</div>
+                    <span id="ctrl-title">JS아카이브</span>
+                    <div class="ctrl-meta">
+                        <span class="ctrl-chip" id="chip-source">source <strong>-</strong></span>
+                        <span class="ctrl-chip" id="chip-count">문항 <strong>0</strong></span>
+                        <span class="ctrl-chip" id="chip-qpp">쪽당 <strong>4</strong></span>
+                    </div>
+                </div>
+            </div>
 
-    <div id="pdf-container">
-        <iframe id="pdf-viewer" src=""></iframe>
+            <div class="mode-tabs">
+                <button class="mode-tab" id="btn-exam" onclick="switchMode('exam')">시험지</button>
+                <button class="mode-tab" id="btn-sol" onclick="switchMode('sol')">해설지</button>
+                <button class="mode-tab" id="btn-ans" onclick="switchMode('ans')">정답표</button>
+            </div>
+
+            <div class="ctrl-right">
+                <span class="mini-label">문항/쪽</span>
+                <select class="ctrl-select" id="qpp-select" onchange="changeQpp(this.value)">
+                    <option value="2">2문항</option>
+                    <option value="4">4문항</option>
+                    <option value="6">6문항</option>
+                    <option value="8">8문항</option>
+                </select>
+                <button class="ctrl-btn ghost" id="btn-shuffle" onclick="shuffleData()">🔀 셔플</button>
+                <button class="ctrl-btn primary" id="btn-print" onclick="window.print()">🖨 인쇄</button>
+            </div>
+        </div>
     </div>
 
     <div id="print-area"></div>
-    <div id="staging" style="position:absolute;top:-9999px;left:0;visibility:hidden;width:85mm;"></div>
+    <div id="staging" style="position:absolute;top:-9999px;left:0;visibility:hidden;width:83mm;"></div>
 
 <script>
-const AppState = { title: 'JS아카이브', data: [], mode: 'exam', qpp: 4 };
-let pageCount = 0;
+const SE_OVERHEAD_COL = 10;
+const SE_OVERHEAD_GRID = 20;
+const SE_PAGE_TOLERANCE = 5;
+const SE_BLOCK_GAP = 15;
 
-function esc(str) {
-    if (!str) return '';
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return String(str).replace(/[&<>"']/g, m => map[m]);
-}
+const AppState = { data: [], mode: 'exam', qpp: 4, title: '', sourceType: 'single' };
 
-function injectHeaderAndStyles() {
-    if (!document.getElementById('engine-custom-style')) {
-        const style = document.createElement('style');
-        style.id = 'engine-custom-style';
-        style.innerHTML = `
-            .print-header {
-                margin-bottom: 16px;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #000;
-                font-family: 'Nanum Myeongjo', serif;
-            }
-            .print-header-top {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                margin-bottom: 6px;
-            }
-            .print-header-title {
-                font-size: 20px;
-                font-weight: 800;
-                letter-spacing: -0.5px;
-            }
-            .print-header-fields {
-                display: flex;
-                gap: 20px;
-                font-size: 20px;
-            }
-            .print-header-field {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-            .print-header-field span {
-                display: inline-block;
-                border-bottom: 1px solid #000;
-                min-width: 60px;
-            }
-            .print-header-meta {
-                font-size: 20px;
-                color: #444;
-                text-align: right;
-            }
-            .sol-missing-msg { color: #94a3b8; font-size: 0.9em; font-style: italic; margin-top: 5px; }
-            .ans-sheet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding: 10px 0; }
-            .ans-unit { display: flex; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; font-size: 14px; background: #fff; height: 32px; align-items: center; }
-            .ans-idx { background: #f8fafc; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 800; border-right: 1px solid #cbd5e1; color: #475569; flex-shrink: 0; }
-            .ans-text { flex: 1; text-align: center; font-weight: 600; color: #1e293b; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        `;
-        document.head.appendChild(style);
-    }
-
-    const target = document.getElementById('print-area');
-    if (!target || target.querySelector('.print-header')) return;
-
-    const modeLabel = AppState.mode === 'sol' ? '해설지' : AppState.mode === 'ans' ? '정답표' : '';
-    const headerHtml = `
-        <div class="print-header">
-            <div class="print-header-top">
-                <div class="print-header-title">${esc(AppState.title)}</div>
-                ${AppState.mode === 'exam' ? `
-                <div class="print-header-fields">
-                    <div class="print-header-field">이름: <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
-                </div>` : `<div class="print-header-meta">${modeLabel}</div>`}
-            </div>
-        </div>
-    `;
-    target.insertAdjacentHTML('afterbegin', headerHtml);
-}
-
-function renderAnswerSheetOnly() {
-    const target = document.getElementById('print-area');
-    if (!target) return;
-    target.innerHTML = '';
-
-    const grid = document.createElement('div');
-    grid.className = 'ans-sheet-grid';
-    AppState.data.forEach((item, idx) => {
-        const unit = document.createElement('div');
-        unit.className = 'ans-unit';
-        unit.innerHTML = `
-            <div class="ans-idx">${idx + 1}</div>
-            <div class="ans-text">${esc(item.answer) || ''}</div>
-        `;
-        grid.appendChild(unit);
+function wrapLatex(text) {
+    if (text == null) return '';
+    let s = String(text);
+    s = s.replace(/\\\([\s\S]+?\\\)/g, m => '$' + m.slice(2, -2) + '$');
+    s = s.replace(/\\\[[\s\S]+?\\\]/g, m => '$$' + m.slice(2, -2) + '$$');
+    const combRepl = T => (m, a1, a2, b1, b2) => `$_{${a1||a2}}${T}_{${b1||b2}}$`;
+    const combPat = prefix => new RegExp(`(?:\\{\\}|\\[\\])_(?:\\{([^}]+)\\}|([a-zA-Z0-9+\\-]+))${prefix}_(?:\\{([^}]+)\\}|([a-zA-Z0-9+\\-]+))`, 'g');
+    const htmlTags = [];
+    s = s.replace(/<svg[\s\S]*?<\/svg>|<img[^>]*>|<br\s*\/?>|<\/?(div|span|b|i|strong|em|u|sup|sub|table|thead|tbody|tr|th|td|colgroup|col)[^>]*>/gi, m => {
+        const token = `__HTMLTAG_${htmlTags.length}__`; htmlTags.push(m); return token;
     });
-    target.appendChild(grid);
+    s = s.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g).map((seg, idx) => {
+        if (idx % 2 === 1) return seg;
+        let t = seg;
+        t = t.replace(combPat('C'), combRepl('C')).replace(combPat('H'), combRepl('H')).replace(combPat('P'), combRepl('P'));
+        return t.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }).join('');
+    s = s.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$|__HTMLTAG_\d+__)/g).map((seg, idx) => {
+        if (idx % 2 === 1) return seg;
+        const trimmed = seg.trim(); if (!trimmed) return seg;
+        const hasKorean = /[가-힣]/.test(seg); const hasLatex = /\\[a-zA-Z]/.test(seg);
+        if (!hasKorean && /\\begin\{(cases|aligned|array|matrix|pmatrix|bmatrix|vmatrix|Vmatrix)\}/.test(seg)) return `$$${seg}$$`;
+        if (!hasKorean && hasLatex && /^[0-9a-zA-Z\s\+\-\*\/\=\^\{\}\(\)\[\]_\.,\\!;:]+$/.test(trimmed)) return `$${trimmed}$`;
+        if (hasKorean && hasLatex) return seg.replace(/(\\[a-zA-Z]+(?:\{[^}]*\})*(?:\{[^}]*\})*(?:_\{?[^}\s]+\}?)?(?:\^\{?[^}\s]+\}?)?)/g, '$$$1$$');
+        return seg;
+    }).join('');
+    s = s.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g).map((seg, idx) => {
+        if (idx % 2 === 1) return seg;
+        return seg.replace(/(\\\{(?:[^{}]|\{[^}]*\})*\\\})/g, '$$$1$$');
+    }).join('');
+    s = s.replace(/\\n(?![a-zA-Z])/g, '<br>').replace(/\r\n|\r|\n/g, '<br>');
+    return s.replace(/__HTMLTAG_(\d+)__/g, (_, i) => htmlTags[i] || '');
 }
 
-async function loadData(dataUrl) {
-    if (dataUrl === 'mixed') {
-        let bank = [];
-        try {
-            const raw = sessionStorage.getItem('mixedQuestions') || localStorage.getItem('mixedQuestions');
-            if (!raw) return [];
-            const tasks = JSON.parse(raw);
-            
-            if (!Array.isArray(tasks)) return [];
-
-            // ▼ 새 믹서 형식: 전체 문항 객체 배열 → 그대로 반환
-            if (tasks[0] && (tasks[0].content !== undefined || tasks[0].question !== undefined)) {
-                return tasks;
-            }
-
-            // ▼ 기존 형식: sourceRef 배열 → 스크립트 로드
-            const seenSourceRefs = new Set();
-            for (const task of tasks) {
-                if (!task.sourceRef || seenSourceRefs.has(task.sourceRef)) continue;
-                seenSourceRefs.add(task.sourceRef);
-
-                window.mainDB = { exams: [] };
-                window.questionBank = [];
-                try {
-                    await new Promise((resolve) => {
-                        const script = document.createElement('script');
-                        script.src = encodeURI(decodeURI(task.sourceRef));
-                        script.onload = () => { resolve(); if (script.parentNode) script.parentNode.removeChild(script); };
-                        script.onerror = () => {
-                            if (script.parentNode) script.parentNode.removeChild(script);
-                            console.warn(`Resource skip: ${task.sourceRef}`);
-                            resolve();
-                        };
-                        document.head.appendChild(script);
-                    });
-                    const loaded = (Array.isArray(window.questionBank) && window.questionBank.length > 0)
-                                   ? window.questionBank
-                                   : (window.mainDB && Array.isArray(window.mainDB.exams) ? window.mainDB.exams : []);
-                    bank = [...bank, ...loaded];
-                } catch (e) { }
-            }
-        } catch (e) { console.error('Mixed data parse error:', e); }
-        window.mainDB = { exams: [] };
-        window.questionBank = [];
-        return bank;
+function autoCompress(container) {
+    let fontSize = 9.5; let lineHeight = 1.58;
+    while (container.scrollHeight > container.clientHeight + 1 && fontSize > 6.5) {
+        fontSize = Math.max(fontSize - 0.3, 6.5); lineHeight = Math.max(lineHeight - 0.08, 1.0);
+        container.style.fontSize = fontSize + 'pt'; container.style.lineHeight = String(lineHeight);
     }
-
-    window.mainDB = { exams: [] };
-    window.questionBank = [];
-    try {
-        await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = encodeURI(decodeURI(dataUrl));
-            script.onload = () => { resolve(); if (script.parentNode) script.parentNode.removeChild(script); };
-            script.onerror = (e) => { if (script.parentNode) script.parentNode.removeChild(script); reject(e); };
-            document.head.appendChild(script);
-        });
-        return (Array.isArray(window.questionBank) && window.questionBank.length > 0)
-               ? window.questionBank
-               : (window.mainDB && Array.isArray(window.mainDB.exams) ? window.mainDB.exams : []);
-    } catch (e) { console.error('Single load error:', e); return []; }
-}
-
-async function init() {
-    const params = new URLSearchParams(window.location.search);
-    const dataUrl = params.get('data');
-    const fileUrl = params.get('file');
-    AppState.data_url = dataUrl;
-    AppState.mode = params.get('mode') || 'exam';
-
-    if (dataUrl === 'mixed') {
-        try {
-            const rawMeta = sessionStorage.getItem('mixedMeta') || localStorage.getItem('mixedMeta');
-            if (rawMeta) {
-                const mixedMeta = JSON.parse(rawMeta);
-                if (mixedMeta.title) AppState.title = mixedMeta.title;
-                if (mixedMeta.qpp) AppState.qpp = parseInt(mixedMeta.qpp) || AppState.qpp;
-            }
-        } catch (e) { console.error("MixedMeta load failed:", e); }
-    }
-
-    if (params.has('title')) AppState.title = params.get('title');
-    const rawQpp = parseInt(params.get('qpp') || (dataUrl === 'mixed' ? AppState.qpp : null) || AppState.qpp);
-    AppState.qpp = Math.max(1, Math.min(8, isNaN(rawQpp) ? 2 : rawQpp));
-
-    // 다단 구성 대신 2단 고정 레이아웃 사용
-    AppState.cols = 2;
-
-    const pdfContainer = document.getElementById('pdf-container');
-    if (pdfContainer) pdfContainer.style.display = 'none';
-
-    const printArea = document.getElementById('print-area');
-    if (printArea) printArea.style.display = 'flex';
-
-    const titleEl = document.getElementById('ctrl-title');
-    if (titleEl) titleEl.innerText = AppState.title;
-    updateTabs(AppState.mode);
-
-    if (AppState.mode === 'pdf' || fileUrl) {
-        if (printArea) {
-            printArea.innerHTML = '<div style="flex:1; padding:150px 0; text-align:center; color:#d32f2f; font-size:1.1em; background:#fff; font-weight:bold;">PDF 출력 기능은 현재 비활성화되어 있습니다.<br><span style="color:#666; font-weight:normal; font-size:0.9em; margin-top:10px; display:block;">JS 문항 기반의 시험지/해설지/정답표 출력을 이용해 주세요.</span></div>';
-        }
-        return;
-    }
-
-    if (dataUrl) {
-        const rawData = await loadData(dataUrl);
-
-        if (AppState.mode === 'sol') {
-            AppState.data = rawData.filter(item => item != null).map(item => ({
-                ...item,
-                answer: (item.answer !== undefined && item.answer !== null) ? String(item.answer) : '',
-                solution: item.solution || '<div class="sol-missing-msg">해설이 제공되지 문항입니다.</div>'
-            }));
-        } else if (AppState.mode === 'exam') {
-            AppState.data = rawData.filter(item => item != null).map(item => ({
-                ...item,
-                content: item.content || '(문항 내용 없음)',
-                choices: Array.isArray(item.choices) ? item.choices : []
-            }));
-        } else {
-            AppState.data = rawData.filter(item => item != null);
-        }
-
-        if (dataUrl === 'mixed' && AppState.data.length === 0) {
-            if (printArea) {
-                printArea.innerHTML = '<div style="flex:1; padding:150px 0; text-align:center; color:#999; font-size:1.1em; background:#fff;">선택된 문항이 없습니다. 믹서에서 문항을 추가한 후 다시 시도해 주세요.</div>';
-            }
-            return;
-        }
-
-        if (AppState.mode === 'ans') {
-            const area = document.getElementById('print-area');
-            renderAnsGrid(area, AppState.data);
-            injectHeaderAndStyles();
-        } else {
-            await renderEngine();
-            if (!document.querySelector('#print-area .print-header')) {
-                injectHeaderAndStyles();
-            }
-        }
-    }
-}
-
-function updateTabs(mode) {
-    document.querySelectorAll('.mode-tab').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
-    });
-}
-
-function switchMode(mode) {
-    if (mode === AppState.mode) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set('mode', mode);
-    url.searchParams.set('qpp', AppState.qpp);
-    url.searchParams.set('cols', AppState.cols || 2);
-    window.location.href = url.toString();
-}
-
-async function renderEngine() {
-    const area = document.getElementById('print-area');
-    area.innerHTML = '';
-    pageCount = 0;
-
-    if (AppState.mode === 'ans') {
-        renderAnsGrid(area, AppState.data);
-    } else if (AppState.mode === 'sol') {
-        await renderSol(area, AppState.data);
-    } else {
-        await renderExam(area, AppState.data);
-    }
-}
-
-async function renderExam(area, bank) {
-    const numCols = AppState.cols || 2;
-    const perCol = Math.ceil(AppState.qpp / numCols);
-    const staging = document.getElementById('staging');
-    
-    const colWidthMap = { 1: '170mm', 2: '85mm', 3: '56mm', 4: '42mm' };
-    staging.style.width = colWidthMap[numCols] || '85mm';
-    
-    staging.innerHTML = '';
-
-    const boxes = bank.map((q, i) => {
-        const el = document.createElement('div');
-        el.className = 'q-box';
-        el.innerHTML = buildExamBox(q, i);
-        staging.appendChild(el);
-        return el;
-    });
-
-    if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([staging]);
-    await raf();
-
-    for (let start = 0; start < boxes.length; start += AppState.qpp) {
-        const chunk = boxes.slice(start, start + AppState.qpp);
-        const page = makePage(area, 'exam');
-
-        for (let c = 0; c < numCols; c++) {
-            const colItems = chunk.slice(c * perCol, (c + 1) * perCol).map(el => el.cloneNode(true));
-            colItems.forEach(el => page.cols[c].appendChild(el));
-        }
-
-        if (window.MathJax?.typesetPromise) {
-            await MathJax.typesetPromise(page.cols);
-        }
-        await raf();
-
-        page.cols.forEach(col => fitExamColumn(col));
-
-        if (window.MathJax?.typesetPromise) {
-            await MathJax.typesetPromise(page.cols);
-        }
-        await raf();
-    }
-}
-
-function extractChoice(c) {
-    if (c === null || c === undefined) return '';
-    if (typeof c === 'object') {
-        return c.text || c.content || c.value || c.answer || Object.values(c)[0] || '';
-    }
-    return String(c);
-}
-
-function buildExamBox(q, i) {
-    const circled = ['①','②','③','④','⑤'];
-    const isMultipleChoice =
-        Array.isArray(q.choices) &&
-        q.choices.length > 0 &&
-        q.choices[0] !== "주관식" &&
-        q.choices.some(c => extractChoice(c).trim() !== "");
-
-    const choicesHTML = isMultipleChoice
-        ? `<div class="choices">${q.choices.map((c, ci) =>
-              `<div>${circled[ci] || (ci + 1) + ')'} ${wrapLatex(extractChoice(c))}</div>`).join('')}</div>`
-        : `<div class="answer-box"></div>`;
-
-    return `
-        <div class="q-num">${i + 1}.</div>
-        <div class="q-content">${wrapLatex(q.content || q.question || '')}</div>
-        ${choicesHTML}
-    `;
-}
-
-function fitExamColumn(col) {
-    const boxes = [...col.querySelectorAll('.q-box')];
-    boxes.forEach(box => fitQuestionBox(box));
 }
 
 function fitQuestionBox(box) {
-    const fitClasses = ['', 'fit-tight', 'fit-tighter', 'fit-micro'];
-
-    for (const cls of fitClasses) {
+    const textClasses = ['', 'fit-tight', 'fit-tighter', 'fit-micro'];
+    const imgClasses = ['', 'img-fit-tight', 'img-fit-tighter', 'img-fit-micro'];
+    const imgs = box.querySelectorAll('.q-content img, .q-image-wrap img');
+    for (const tCls of textClasses) {
         box.classList.remove('fit-tight', 'fit-tighter', 'fit-micro');
-        if (cls) box.classList.add(cls);
+        if (tCls) box.classList.add(tCls);
+        if (box.scrollHeight <= box.clientHeight + 1) return;
+    }
+    for (const iCls of imgClasses) {
+        imgs.forEach(img => img.classList.remove('img-fit-tight', 'img-fit-tighter', 'img-fit-micro'));
+        if (iCls) imgs.forEach(img => img.classList.add(iCls));
+        if (box.scrollHeight <= box.clientHeight + 1) return;
+    }
+}
 
-        if (box.scrollHeight <= box.clientHeight + 1) {
+function parseExamTitle(raw) {
+    if (!raw) return { year: '', school: '', grade: '', semester: '', examType: '', subject: '' };
+    const p = raw.split('_');
+    if (p.length < 2) return { year: '', school: '', grade: '', semester: '', examType: '', subject: raw };
+    return { year: p[0] ? (p[0].length === 2 ? '20' + p[0] + '년' : p[0] + '년') : '', school: p[1] || '', semester: p[2] || '', examType: p[3] || '', grade: p[4] || '', subject: p[5] || '' };
+}
+
+function makePage(area, type, pNum) {
+    const page = document.createElement('div'); page.className = 'page';
+    const header = document.createElement('div'); header.className = 'page-header';
+    if (type === 'exam') header.style.borderBottomColor = '#1d4ed8';
+    else if (type === 'sol') header.style.borderBottomColor = '#dc2626';
+    else header.style.borderBottomColor = '#059669';
+    const t = parseExamTitle(AppState.title);
+    const leftText = [t.year, t.school, t.grade, t.semester, t.examType, t.subject].filter(Boolean).join(' | ') || AppState.title;
+    let rightText = (type === 'sol') ? '[ 정답 및 해설 ]' : (type === 'ans') ? '[ 정답표 ]' : '이름: ____________  점수:        / 100';
+    header.innerHTML = `<div style="flex:1;">${leftText}</div><div>${rightText}</div>`;
+    page.appendChild(header);
+    const body = document.createElement('div'); body.style.cssText = 'flex:1; display:flex; flex-direction:column; min-height:0;';
+    page.appendChild(body); page.body = body;
+    const pageNum = document.createElement('div'); pageNum.style.cssText = 'position:absolute; bottom:15mm; left:0; width:100%; text-align:center; font-size:9pt; color:#555;';
+    pageNum.textContent = `- ${pNum} -`; page.appendChild(pageNum);
+    area.appendChild(page); return page;
+}
+
+function sanitizeLoadedBank(raw) {
+    if (Array.isArray(raw)) return raw.filter(item => item != null);
+    if (Array.isArray(raw?.questions)) return raw.questions.filter(item => item != null);
+    if (Array.isArray(raw?.problems)) return raw.problems.filter(item => item != null);
+    return [];
+}
+
+function loadScriptData(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src + (src.includes('?') ? '&' : '?') + 'v=' + Date.now();
+        script.onload = () => {
+            const loaded = sanitizeLoadedBank(window.questionBank);
+            const title = window.examTitle || '';
+            script.remove();
+            delete window.questionBank;
+            delete window.examTitle;
+            resolve({ data: loaded, title });
+        };
+        script.onerror = (e) => {
+            script.remove();
+            delete window.questionBank;
+            delete window.examTitle;
+            reject(e);
+        };
+        document.body.appendChild(script);
+    });
+}
+
+async function loadMixedData() {
+    const rawQuestions = sessionStorage.getItem('mixedQuestions') || localStorage.getItem('mixedQuestions');
+    if (!rawQuestions) return { data: [], title: '' };
+
+    let tasks;
+    try {
+        tasks = JSON.parse(rawQuestions);
+    } catch (e) {
+        return { data: [], title: '' };
+    }
+    if (!Array.isArray(tasks) || tasks.length === 0) return { data: [], title: '' };
+
+    let mixedTitle = '';
+    try {
+        const rawMeta = sessionStorage.getItem('mixedMeta') || localStorage.getItem('mixedMeta');
+        if (rawMeta) mixedTitle = JSON.parse(rawMeta)?.title || '';
+    } catch (e) {}
+
+    const looksLikeQuestionObjects = tasks[0] && (tasks[0].content !== undefined || tasks[0].question !== undefined);
+    if (looksLikeQuestionObjects) {
+        return { data: tasks.filter(item => item != null), title: mixedTitle };
+    }
+
+    const merged = [];
+    const seen = new Set();
+    for (const task of tasks) {
+        const src = task?.sourceRef;
+        if (!src || seen.has(src)) continue;
+        seen.add(src);
+        try {
+            const loaded = await loadScriptData(src);
+            merged.push(...loaded.data);
+        } catch (e) {
+            console.warn('Mixed source skip:', src, e);
+        }
+    }
+    return { data: merged, title: mixedTitle };
+}
+
+function updateControlSummary() {
+    const chipSource = document.getElementById('chip-source');
+    const chipCount = document.getElementById('chip-count');
+    const chipQpp = document.getElementById('chip-qpp');
+    const qppSelect = document.getElementById('qpp-select');
+    const shuffleBtn = document.getElementById('btn-shuffle');
+
+    if (chipSource) {
+        chipSource.classList.remove('source-mixed', 'source-single');
+        chipSource.classList.add(AppState.sourceType === 'mixed' ? 'source-mixed' : 'source-single');
+        chipSource.innerHTML = `source <strong>${AppState.sourceType === 'mixed' ? '믹서' : '단일'}</strong>`;
+    }
+    if (chipCount) chipCount.innerHTML = `문항 <strong>${AppState.data.length}</strong>`;
+    if (chipQpp) chipQpp.innerHTML = `쪽당 <strong>${AppState.qpp}</strong>`;
+    if (qppSelect) {
+        qppSelect.value = String(AppState.qpp);
+        qppSelect.disabled = AppState.mode === 'ans';
+    }
+    if (shuffleBtn) shuffleBtn.disabled = AppState.data.length <= 1;
+}
+
+function changeQpp(val) {
+    const next = parseInt(val, 10);
+    if (!Number.isFinite(next) || next < 1) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('qpp', next);
+    window.location.href = url.toString();
+}
+
+function setStatusCard(message, tone = 'normal') {
+    const area = document.getElementById('print-area');
+    if (!area) return;
+    const color = tone === 'error' ? '#dc2626' : tone === 'loading' ? '#1d4ed8' : '#475569';
+    area.innerHTML = `<div class="status-card" style="color:${color};">${message}</div>`;
+}
+
+async function init() {
+    const p = new URLSearchParams(window.location.search);
+    AppState.mode = p.get('mode') || 'exam';
+    AppState.qpp = parseInt(p.get('qpp')) || 4;
+    AppState.sourceType = p.get('data') === 'mixed' ? 'mixed' : 'single';
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    const targetBtn = document.getElementById('btn-' + AppState.mode);
+    if (targetBtn) targetBtn.classList.add('active');
+
+    const dataUrl = p.get('data');
+    if (!dataUrl) {
+        setStatusCard('데이터 경로가 없습니다.', 'error');
+        return;
+    }
+
+    setStatusCard('문항 데이터를 불러오는 중입니다...', 'loading');
+
+    try {
+        let loaded;
+        if (dataUrl === 'mixed') loaded = await loadMixedData();
+        else loaded = await loadScriptData(dataUrl);
+
+        AppState.data = sanitizeLoadedBank(loaded.data);
+        AppState.title = loaded.title || p.get('title') || '수학 시험지';
+        document.getElementById('ctrl-title').innerText = AppState.title;
+        updateControlSummary();
+
+        if (AppState.data.length === 0) {
+            setStatusCard(AppState.sourceType === 'mixed' ? '믹서에서 선택된 문항이 없습니다.' : '불러온 문항이 없습니다.');
             return;
         }
-    }
 
-    const choices = box.querySelector('.choices');
-    if (choices) {
-        choices.style.lineHeight = '1.2';
-        choices.style.marginTop = '1px';
-    }
-
-    const qnum = box.querySelector('.q-num');
-    if (qnum) {
-        qnum.style.marginBottom = '1px';
+        await render();
+    } catch (e) {
+        console.error('Engine load error:', e);
+        setStatusCard('데이터를 불러오지 못했습니다.', 'error');
     }
 }
 
-function buildSolHeader(q, i) {
-    return `
-        <div class="sol-head">
-            <div class="q-num">${i + 1}.
-                <span style="font-size:9pt;font-weight:normal;">
-                    ${wrapLatex(q.content || q.question || '')}
-                </span>
-            </div>
-        </div>
-    `;
+function switchMode(mode) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', mode);
+    window.location.href = url.toString();
 }
 
-function buildSolFragments(q) {
-    if (q.solution_steps?.length) {
-        return q.solution_steps.map((s, si) => `
-            <div class="sol-frag">
-                <div class="sol-step"><b>[${si + 1}단계]</b> ${wrapLatexPreserveBlocks(stripCite(s))}</div>
-            </div>
-        `);
+async function shuffleData() {
+    for (let i = AppState.data.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1)); [AppState.data[i], AppState.data[j]] = [AppState.data[j], AppState.data[i]];
     }
+    updateControlSummary();
+    await render();
+}
 
-    if (q.solution) {
-        const raw = stripCite(q.solution);
+function raf() { return new Promise(r => requestAnimationFrame(r)); }
 
-        const hasStructuredMath =
-            /\\begin\{(array|aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases)\}/.test(raw) ||
-            /\\multicolumn|\\cline|\\hline/.test(raw);
+function extractChoice(c) {
+    if (c === null || c === undefined) return '';
+    if (typeof c === 'object') return c.text || c.content || c.value || c.answer || Object.values(c)[0] || '';
+    return String(c);
+}
 
-        if (hasStructuredMath) {
-            return [
-                `<div class="sol-frag"><div class="sol-step">${wrapLatexPreserveBlocks(raw)}</div></div>`
-            ];
+function stripChoicePrefix(text) {
+    return String(text || '').replace(/^\s*(?:[①②③④⑤⑥⑦⑧⑨⑩]|\(?\d+\)|\d+\.(?!\d)|\d+\))\s*/, '').trim();
+}
+
+function detectChoiceRenderMode(choices) {
+    if (!choices || choices.length === 0) return 'compact';
+    const texts = choices.map(c => stripChoicePrefix(extractChoice(c)).trim());
+    const isLong = texts.some(t => t.length > 20);
+    const hasBlockPrefix = texts.some(t => /^[가-힣ㄱ-ㅎa-zA-Z][\.\)]/.test(t));
+    const hasSentences = texts.some(t => /[.?!]/.test(t) && t.length > 15);
+    return (isLong || hasBlockPrefix || hasSentences) ? 'block' : 'compact';
+}
+
+function renderChoicesHTML(q) {
+    const circled = ['①', '②', '③', '④', '⑤'];
+    const isSubjective = !Array.isArray(q.choices) || q.choices.length === 0 || q.choices[0] === '주관식' || q.choices.every(c => extractChoice(c).trim() === '');
+    if (isSubjective) return '<div class="answer-box"></div>';
+    const mode = detectChoiceRenderMode(q.choices);
+    const itemsHTML = q.choices.map((c, ci) => {
+        const text = wrapLatex(stripChoicePrefix(extractChoice(c)));
+        return `<div class="choice-item"><span class="choice-no">${circled[ci] || ''}</span><span class="choice-text">${text}</span></div>`;
+    }).join('');
+    return `<div class="choices choices-${mode}">${itemsHTML}</div>`;
+}
+
+function formatQuestionContent(html, q) {
+    if (!html) return '';
+    let count = 0;
+    return html.replace(/([\.!?]|\s|>)\s*(\(\d+\))/g, (match, p1, p2) => {
+        count++;
+        if (count === 1) return match;
+        if (p1.includes('br>') || p1.includes('\n')) return match;
+        return p1 + '<br>' + p2;
+    });
+}
+
+function normalizeQuestionTables(html) {
+    if (!html) return '';
+    return html
+        .replace(/<div class="question-table-wrap">\s*<table/gi, '<div class="question-table-wrap"><table class="question-table"')
+        .replace(/<table(?![^>]*class=)/gi, '<table class="question-table"');
+}
+
+function normalizeQuestionNotes(html) {
+    if (!html || /question-note-box/.test(html)) return html;
+    return html.replace(
+        /((?:<br\s*\/?>\s*)+)(\[[^\]]+\][\s\S]*?)(?=(?:<br\s*\/?>\s*){2,}|$)/gi,
+        (match, breaks, noteBlock) => {
+            const brCount = (noteBlock.match(/<br\s*\/?>/gi) || []).length;
+            const plainText = noteBlock.replace(/<[^>]+>/g, '').trim();
+            if (brCount < 2 && plainText.length < 60) return match;
+            return `${breaks}<div class="question-note-box">${noteBlock}</div>`;
         }
-
-        const lines = raw
-            .split(/\n+/)
-            .map(v => v.trim())
-            .filter(Boolean);
-
-        return lines.map(line => `
-            <div class="sol-frag">
-                <div class="sol-step">${wrapLatexPreserveBlocks(line)}</div>
-            </div>
-        `);
-    }
-
-    return [
-        `<div class="sol-frag"><div class="sol-step" style="color:#94a3b8;font-size:8pt;">해설 없음</div></div>`
-    ];
+    );
 }
 
-async function renderSol(area, bank) {
-    let p = makePage(area, 'sol');
-    let colIdx = 0;
+function stripInlineImagesFromContent(content, hasImageField) {
+    if (!content) return '';
+    if (!hasImageField) return content;
+    let stripped = content.replace(/(?:<br\s*\/?>\s*)*<img[^>]*>(?:\s*<br\s*\/?>)*/gi, '<br>');
+    stripped = stripped.replace(/^(?:<br\s*\/?>\s*)+/i, '').replace(/(?:<br\s*\/?>\s*)+$/i, '');
+    return stripped;
+}
 
-    async function ensureFitOrAdvance(targetCol, node) {
-        targetCol.appendChild(node);
+function renderQuestionImageHTML(q) {
+    if (!q.image) return '';
+    return `<div class="q-image-wrap"><img src="${q.image}"></div>`;
+}
 
-        if (window.MathJax?.typesetPromise) {
-            await MathJax.typesetPromise([targetCol]);
-        }
-        await raf();
-
-        const overflowed = targetCol.scrollHeight > targetCol.clientHeight + 1;
-
-        if (!overflowed) return true;
-
-        node.remove();
-
-        if (colIdx === 0) {
-            colIdx = 1;
+async function renderExam(area, data) {
+    const staging = document.getElementById('staging'); staging.style.width = '83mm'; staging.innerHTML = '';
+    let pNum = 1;
+    const items = data.map((q, i) => {
+        const box = document.createElement('div'); box.className = 'q-box';
+        const hasImageField = !!q.image;
+        const rawContent = stripInlineImagesFromContent(q.content || q.question || '', hasImageField);
+        const formattedContent = normalizeQuestionNotes(
+            normalizeQuestionTables(
+                formatQuestionContent(wrapLatex(rawContent), q)
+            )
+        );
+        const imageHTML = renderQuestionImageHTML(q);
+        const choicesHTML = renderChoicesHTML(q);
+        box.innerHTML = `<div class="q-num">${i + 1}.</div>
+                         <div class="q-content">${formattedContent}</div>
+                         ${imageHTML}
+                         ${choicesHTML}`;
+        staging.appendChild(box); return { q, box, originalIndex: i };
+    });
+    if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([staging]); await raf();
+    for (const item of items) {
+        const p = {}; p.proxyHeight_raw = item.box.scrollHeight; item.box.classList.add('fit-tight'); await raf();
+        p.proxyHeight_tight = item.box.scrollHeight; item.box.classList.remove('fit-tight');
+        item.profile = p;
+    }
+    const tempPage = makePage(area, 'exam', 0);
+    const usablePageHeight = tempPage.body.clientHeight;
+    area.removeChild(tempPage);
+    let firstPage = null; let pages = [];
+    let currentPage = { blocks: [], usedHeight: 0 };
+    let activeChunk = []; let currentType = null;
+    const flushBlock = () => {
+        if (activeChunk.length === 0) return;
+        const type = currentType; const chunk = [...activeChunk];
+        let hType = (type === 'normal') ? 'proxyHeight_tight' : 'proxyHeight_raw';
+        let blockH;
+        if (type === 'wide') {
+            blockH = chunk[0].profile.proxyHeight_raw + SE_OVERHEAD_COL + SE_OVERHEAD_GRID;
         } else {
-            p = makePage(area, 'sol');
-            colIdx = 0;
+            const split = Math.ceil(chunk.length / 2);
+            const leftH = chunk.slice(0, split).reduce((s, it) => s + it.profile[hType], 0) + SE_OVERHEAD_COL;
+            const rightH = chunk.slice(split).reduce((s, it) => s + it.profile[hType], 0) + SE_OVERHEAD_COL;
+            blockH = Math.max(leftH, rightH) + SE_OVERHEAD_GRID;
         }
-        return false;
+        const isNormalForceBreak = (type === 'normal' && currentPage.blocks.length > 0);
+        const gap = (currentPage.blocks.length > 0) ? SE_BLOCK_GAP : 0;
+        if ((isNormalForceBreak || (currentPage.usedHeight + gap + blockH > usablePageHeight)) && currentPage.blocks.length > 0) {
+            pages.push(currentPage); currentPage = { blocks: [], usedHeight: 0 };
+        }
+        currentPage.usedHeight += (currentPage.blocks.length > 0 ? SE_BLOCK_GAP : 0) + blockH;
+        currentPage.blocks.push({ type, items: chunk, blockH });
+        activeChunk = [];
+    };
+    items.forEach(item => {
+        const lt = item.q.layoutTag || '';
+        let qType = 'normal'; let limit = AppState.qpp;
+        if (item.q.wide === true || lt === 'fullwidth') { qType = 'wide'; limit = 1; }
+        else if (lt === 'subjective-2up') { qType = 'subj2'; limit = 2; }
+        else if (lt === 'subjective-4up') { qType = 'subj4'; limit = 4; }
+        const isSpecialType = (qType === 'subj2' || qType === 'subj4' || qType === 'wide');
+        const prevWasSpecial = (currentType === 'subj2' || currentType === 'subj4' || currentType === 'wide');
+        if ((currentType !== null && currentType !== qType) || (activeChunk.length >= limit) || ((isSpecialType || prevWasSpecial) && currentPage.blocks.length > 0)) {
+            flushBlock();
+            if (isSpecialType && currentPage.blocks.length > 0) { pages.push(currentPage); currentPage = { blocks: [], usedHeight: 0 }; }
+            currentType = qType;
+        }
+        if (currentType === null) currentType = qType;
+        activeChunk.push(item);
+    });
+    flushBlock(); if (currentPage.blocks.length > 0) pages.push(currentPage);
+    for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+        const pageData = pages[pIdx];
+        const page = (!firstPage) ? (firstPage = makePage(area, 'exam', pNum)) : makePage(area, 'exam', ++pNum);
+        pageData.blocks.forEach((block, bIdx) => {
+            if (block.type === 'wide') {
+                const wideCol = document.createElement('div'); wideCol.style.cssText = 'flex:1; display:flex; flex-direction:column; padding:0 8px; min-height:0; overflow:hidden;';
+                wideCol.appendChild(block.items[0].box.cloneNode(true)); page.body.appendChild(wideCol);
+            } else {
+                const bGrid = document.createElement('div'); bGrid.className = 'grid-container';
+                bGrid.style.flex = (block.type === 'normal') ? '1 1 0' : 'none';
+                if (bIdx < pageData.blocks.length - 1) bGrid.style.marginBottom = SE_BLOCK_GAP + 'px';
+                const bLeft = document.createElement('div'); bLeft.className = 'grid-col';
+                const bRight = document.createElement('div'); bRight.className = 'grid-col';
+                bGrid.appendChild(bLeft); bGrid.appendChild(bRight); page.body.appendChild(bGrid);
+                const split = Math.ceil(block.items.length / 2);
+                block.items.slice(0, split).forEach(it => bLeft.appendChild(it.box.cloneNode(true)));
+                block.items.slice(split).forEach(it => bRight.appendChild(it.box.cloneNode(true)));
+            }
+        });
+        if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([page]); await raf();
+        const allPageBoxes = page.querySelectorAll('.q-box'); allPageBoxes.forEach(b => fitQuestionBox(b));
+        if (page.body.scrollHeight > usablePageHeight + SE_PAGE_TOLERANCE) {
+            allPageBoxes.forEach(b => autoCompress(b)); await raf();
+            if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([page]);
+        }
     }
+}
 
-    for (let i = 0; i < bank.length; i++) {
-        const q = bank[i];
-
-        const headWrap = document.createElement('div');
-        headWrap.innerHTML = buildSolHeader(q, i).trim();
-        const headEl = headWrap.firstElementChild;
-
-        let placedHeader = false;
-        while (!placedHeader) {
-            const targetCol = p.cols[colIdx];
-            placedHeader = await ensureFitOrAdvance(targetCol, headEl.cloneNode(true));
-        }
-
-        const fragments = buildSolFragments(q);
-
-        for (const fragHTML of fragments) {
-            const fragWrap = document.createElement('div');
-            fragWrap.innerHTML = fragHTML.trim();
-            const fragEl = fragWrap.firstElementChild;
-
-            let placedFrag = false;
-            while (!placedFrag) {
-                const targetCol = p.cols[colIdx];
-                placedFrag = await ensureFitOrAdvance(targetCol, fragEl.cloneNode(true));
+async function renderSol(area, data) {
+    let pNum = 1;
+    function makeGridPage() {
+        const p = makePage(area, 'sol', pNum++);
+        const grid = document.createElement('div'); grid.className = 'grid-container';
+        const l = document.createElement('div'); l.className = 'grid-col';
+        const r = document.createElement('div'); r.className = 'grid-col';
+        grid.appendChild(l); grid.appendChild(r); p.body.appendChild(grid);
+        return { p, cols: [l, r] };
+    }
+    let { cols } = makeGridPage(); let colIdx = 0;
+    for (let i = 0; i < data.length; i++) {
+        const q = data[i]; const solutionText = q.solution || q.explanation || q.sol || '해설이 없습니다.';
+        const reminderRawContent = stripInlineImagesFromContent(q.content || q.question || '', !!q.image);
+        const reminderContent = normalizeQuestionNotes(
+            normalizeQuestionTables(
+                formatQuestionContent(wrapLatex(reminderRawContent), q)
+            )
+        );
+        const box = document.createElement('div'); box.className = 'q-box sol-box';
+        box.innerHTML = `<div class="q-num">${i+1}.</div><div style="margin-bottom:8px;color:#555;font-size:8.5pt;">${reminderContent}</div><div style="background:#fdfdfd;padding:8px;border:1px solid #eee;border-radius:3px;"><div style="font-weight:bold;color:red;margin-bottom:4px;">[정답] ${wrapLatex(q.answer ?? '–')}</div><div style="font-size:8.5pt;line-height:1.55;">${wrapLatex(solutionText)}</div></div>`;
+        cols[colIdx].appendChild(box);
+        if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([cols[colIdx]]); await raf();
+        if (cols[colIdx].scrollHeight > cols[colIdx].clientHeight + 2) {
+            autoCompress(box); await raf();
+            if (cols[colIdx].scrollHeight > cols[colIdx].clientHeight + 2) {
+                cols[colIdx].removeChild(box);
+                if (colIdx === 0) { colIdx = 1; cols[colIdx].appendChild(box); }
+                else { ({ cols } = makeGridPage()); colIdx = 0; cols[colIdx].appendChild(box); }
+                if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([cols[colIdx]]); await raf();
             }
         }
+    }
+}
 
-        const divider = document.createElement('div');
-        divider.className = 'sol-divider';
-
-        let placedDivider = false;
-        while (!placedDivider) {
-            const targetCol = p.cols[colIdx];
-            placedDivider = await ensureFitOrAdvance(targetCol, divider.cloneNode(true));
+function renderAns(area, data) {
+    const PER_PAGE = 50; let pCount = 1;
+    for (let start = 0; start < data.length; start += PER_PAGE) {
+        const chunk = data.slice(start, start + PER_PAGE);
+        const p = makePage(area, 'ans', pCount++);
+        const grid = document.createElement('div'); grid.className = 'ans-grid';
+        const splitIndex = Math.ceil(chunk.length / 2);
+        for (let i = 0; i < splitIndex; i++) {
+            [i, splitIndex + i].forEach(idx => {
+                if (chunk[idx]) {
+                    const u = document.createElement('div'); u.className = 'ans-cell';
+                    u.innerHTML = `<div class="ans-n">${start + idx + 1}.</div><div class="ans-v">${wrapLatex(chunk[idx].answer ?? '–')}</div>`;
+                    grid.appendChild(u);
+                }
+            });
         }
+        p.body.appendChild(grid);
     }
 }
 
-function renderAnsGrid(area, bank) {
-    const p = makePage(area, 'ans');
-    const grid = document.createElement('div');
-    grid.className = 'ans-grid';
-
-    const half = Math.ceil(bank.length / 2);
-
-    for (let i = 0; i < half; i++) {
-        const leftCell = document.createElement('div');
-        leftCell.className = 'ans-cell';
-        const leftAns = bank[i] ? wrapLatex(String(bank[i].answer ?? '–')) : '';
-        leftCell.innerHTML = `<b style="font-size:10.5pt;min-width:28px;">${i + 1}.</b><span style="font-size:10.5pt;">${leftAns}</span>`;
-        grid.appendChild(leftCell);
-
-        const rightCell = document.createElement('div');
-        rightCell.className = 'ans-cell';
-        const rIdx = half + i;
-        const rightAns = bank[rIdx] ? wrapLatex(String(bank[rIdx].answer ?? '–')) : '';
-        rightCell.innerHTML = bank[rIdx]
-            ? `<b style="font-size:10.5pt;min-width:28px;">${rIdx + 1}.</b><span style="font-size:10.5pt;">${rightAns}</span>`
-            : '';
-        grid.appendChild(rightCell);
-    }
-
-    p.body.appendChild(grid);
-    if (window.MathJax?.typesetPromise) MathJax.typesetPromise([p.body]);
+async function render() {
+    const area = document.getElementById('print-area'); area.innerHTML = '';
+    if (AppState.mode === 'ans') renderAns(area, AppState.data);
+    else if (AppState.mode === 'sol') await renderSol(area, AppState.data);
+    else await renderExam(area, AppState.data);
+    if (window.MathJax?.typesetPromise) await MathJax.typesetPromise([area]);
+    updateControlSummary();
 }
-
-function makePage(area, type) {
-    pageCount++;
-    const page = document.createElement('div');
-    page.className = 'page';
-
-    if (type === 'ans') {
-        const body = document.createElement('div');
-        body.style.flex = '1';
-        page.appendChild(body);
-        
-        const footer = document.createElement('div');
-        footer.className = 'page-footer';
-        footer.innerHTML = `- ${pageCount} -`;
-        page.appendChild(footer);
-        
-        area.appendChild(page);
-        return { page, body };
-    }
-
-    if (type === 'sol') {
-        const grid = document.createElement('div');
-        grid.className = 'grid-container cols-2';
-        const left = document.createElement('div'); left.className = 'grid-col';
-        const right = document.createElement('div'); right.className = 'grid-col';
-        grid.appendChild(left); grid.appendChild(right);
-        page.appendChild(grid);
-        
-        const footer = document.createElement('div');
-        footer.className = 'page-footer';
-        footer.innerHTML = `- ${pageCount} -`;
-        page.appendChild(footer);
-        
-        area.appendChild(page);
-        return { page, cols: [left, right] };
-    }
-
-    const numCols = AppState.cols || 2;
-    const grid = document.createElement('div');
-    grid.className = `grid-container cols-${numCols}`;
-    const cols = [];
-    for (let i = 0; i < numCols; i++) {
-        const col = document.createElement('div');
-        col.className = 'grid-col';
-        grid.appendChild(col);
-        cols.push(col);
-    }
-    page.appendChild(grid);
-    
-    const footer = document.createElement('div');
-    footer.className = 'page-footer';
-    footer.innerHTML = `- ${pageCount} -`;
-    page.appendChild(footer);
-    
-    area.appendChild(page);
-    return { page, cols };
-}
-
-function wrapLatex(text) {
-    return wrapLatexPreserveBlocks(text);
-}
-
-function wrapLatexPreserveBlocks(text) {
-    if (!text) return text;
-    let s = String(text);
-
-    s = s.replace(/\^\[([^\]]+)\]/g, '^{$1}').replace(/_\[([^\]]+)\]/g, '_{$1}');
-    s = s.replace(//g, '(').replace(//g, ')').replace(//g, '');
-    s = s.replace(/²/g, '^2').replace(/³/g, '^3');
-    s = s.replace(/√\s*\(([^\)]+)\)/g, '\\sqrt{$1}').replace(/√\s*([0-9a-zA-Z]+)/g, '\\sqrt{$1}');
-    s = s.replace(/sqrt\(([^)]+)\)/g, '\\sqrt{$1}').replace(/frac\(([^,]+),([^)]+)\)/g, '\\frac{$1}{$2}');
-    s = s.replace(/\\frac\[([^\]]+)\]\[([^\]]+)\]/g, '\\frac{$1}{$2}').replace(/\\dot\[([^\]]+)\]/g, '\\dot{$1}');
-
-    if (/\\begin\{(array|aligned|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|cases)\}/.test(s) || /\\multicolumn|\\cline|\\hline/.test(s)) {
-        return `$$${s}$$`;
-    }
-
-    if (/^\s*\$\$[\s\S]*\$\$\s*$/.test(s) || /^\s*\$[\s\S]*\$\s*$/.test(s)) return s;
-
-    const parts = s.split(/(<[^>]+>)/g);
-    return parts.map(p => {
-        if (!p) return '';
-        if (p.startsWith('<')) return p;
-
-        let t = p.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
-        const trimmed = t.trim();
-
-        const hasKorean = /[가-힣]/.test(trimmed);
-        const hasDollar = /\$/.test(trimmed);
-
-        const looksLikeMath =
-            !hasKorean &&
-            !hasDollar &&
-            (
-                /\\[a-zA-Z]+/.test(trimmed) ||
-                (/^[0-9a-zA-Z\s\+\-\*\/\=\^\_\{\}\(\)\[\]\.,:;|\\]+$/.test(trimmed) && trimmed.length > 0)
-            );
-
-        if (looksLikeMath && !t.includes('<br>')) return `$${trimmed}$`;
-        return t;
-    }).join('');
-}
-
-function stripCite(text) {
-    if (!text) return text;
-    return text.replace(/【[^】]*】/g, '').trim();
-}
-
-function raf() {
-    return new Promise(r => requestAnimationFrame(r));
-}
-
 window.onload = init;
 </script>
 </body>
