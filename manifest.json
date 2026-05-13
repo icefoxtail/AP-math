@@ -6,8 +6,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "landscape-primary",
-  "background_color": "#67c7ff",
-  "theme_color": "#ff9d2e",
+  "background_color": "#8B552F",
+  "theme_color": "#E9A85D",
   "lang": "ko",
   "categories": [
     "kids",

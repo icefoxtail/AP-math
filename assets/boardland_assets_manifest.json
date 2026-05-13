@@ -1,0 +1,11 @@
+{
+  "card_back": "./assets/icons/card-back.webp",
+  "pawn_dog": "./assets/pawns/dog-pawn.webp",
+  "pawn_cat": "./assets/pawns/cat-pawn.webp",
+  "pawn_rabbit": "./assets/pawns/rabbit-pawn.webp",
+  "pawn_bear": "./assets/pawns/bear-pawn.webp",
+  "icon_star": "./assets/rewards/sticker-star.webp",
+  "icon_heart": "./assets/rewards/sticker-heart.webp",
+  "icon_rainbow": "./assets/rewards/sticker-rainbow.webp",
+  "icon_gift": "./assets/rewards/gift-box.webp"
+}
