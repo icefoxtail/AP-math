@@ -160,22 +160,27 @@
     } catch (error) {}
   }
 
-  function makeText(text, style) {
-    return new PIXI.Text(text, {
+  function makeText(text, style = {}) {
+    const textStyle = {
       fontFamily: 'Arial Rounded MT Bold, Jua, Apple SD Gothic Neo, sans-serif',
       fill: style.fill ?? COLORS.ink,
       fontSize: style.fontSize ?? 32,
       fontWeight: style.fontWeight ?? '900',
       align: style.align ?? 'center',
-      stroke: style.stroke,
-      strokeThickness: style.strokeThickness ?? 0,
       dropShadow: style.dropShadow ?? false,
       dropShadowAlpha: style.dropShadowAlpha ?? 0.22,
       dropShadowDistance: style.dropShadowDistance ?? 3,
       wordWrap: style.wordWrap ?? false,
-      wordWrapWidth: style.wordWrapWidth ?? 320,
-      lineHeight: style.lineHeight
-    });
+      wordWrapWidth: style.wordWrapWidth ?? 320
+    };
+    if (style.stroke !== undefined && style.stroke !== null) {
+      textStyle.stroke = style.stroke;
+      textStyle.strokeThickness = style.strokeThickness ?? 0;
+    }
+    if (style.lineHeight !== undefined && style.lineHeight !== null) {
+      textStyle.lineHeight = style.lineHeight;
+    }
+    return new PIXI.Text(text, textStyle);
   }
 
   function roundedRect(g, x, y, w, h, r, fill, alpha = 1, stroke = null) {
