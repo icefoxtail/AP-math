@@ -95,10 +95,10 @@
 
   const EVENT_CARDS = [
     {
-      id: 'hug',
+      id: 'family_hug',
       type: 'family',
       icon: '🫂',
-      title: '안아줘요',
+      title: '꼬옥 안아주기',
       body: '가족을 꼬옥 안아주세요',
       voiceId: 'board.card.familyHug'
     },
@@ -111,52 +111,12 @@
       voiceId: 'board.card.highFive'
     },
     {
-      id: 'love',
-      type: 'family',
-      icon: '❤️',
-      title: '사랑해요',
-      body: '사랑한다고 말해요',
-      voiceId: 'board.card.love'
-    },
-    {
-      id: 'clap',
+      id: 'dino',
       type: 'mission',
-      icon: '👏',
-      title: '박수 짝짝',
-      body: '박수를 크게 쳐요',
-      voiceId: 'board.card.clap'
-    },
-    {
-      id: 'dance',
-      type: 'mission',
-      icon: '💃',
-      title: '흔들흔들 춤',
-      body: '신나게 춤춰요',
-      voiceId: 'board.card.dance'
-    },
-    {
-      id: 'rainbow_jump',
-      type: 'jump',
-      icon: '🌈',
-      title: '무지개 점프',
-      body: '무지개처럼 점프해요',
-      voiceId: 'board.card.rainbowJump'
-    },
-    {
-      id: 'forward_two',
-      type: 'jump',
-      icon: '➡️',
-      title: '앞으로 두 칸',
-      body: '두 칸 앞으로 가요',
-      voiceId: 'board.card.forwardTwo'
-    },
-    {
-      id: 'spin_again',
-      type: 'family',
-      icon: '🎡',
-      title: '한 번 더',
-      body: '룰렛을 한 번 더 돌려요',
-      voiceId: 'board.card.spinAgain'
+      icon: '🦖',
+      title: '공룡 흉내',
+      body: '크아앙!',
+      voiceId: 'board.card.dino'
     },
     {
       id: 'gift',
@@ -183,27 +143,27 @@
       './assets/board/roulette-pointer.png'
     ],
     card_back: [
+      './assets/boardland/cards/card-back-main.webp',
       './assets/boardland/events/card-back.webp',
-      './assets/events/card-back.webp',
       './assets/icons/card-back.webp'
     ],
-    card_front_default: [
+    card_front_family_hug: [
+      './assets/boardland/events/card-hug.webp',
+      './assets/boardland/cards/card-family-hug.webp'
+    ],
+    card_front_high_five: [
+      './assets/boardland/events/card-high-five.webp',
+      './assets/boardland/cards/card-high-five.webp'
+    ],
+    card_front_dino: [
+      './assets/boardland/events/card-love.webp',
       './assets/boardland/events/card-front.webp'
     ],
     card_front_gift: [
       './assets/boardland/events/card-gift.webp'
     ],
-    card_front_high_five: [
-      './assets/boardland/events/card-high-five.webp'
-    ],
-    card_front_hug: [
-      './assets/boardland/events/card-hug.webp'
-    ],
-    card_front_family_hug: [
-      './assets/boardland/events/card-hug.webp'
-    ],
-    card_front_love: [
-      './assets/boardland/events/card-love.webp'
+    card_front_default: [
+      './assets/boardland/events/card-front.webp'
     ],
     card_front_clap: [
       './assets/boardland/events/card-clap.webp'
@@ -211,10 +171,10 @@
     card_front_dance: [
       './assets/boardland/events/card-dance.webp'
     ],
-    card_front_rainbow: [
-      './assets/boardland/events/card-rainbow-jump.webp'
+    card_front_love: [
+      './assets/boardland/events/card-love.webp'
     ],
-    card_front_rainbow_jump: [
+    card_front_rainbow: [
       './assets/boardland/events/card-rainbow-jump.webp'
     ],
     card_front_forward_two: [
@@ -224,8 +184,7 @@
       './assets/boardland/events/card-spin-again.webp'
     ],
     icon_gift: [
-      './assets/rewards/gift-box.webp',
-      './assets/events/gift-box.webp'
+      './assets/rewards/gift-box.webp'
     ],
     icon_star: [
       './assets/rewards/sticker-star.webp'
@@ -421,23 +380,68 @@
     return icon;
   }
 
+  function normalizeAssetPath(value) {
+    const src = String(value || '').trim();
+    if (!src) return '';
+
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.startsWith('./')) return src;
+
+    if (src.startsWith('/family-boardland/')) {
+      return `.${src.replace('/family-boardland', '')}`;
+    }
+
+    if (src.startsWith('/assets/')) {
+      return `.${src}`;
+    }
+
+    if (src.startsWith('assets/')) {
+      return `./${src}`;
+    }
+
+    return src;
+  }
+
+  function loadTextureFromImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          const texture = PIXI.Texture.from(img);
+          resolve(texture);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      img.onerror = () => {
+        reject(new Error(`Image load failed: ${src}`));
+      };
+
+      img.src = src;
+    });
+  }
+
   async function loadOne(alias, candidates) {
     const list = Array.isArray(candidates) ? candidates : [];
 
-    for (const src of list) {
+    for (const rawSrc of list) {
+      const src = normalizeAssetPath(rawSrc);
+      if (!src) continue;
+
       try {
-        const texture = await PIXI.Assets.load(src);
+        const texture = await loadTextureFromImage(src);
         if (texture) {
           state.assetTextures[alias] = texture;
           return true;
         }
-      } catch (error) {}
+      } catch (error) {
+        console.warn('[Boardland] asset candidate failed:', alias, src);
+      }
     }
 
-    if (alias === 'board_bg' || alias === 'roulette' || alias === 'roulette_pointer') {
-      console.warn('[Boardland] asset load failed:', alias, list);
-    }
-
+    console.warn('[Boardland] asset load failed:', alias, list.map(normalizeAssetPath));
     return false;
   }
 
@@ -449,45 +453,37 @@
 
         const push = (key, value) => {
           if (!value || typeof value !== 'string') return;
-          const clean = value.trim();
+          const clean = normalizeAssetPath(value);
           if (!clean) return;
           if (!ASSET_CANDIDATES[key]) ASSET_CANDIDATES[key] = [];
-          ASSET_CANDIDATES[key] = [clean, ...ASSET_CANDIDATES[key].filter(src => src !== clean)];
+          if (!ASSET_CANDIDATES[key].includes(clean)) ASSET_CANDIDATES[key].unshift(clean);
         };
 
         push('board_bg', manifest.board_bg || manifest?.board?.main);
         push('roulette', manifest.roulette || manifest.roulette_wheel || manifest?.board?.roulette);
         push('roulette_pointer', manifest.roulette_pointer || manifest.pointer || manifest?.board?.roulette_pointer || manifest?.board?.pointer);
-
         push('card_back', manifest.card_back || manifest?.cards?.back);
         push('card_front_default', manifest.card_front || manifest?.cards?.front);
         push('card_front_gift', manifest.card_gift);
         push('card_front_high_five', manifest.card_high_five);
-        push('card_front_hug', manifest.card_hug);
-        push('card_front_family_hug', manifest.card_hug);
+        push('card_front_family_hug', manifest.card_hug || manifest.card_family_hug);
         push('card_front_love', manifest.card_love);
         push('card_front_clap', manifest.card_clap);
         push('card_front_dance', manifest.card_dance);
-        push('card_front_rainbow', manifest.card_rainbow_jump);
-        push('card_front_rainbow_jump', manifest.card_rainbow_jump);
+        push('card_front_rainbow', manifest.card_rainbow_jump || manifest.card_rainbow);
         push('card_front_forward_two', manifest.card_forward_two);
-        push('card_front_spin_again', manifest.card_spin_again);
+        push('card_front_spin_again', manifest.card_spin_again || manifest.card_roulette_once);
 
         push('icon_gift', manifest.icon_gift || manifest?.rewards?.gift);
         push('icon_star', manifest.icon_star || manifest?.rewards?.star);
         push('icon_heart', manifest.icon_heart || manifest?.rewards?.heart);
         push('icon_rainbow', manifest.icon_rainbow || manifest?.rewards?.rainbow);
-
         push('pawn_dog', manifest.pawn_dog || manifest?.pawns?.dog);
         push('pawn_cat', manifest.pawn_cat || manifest?.pawns?.cat);
         push('pawn_rabbit', manifest.pawn_rabbit || manifest?.pawns?.rabbit);
         push('pawn_bear', manifest.pawn_bear || manifest?.pawns?.bear);
-      } else {
-        console.warn('[Boardland] manifest not found:', res.status);
       }
-    } catch (error) {
-      console.warn('[Boardland] manifest load failed:', error);
-    }
+    } catch (error) {}
 
     await Promise.all(
       Object.keys(ASSET_CANDIDATES).map(key => loadOne(key, ASSET_CANDIDATES[key]))
@@ -916,16 +912,16 @@
   }
 
   function getCardFrontAlias(card) {
-    if (!card || !card.id) return 'card_front_default';
-    if (card.id === 'family_hug' || card.id === 'hug') return 'card_front_hug';
+    if (card.id === 'family_hug') return 'card_front_family_hug';
     if (card.id === 'high_five') return 'card_front_high_five';
+    if (card.id === 'dino') return 'card_front_dino';
+    if (card.id === 'gift') return 'card_front_gift';
     if (card.id === 'love') return 'card_front_love';
     if (card.id === 'clap') return 'card_front_clap';
     if (card.id === 'dance') return 'card_front_dance';
     if (card.id === 'rainbow_jump') return 'card_front_rainbow';
     if (card.id === 'forward_two') return 'card_front_forward_two';
     if (card.id === 'spin_again') return 'card_front_spin_again';
-    if (card.id === 'gift') return 'card_front_gift';
     return 'card_front_default';
   }
 
