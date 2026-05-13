@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1778685200223,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778685853251,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,14 +1,29 @@\n {\n-  \"version\": \"boardland-v2.5.2-3d-coords-fix\",\n+  \"version\": \"boardland-v2.5.3-assets-cleanup\",\n   \"board_bg\": \"./assets/board/board-main.webp\",\n+  \"roulette\": \"./assets/board/roulette-wheel.webp\",\n   \"roulette_pointer\": \"./assets/board/roulette-pointer.webp\",\n-  \"card_back\": \"./assets/icons/card-back.webp\",\n-  \"pawn_dog\": \"./assets/pawns/dog-pawn.webp\",\n-  \"pawn_cat\": \"./assets/pawns/cat-pawn.webp\",\n-  \"pawn_rabbit\": \"./assets/pawns/rabbit-pawn.webp\",\n-  \"pawn_bear\": \"./assets/pawns/bear-pawn.webp\",\n+\n+  \"card_back\": \"./assets/boardland/events/card-back.webp\",\n+  \"card_front\": \"./assets/boardland/events/card-front.webp\",\n+\n+  \"card_gift\": \"./assets/boardland/events/card-gift.webp\",\n+  \"card_high_five\": \"./assets/boardland/events/card-high-five.webp\",\n+  \"card_hug\": \"./assets/boardland/events/card-hug.webp\",\n+  \"card_love\": \"./assets/boardland/events/card-love.webp\",\n+  \"card_clap\": \"./assets/boardland/events/card-clap.webp\",\n+  \"card_dance\": \"./assets/boardland/events/card-dance.webp\",\n+  \"card_rainbow_jump\": \"./assets/boardland/events/card-rainbow-jump.webp\",\n+  \"card_forward_two\": \"./assets/boardland/events/card-forward-two.webp\",\n+  \"card_spin_again\": \"./assets/boardland/events/card-spin-again.webp\",\n+\n+  \"pawn_dog\": \"./assets/boardland/pawns/dog-pawn.webp\",\n+  \"pawn_cat\": \"./assets/boardland/pawns/cat-pawn.webp\",\n+  \"pawn_rabbit\": \"./assets/boardland/pawns/rabbit-pawn.webp\",\n+  \"pawn_bear\": \"./assets/boardland/pawns/bear-pawn.webp\",\n+\n   \"icon_star\": \"./assets/rewards/sticker-star.webp\",\n   \"icon_heart\": \"./assets/rewards/sticker-heart.webp\",\n   \"icon_rainbow\": \"./assets/rewards/sticker-rainbow.webp\",\n   \"icon_gift\": \"./assets/rewards/gift-box.webp\"\n-}\n+}\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1778685200223,
