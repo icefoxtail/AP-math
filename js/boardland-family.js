@@ -43,38 +43,39 @@
   ];
 
   const TILE_COORDS = [
-    { x: 250, y: 760 },
-    { x: 390, y: 775 },
-    { x: 530, y: 775 },
-    { x: 670, y: 770 },
-    { x: 810, y: 760 },
-    { x: 950, y: 740 },
-    { x: 1085, y: 705 },
-    { x: 1195, y: 650 },
-    { x: 1270, y: 560 },
-    { x: 1295, y: 455 },
-    { x: 1270, y: 350 },
-    { x: 1200, y: 260 },
-    { x: 1085, y: 205 },
-    { x: 945, y: 175 },
-    { x: 800, y: 165 },
-    { x: 660, y: 175 },
-    { x: 520, y: 205 },
-    { x: 405, y: 260 },
-    { x: 325, y: 350 },
-    { x: 285, y: 455 },
-    { x: 310, y: 560 },
-    { x: 390, y: 650 },
-    { x: 520, y: 700 },
-    { x: 660, y: 725 },
-    { x: 800, y: 735 },
-    { x: 940, y: 720 },
-    { x: 1065, y: 670 },
-    { x: 1145, y: 585 },
-    { x: 1150, y: 470 },
-    { x: 1085, y: 370 },
-    { x: 965, y: 305 },
-    { x: 830, y: 285 }
+    // 1600×900 board-main.webp 실제 보드 길 기준 좌표
+    { x: 405, y: 644 },
+    { x: 518, y: 650 },
+    { x: 616, y: 650 },
+    { x: 716, y: 650 },
+    { x: 816, y: 650 },
+    { x: 916, y: 650 },
+    { x: 1015, y: 640 },
+    { x: 1095, y: 640 },
+    { x: 1136, y: 540 },
+    { x: 1147, y: 445 },
+    { x: 1152, y: 352 },
+    { x: 1153, y: 256 },
+    { x: 1142, y: 150 },
+    { x: 1035, y: 150 },
+    { x: 954, y: 150 },
+    { x: 870, y: 150 },
+    { x: 785, y: 150 },
+    { x: 703, y: 150 },
+    { x: 615, y: 150 },
+    { x: 505, y: 150 },
+    { x: 490, y: 248 },
+    { x: 472, y: 345 },
+    { x: 455, y: 442 },
+    { x: 438, y: 538 },
+    { x: 405, y: 625 },
+    { x: 520, y: 586 },
+    { x: 642, y: 550 },
+    { x: 760, y: 538 },
+    { x: 882, y: 536 },
+    { x: 988, y: 500 },
+    { x: 960, y: 376 },
+    { x: 800, y: 330 }
   ];
   const DEBUG_MODE = true;
 
@@ -100,6 +101,7 @@
     tickerItems: [], pulseVersion: 0, panelTickerVersion: 0, playerPanelLayer: null,
     totalTurns: 0,
     assetAliases: {},
+    assetTextures: {},
     filters: {
       colorMatrix: null
     }
@@ -132,9 +134,9 @@
   
   // v2.4 Sprite/Emoji Hybrid Icon Creator
   function createIcon(symbol, size, spriteId) {
-    if (spriteId && state.assetAliases && state.assetAliases[spriteId]) {
+    if (spriteId && state.assetTextures && state.assetTextures[spriteId]) {
       try {
-        const sp = PIXI.Sprite.from(spriteId);
+        const sp = new PIXI.Sprite(state.assetTextures[spriteId]);
         sp.anchor.set(0.5);
         sp.width = size;
         sp.height = size;
@@ -208,8 +210,8 @@
     shadow.y = 28;
     l.addChild(shadow);
 
-    if (state.assetAliases && state.assetAliases.board_bg) {
-      const bg = PIXI.Sprite.from('board_bg');
+    if (state.assetTextures && state.assetTextures.board_bg) {
+      const bg = new PIXI.Sprite(state.assetTextures.board_bg);
       bg.anchor.set(0.5);
       bg.x = DESIGN_W / 2;
       bg.y = DESIGN_H / 2;
@@ -578,38 +580,58 @@
 
   async function loadAssets() {
     state.assetAliases = {};
+    state.assetTextures = {};
+
+    const defaults = {
+      board_bg: ['./assets/board/board-main.webp', './assets/boardland/board/board-main.webp'],
+      card_back: ['./assets/icons/card-back.webp'],
+      icon_gift: ['./assets/rewards/gift-box.webp'],
+      icon_star: ['./assets/rewards/sticker-star.webp'],
+      icon_heart: ['./assets/rewards/sticker-heart.webp'],
+      icon_rainbow: ['./assets/rewards/sticker-rainbow.webp'],
+      pawn_dog: ['./assets/pawns/dog-pawn.webp'],
+      pawn_cat: ['./assets/pawns/cat-pawn.webp'],
+      pawn_rabbit: ['./assets/pawns/rabbit-pawn.webp'],
+      pawn_bear: ['./assets/pawns/bear-pawn.webp']
+    };
+
     try {
       const res = await fetch('./assets/boardland_assets_manifest.json', { cache: 'no-store' });
-      if (!res.ok) throw new Error('asset manifest load failed');
-      const manifest = await res.json();
-      const bundle = {};
-      const add = (key, value) => {
-        if (typeof value === 'string' && value.trim()) bundle[key] = value.trim();
-      };
+      if (res.ok) {
+        const manifest = await res.json();
+        const push = (key, value) => {
+          if (!value || typeof value !== 'string') return;
+          const clean = value.trim();
+          if (clean && !defaults[key].includes(clean)) defaults[key].unshift(clean);
+        };
+        push('board_bg', manifest.board_bg || manifest?.board?.main);
+        push('card_back', manifest.card_back || manifest?.events?.cardBack || manifest?.icons?.cardBack);
+        push('icon_gift', manifest.icon_gift || manifest?.events?.gift || manifest?.rewards?.gift);
+        push('icon_star', manifest.icon_star || manifest?.rewards?.star);
+        push('icon_heart', manifest.icon_heart || manifest?.rewards?.heart);
+        push('icon_rainbow', manifest.icon_rainbow || manifest?.rewards?.rainbow);
+        push('pawn_dog', manifest.pawn_dog || manifest?.pawns?.dog);
+        push('pawn_cat', manifest.pawn_cat || manifest?.pawns?.cat);
+        push('pawn_rabbit', manifest.pawn_rabbit || manifest?.pawns?.rabbit);
+        push('pawn_bear', manifest.pawn_bear || manifest?.pawns?.bear);
+      }
+    } catch (error) {}
 
-      add('board_bg', manifest.board_bg || manifest?.board?.main);
-      add('card_back', manifest.card_back || manifest?.events?.cardBack || manifest?.icons?.cardBack);
-      add('icon_gift', manifest.icon_gift || manifest?.events?.gift || manifest?.rewards?.gift);
-      add('icon_star', manifest.icon_star || manifest?.rewards?.star);
-      add('icon_heart', manifest.icon_heart || manifest?.rewards?.heart);
-      add('icon_rainbow', manifest.icon_rainbow || manifest?.rewards?.rainbow);
-      add('pawn_dog', manifest.pawn_dog || manifest?.pawns?.dog);
-      add('pawn_cat', manifest.pawn_cat || manifest?.pawns?.cat);
-      add('pawn_rabbit', manifest.pawn_rabbit || manifest?.pawns?.rabbit);
-      add('pawn_bear', manifest.pawn_bear || manifest?.pawns?.bear);
+    const loadOne = async (alias, candidates) => {
+      for (const src of candidates) {
+        try {
+          const texture = await PIXI.Assets.load(src);
+          if (texture) {
+            state.assetTextures[alias] = texture;
+            state.assetAliases[alias] = true;
+            return true;
+          }
+        } catch (error) {}
+      }
+      return false;
+    };
 
-      Object.keys(manifest || {}).forEach(key => {
-        if (typeof manifest[key] === 'string' && !bundle[key]) bundle[key] = manifest[key];
-      });
-
-      if (!Object.keys(bundle).length) throw new Error('asset manifest is empty');
-      PIXI.Assets.addBundle('boardlandPremium', bundle);
-      await PIXI.Assets.loadBundle('boardlandPremium');
-      Object.keys(bundle).forEach(key => { state.assetAliases[key] = true; });
-    } catch (error) {
-      state.assetAliases = {};
-      console.log('Boardland premium assets unavailable, falling back to drawn mode.');
-    }
+    await Promise.all(Object.keys(defaults).map(key => loadOne(key, defaults[key])));
   }
 
   async function init() {

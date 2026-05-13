@@ -1,5 +1,5 @@
 {
-  "version": "boardland-v2.5-3d-edition",
+  "version": "boardland-v2.5.2-3d-coords-fix",
   "board_bg": "./assets/board/board-main.webp",
   "card_back": "./assets/icons/card-back.webp",
   "pawn_dog": "./assets/pawns/dog-pawn.webp",
