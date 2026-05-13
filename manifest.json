@@ -1,0 +1,20 @@
+{
+  "name": "보드랜드 패밀리",
+  "short_name": "보드랜드",
+  "description": "태블릿 가로 전용 가족 보드게임",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#67c7ff",
+  "theme_color": "#ff9d2e",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "assets/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
