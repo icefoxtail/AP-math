@@ -3,635 +3,368 @@
 
   const DESIGN_W = 1600;
   const DESIGN_H = 900;
-  const BOARD = { x: 250, y: 82, w: 960, h: 690, r: 34 };
-  const CENTER = { x: BOARD.x + BOARD.w / 2, y: BOARD.y + BOARD.h / 2 };
-  const TILE_SIZE = 90;
-  const CORNER_SIZE = 110;
-  const FINISH_INDEX = 31;
-  const MOVE_STEP_MS = 300;
 
-  const COLORS = {
-    tableTop: 0x9B5D31, boardBase: 0xFFF0C7, boardEdge: 0xC27B36, boardGold: 0xF9D36D, ink: 0x53311D, cream: 0xFFF8E5, white: 0xFFFFFF,
-    green: 0x8BCB63, greenDark: 0x4B8D35, orange: 0xF5B34D, orangeDark: 0xB66B1E,
-    blue: 0x60B7EA, blueDark: 0x1B76A8, pink: 0xF178A8, pinkDark: 0xB63D72,
-    purple: 0xB77AE8, purpleDark: 0x6B3BA8, yellow: 0xF8D64D, red: 0xF56A66
-  };
-
-  const ZONES = [
-    { id: 'forest', icon: '🌳', fill: COLORS.green, edge: COLORS.greenDark },
-    { id: 'sun', icon: '☀️', fill: COLORS.orange, edge: COLORS.orangeDark },
-    { id: 'ocean', icon: '🌊', fill: COLORS.blue, edge: COLORS.blueDark },
-    { id: 'magic', icon: '✨', fill: COLORS.pink, edge: COLORS.pinkDark }
-  ];
-
-  const TILE_TYPES = {
-    start:  { fill: 0x23B574, edge: 0x0E744A, icon: '🚀', label: '출발' },
-    normal: { fill: 0xFFF6D7, edge: 0xD8AA5B, icon: '', label: '' },
-    gift:   { fill: 0xF178A8, edge: 0xB63D72, icon: '🎁', label: '' },
-    mission:{ fill: 0xB77AE8, edge: 0x6B3BA8, icon: '⭐', label: '' },
-    family: { fill: 0xF8D64D, edge: 0xC28A1A, icon: '❤️', label: '' },
-    jump:   { fill: 0x6ED7B0, edge: 0x22996F, icon: '🌈', label: '' },
-    rest:   { fill: 0x8FC8F8, edge: 0x2B78BA, icon: '🌙', label: '' },
-    finish: { fill: 0xFFD957, edge: 0xBC771F, icon: '🏆', label: '도착' }
-  };
-
-  const TILE_PATTERN = [
-    'start','normal','gift','normal','mission','normal','family','normal',
-    'jump','normal','gift','normal','mission','normal','rest','normal',
-    'gift','normal','family','normal','mission','normal','jump','normal',
-    'gift','normal','mission','normal','rest','normal','normal','finish'
-  ];
+  const CARD_COORD = { x: 899, y: 346 };
+  const GIFT_COORD = { x: 681, y: 336 };
+  const ROULETTE_COORD = { x: 1332, y: 635 };
 
   const TILE_COORDS = [
-    // 1600×900 board-main.webp 실제 보드 길 기준 좌표
-    { x: 405, y: 644 },
-    { x: 518, y: 650 },
-    { x: 616, y: 650 },
-    { x: 716, y: 650 },
-    { x: 816, y: 650 },
-    { x: 916, y: 650 },
-    { x: 1015, y: 640 },
-    { x: 1095, y: 640 },
-    { x: 1136, y: 540 },
-    { x: 1147, y: 445 },
-    { x: 1152, y: 352 },
-    { x: 1153, y: 256 },
-    { x: 1142, y: 150 },
-    { x: 1035, y: 150 },
-    { x: 954, y: 150 },
-    { x: 870, y: 150 },
-    { x: 785, y: 150 },
-    { x: 703, y: 150 },
-    { x: 615, y: 150 },
-    { x: 505, y: 150 },
-    { x: 490, y: 248 },
-    { x: 472, y: 345 },
-    { x: 455, y: 442 },
-    { x: 438, y: 538 },
-    { x: 405, y: 625 },
-    { x: 520, y: 586 },
-    { x: 642, y: 550 },
-    { x: 760, y: 538 },
-    { x: 882, y: 536 },
-    { x: 988, y: 500 },
-    { x: 960, y: 376 },
-    { x: 800, y: 330 }
+    { x: 396, y: 606 },
+    { x: 524, y: 606 },
+    { x: 623, y: 606 },
+    { x: 722, y: 606 },
+    { x: 839, y: 606 },
+    { x: 938, y: 606 },
+    { x: 1064, y: 606 },
+    { x: 1162, y: 492 },
+    { x: 1150, y: 417 },
+    { x: 1135, y: 350 },
+    { x: 1121, y: 286 },
+    { x: 1108, y: 226 },
+    { x: 1090, y: 149 },
+    { x: 990, y: 142 },
+    { x: 912, y: 142 },
+    { x: 835, y: 142 },
+    { x: 757, y: 142 },
+    { x: 680, y: 142 },
+    { x: 604, y: 142 },
+    { x: 490, y: 142 },
+    { x: 472, y: 222 },
+    { x: 461, y: 279 },
+    { x: 445, y: 345 },
+    { x: 432, y: 408 }
   ];
-  const DEBUG_MODE = true;
+
+  const PLAYER_SEAT_COORDS = [
+    { x: 1328, y: 174 },
+    { x: 183, y: 331 },
+    { x: 135, y: 549 },
+    { x: 279, y: 785 }
+  ];
+
+  const FINISH_INDEX = TILE_COORDS.length - 1;
+  const MOVE_STEP_MS = 300;
+
+  const TILE_PATTERN = [
+    'start',
+    'gift',
+    'normal',
+    'mission',
+    'normal',
+    'family',
+    'normal',
+    'jump',
+    'normal',
+    'gift',
+    'normal',
+    'mission',
+    'normal',
+    'rest',
+    'normal',
+    'family',
+    'normal',
+    'gift',
+    'normal',
+    'jump',
+    'normal',
+    'mission',
+    'normal',
+    'finish'
+  ];
 
   const PAWNS = [
-    { id: 'pawn_dog', icon: '🐶', name: '강아지', fill: 0xFFD166, edge: 0xA86B18 },
-    { id: 'pawn_cat', icon: '🐱', name: '눈이(고양이)', fill: 0xFF8FB3, edge: 0xB84970 },
-    { id: 'pawn_rabbit', icon: '🐰', name: '토끼', fill: 0x86D8FF, edge: 0x2A7FA8 },
-    { id: 'pawn_bear', icon: '🐻', name: '곰', fill: 0xB8855B, edge: 0x6F4428 }
+    { id: 'pawn_dog', icon: '🐶', name: '시현이', fill: 0xFFD166, edge: 0xA86B18 },
+    { id: 'pawn_cat', icon: '🐱', name: '엄마', fill: 0xFF8FB3, edge: 0xB84970 },
+    { id: 'pawn_rabbit', icon: '🐰', name: '아빠', fill: 0x86D8FF, edge: 0x2A7FA8 },
+    { id: 'pawn_bear', icon: '🐻', name: '곰', fill: 0x8BCB63, edge: 0x4B8D35 }
   ];
 
   const EVENT_CARDS = [
-    { type: 'family', icon: '🫂', title: '가족 안아주기', body: '가족을 꼬옥 안아주세요' },
-    { type: 'family', icon: '✋', title: '하이파이브 카드', body: '옆 사람과 손바닥 짝!' },
-    { type: 'mission', icon: '🦖', title: '공룡 흉내내기', body: '멋진 공룡 소리를 내봐요' },
-    { type: 'gift', icon: '🎁', title: '선물 카드', body: '상자를 열어 보상을 받으세요' }
+    {
+      id: 'family_hug',
+      type: 'family',
+      icon: '🫂',
+      title: '꼬옥 안아주기',
+      body: '가족을 꼬옥 안아주세요',
+      voiceId: 'board.card.familyHug'
+    },
+    {
+      id: 'high_five',
+      type: 'family',
+      icon: '✋',
+      title: '하이파이브',
+      body: '손바닥 짝!',
+      voiceId: 'board.card.highFive'
+    },
+    {
+      id: 'dino',
+      type: 'mission',
+      icon: '🦖',
+      title: '공룡 흉내',
+      body: '크아앙!',
+      voiceId: 'board.card.dino'
+    },
+    {
+      id: 'gift',
+      type: 'gift',
+      icon: '🎁',
+      title: '선물 받기',
+      body: '선물을 열어요',
+      voiceId: 'board.card.gift'
+    }
   ];
 
-  let state = {
-    app: null, world: null, screen: 'setup',
-    layers: {}, tiles: [], tileMap: [], players: [],
-    currentPlayerIndex: 0, setupPlayerCount: 3, setupPawnIndex: [0, 1, 2, 3],
-    isSpinning: false, isMoving: false, waitingEvent: false,
-    tickerItems: [], pulseVersion: 0, panelTickerVersion: 0, playerPanelLayer: null,
-    totalTurns: 0,
-    assetAliases: {},
+  const ASSET_CANDIDATES = {
+    board_bg: [
+      './assets/board/board-main.png',
+      './assets/board/board-main.webp'
+    ],
+    roulette: [
+      './assets/board/roulette-wheel.webp',
+      './assets/board/roulette-wheel.png'
+    ],
+    card_back: [
+      './assets/boardland/cards/card-back-main.webp',
+      './assets/boardland/events/card-back.webp',
+      './assets/icons/card-back.webp'
+    ],
+    card_front_family_hug: [
+      './assets/boardland/cards/card-family-hug.webp'
+    ],
+    card_front_high_five: [
+      './assets/boardland/cards/card-high-five.webp'
+    ],
+    card_front_dino: [
+      './assets/boardland/cards/card-dino.webp'
+    ],
+    card_front_gift: [
+      './assets/boardland/cards/card-gift.webp'
+    ],
+    icon_gift: [
+      './assets/rewards/gift-box.webp'
+    ],
+    icon_star: [
+      './assets/rewards/sticker-star.webp'
+    ],
+    icon_heart: [
+      './assets/rewards/sticker-heart.webp'
+    ],
+    icon_rainbow: [
+      './assets/rewards/sticker-rainbow.webp'
+    ],
+    pawn_dog: [
+      './assets/pawns/dog-pawn.webp'
+    ],
+    pawn_cat: [
+      './assets/pawns/cat-pawn.webp'
+    ],
+    pawn_rabbit: [
+      './assets/pawns/rabbit-pawn.webp'
+    ],
+    pawn_bear: [
+      './assets/pawns/bear-pawn.webp'
+    ]
+  };
+
+  const state = {
+    app: null,
+    world: null,
+    layers: {},
     assetTextures: {},
-    filters: {
-      colorMatrix: null
-    }
+    players: [],
+    currentPlayerIndex: 0,
+    isSpinning: false,
+    isMoving: false,
+    waitingEvent: false,
+    tickerItems: [],
+    pulseVersion: 0,
+    rouletteWheel: null,
+    setupPlayerCount: 3,
+    screen: 'game',
+    audioCtx: null
   };
 
   const utils = {
     clamp: (v, min, max) => Math.max(min, Math.min(max, v)),
     rand: (min, max) => min + Math.random() * (max - min),
     easeOutCubic: t => 1 - Math.pow(1 - t, 3),
-    easeOutBack: t => { const c1 = 1.70158; const c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
+    easeOutBack: t => {
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    },
     easeInOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2,
-    vibrate: p => { if (navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} },
-    tone: (ctx, freq, start, dur, wave, vol) => {
-      if (!ctx) return;
-      const osc = ctx.createOscillator(); const gain = ctx.createGain();
-      osc.type = wave || 'sine'; osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-      gain.gain.setValueAtTime(0.001, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(vol || 0.1, ctx.currentTime + start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-      osc.connect(gain); gain.connect(ctx.destination); osc.start(ctx.currentTime + start); osc.stop(ctx.currentTime + start + dur + 0.05);
+    vibrate: pattern => {
+      if (!navigator.vibrate) return;
+      try {
+        navigator.vibrate(pattern);
+      } catch (error) {}
     }
   };
 
-  function createText(text, size, fill = COLORS.ink, weight = '900') {
-    return new PIXI.Text(text, {
-      fontFamily: 'Arial Rounded MT Bold, sans-serif', fontSize: size, fill: fill,
-      fontWeight: weight, stroke: 0xFFFFFF, strokeThickness: Math.max(2, size / 10)
+  function getRoot() {
+    return document.getElementById('app') || document.getElementById('boardland-app') || document.body;
+  }
+
+  function initAudio() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return null;
+    if (!state.audioCtx) state.audioCtx = new AudioContext();
+    if (state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
+    return state.audioCtx;
+  }
+
+  function playTone(type) {
+    const ctx = initAudio();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const notes = type === 'win'
+      ? [523, 659, 784, 1046]
+      : type === 'move'
+        ? [392]
+        : [523, 784];
+
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type === 'move' ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.07);
+
+      gain.gain.setValueAtTime(0.001, now + i * 0.07);
+      gain.gain.exponentialRampToValueAtTime(0.13, now + i * 0.07 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.22);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + i * 0.07);
+      osc.stop(now + i * 0.07 + 0.26);
     });
   }
-  
-  // v2.4 Sprite/Emoji Hybrid Icon Creator
-  function createIcon(symbol, size, spriteId) {
-    if (spriteId && state.assetTextures && state.assetTextures[spriteId]) {
-      try {
-        const sp = new PIXI.Sprite(state.assetTextures[spriteId]);
-        sp.anchor.set(0.5);
-        sp.width = size;
-        sp.height = size;
-        return sp;
-      } catch (error) {}
+
+  function playBoardVoice(id) {
+    if (!id) return;
+    if (window.SihyeonVoice && typeof window.SihyeonVoice.play === 'function') {
+      window.SihyeonVoice.play(id).catch(() => {});
     }
-    const icon = createText(symbol, size);
+  }
+
+  function addTicker(fn) {
+    state.tickerItems.push(fn);
+  }
+
+  function clearTickerItems() {
+    state.tickerItems = [];
+  }
+
+  function runTicker() {
+    if (!state.tickerItems.length) return;
+    const keep = [];
+    state.tickerItems.forEach(fn => {
+      try {
+        if (!fn()) keep.push(fn);
+      } catch (error) {}
+    });
+    state.tickerItems = keep;
+  }
+
+  function animate(duration, update) {
+    return new Promise(resolve => {
+      let elapsed = 0;
+
+      addTicker(() => {
+        elapsed += state.app.ticker.deltaMS;
+        const t = utils.clamp(elapsed / duration, 0, 1);
+        update(t);
+
+        if (t >= 1) {
+          resolve();
+          return true;
+        }
+
+        return false;
+      });
+    });
+  }
+
+  function wait(ms) {
+    return new Promise(resolve => {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  function drawG(g, type, x, y, w, h, r, fill, alpha = 1, lw = 0, lc = 0xffffff, la = 1) {
+    g.lineStyle(lw, lc, la);
+    g.beginFill(fill, alpha);
+
+    if (type === 'round') {
+      g.drawRoundedRect(x, y, w, h, r);
+    } else if (type === 'circle') {
+      g.drawCircle(x, y, r);
+    }
+
+    g.endFill();
+  }
+
+  function createText(text, size, fill = 0x53311d, weight = '900') {
+    return new PIXI.Text(text, {
+      fontFamily: 'Arial Rounded MT Bold, Jua, sans-serif',
+      fontSize: size,
+      fill,
+      fontWeight: weight,
+      stroke: 0xffffff,
+      strokeThickness: Math.max(2, size / 10),
+      align: 'center'
+    });
+  }
+
+  function createIcon(symbol, size, spriteId) {
+    if (spriteId && state.assetTextures[spriteId]) {
+      const sprite = new PIXI.Sprite(state.assetTextures[spriteId]);
+      sprite.anchor.set(0.5);
+      sprite.width = size;
+      sprite.height = size;
+      return sprite;
+    }
+
+    const icon = createText(symbol, size, 0xffffff);
     icon.anchor.set(0.5);
     return icon;
   }
 
-  function drawG(g, type, x, y, w, h, r, fill, alpha = 1, lw = 0, lc = 0) {
-    g.lineStyle(lw, lc, 1); g.beginFill(fill, alpha);
-    if (type === 'round') g.drawRoundedRect(x, y, w, h, r);
-    else if (type === 'circle') g.drawCircle(x, y, r);
-    g.endFill();
-  }
-
-  async function animate(duration, update) {
-    return new Promise(res => {
-      let elapsed = 0;
-      const fn = delta => {
-        elapsed += state.app.ticker.deltaMS;
-        const t = utils.clamp(elapsed / duration, 0, 1);
-        update(t);
-        if (t >= 1) { res(); return true; }
-        return false;
-      };
-      state.tickerItems.push(fn);
-    });
-  }
-
-  function handleResize() {
-    const root = document.getElementById('app');
-    const w = root.clientWidth; const h = root.clientHeight;
-    const scale = Math.min(w / DESIGN_W, h / DESIGN_H);
-    state.world.scale.set(scale);
-    state.world.x = (w - DESIGN_W * scale) / 2;
-    state.world.y = (h - DESIGN_H * scale) / 2;
-  }
-
-  // v2.4 Atmosphere Update
-  function updateAtmosphere() {
-    if(!state.filters.colorMatrix) return;
-    const world = state.world;
-    world.filters = [state.filters.colorMatrix];
-    const phase = Math.floor((state.totalTurns / 12) % 3); 
-    const matrix = state.filters.colorMatrix;
-    
-    if (phase === 0) { matrix.reset(); } 
-    else if (phase === 1) { matrix.reset(); matrix.sepia(true); matrix.brightness(1.1); } 
-    else { matrix.reset(); matrix.night(0.7); matrix.contrast(1.2); }
-  }
-
-  function drawTable() {
-    const l = state.layers.table; l.removeChildren();
-    const bg = new PIXI.Graphics(); drawG(bg, 'round', -20, -20, DESIGN_W + 40, DESIGN_H + 40, 0, 0x8F552F);
-    for (let i = 0; i < 12; i++) {
-      bg.lineStyle(2, i % 2 ? 0x6D3C21 : 0xB97843, 0.2);
-      bg.moveTo(-20, i * 82 + 20); bg.bezierCurveTo(400, i * 82 + 40, 1000, i * 82, DESIGN_W + 20, i * 82 + 30);
-    }
-    l.addChild(bg);
-  }
-
-  function drawBoard() {
-    const l = state.layers.board;
-    l.removeChildren();
-
-    const shadow = new PIXI.Graphics();
-    drawG(shadow, 'round', 80, 42, DESIGN_W - 160, DESIGN_H - 80, 52, 0x000000, 0.26);
-    shadow.y = 28;
-    l.addChild(shadow);
-
-    if (state.assetTextures && state.assetTextures.board_bg) {
-      const bg = new PIXI.Sprite(state.assetTextures.board_bg);
-      bg.anchor.set(0.5);
-      bg.x = DESIGN_W / 2;
-      bg.y = DESIGN_H / 2;
-      bg.width = DESIGN_W;
-      bg.height = DESIGN_H;
-      l.addChild(bg);
-      return;
+  async function loadOne(alias, candidates) {
+    for (const src of candidates) {
+      try {
+        const texture = await PIXI.Assets.load(src);
+        if (texture) {
+          state.assetTextures[alias] = texture;
+          return true;
+        }
+      } catch (error) {}
     }
 
-    const table = new PIXI.Graphics();
-    drawG(table, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x9B5D31);
-    drawG(table, 'round', 126, 54, DESIGN_W - 252, DESIGN_H - 108, 50, COLORS.boardEdge, 1, 6, 0xFFE6A6);
-    drawG(table, 'round', 156, 84, DESIGN_W - 312, DESIGN_H - 168, 38, COLORS.boardBase, 1, 4, COLORS.boardGold);
-    l.addChild(table);
+    return false;
   }
-
-  function drawTiles() {
-    state.layers.tile.removeChildren();
-    state.tiles = [];
-    for (let i = 0; i < TILE_PATTERN.length; i += 1) drawTile(i);
-  }
-
-  function drawTile(idx) {
-    const p = state.tileMap[idx];
-    const type = TILE_PATTERN[idx];
-    const meta = TILE_TYPES[type];
-    const isCorner = idx === 0 || idx === 8 || idx === 16 || idx === 24 || idx === FINISH_INDEX;
-
-    const c = new PIXI.Container();
-    c.x = p.x;
-    c.y = p.y;
-    c.zIndex = idx;
-    c.eventMode = 'static';
-    c.cursor = 'pointer';
-    state.layers.tile.addChild(c);
-
-    const hit = new PIXI.Graphics();
-    drawG(hit, 'circle', 0, 0, 0, 0, isCorner ? 52 : 42, 0xFF2B2B, DEBUG_MODE ? 0.45 : 0.001, DEBUG_MODE ? 2 : 0, 0xFFFFFF);
-    c.addChild(hit);
-
-    if (DEBUG_MODE) {
-      const no = createText(String(idx), 22, 0xFFFFFF);
-      no.anchor.set(0.5);
-      c.addChild(no);
-    }
-
-    if (type !== 'normal' && type !== 'start' && type !== 'finish') {
-      const spriteId = type === 'gift' ? 'icon_gift' : type === 'family' ? 'icon_heart' : type === 'jump' ? 'icon_rainbow' : 'icon_star';
-      const icon = createIcon(meta.icon, isCorner ? 64 : 48, spriteId);
-      icon.y = -8;
-      icon.alpha = 0.96;
-      c.addChild(icon);
-    }
-
-    if (type === 'start' || type === 'finish') {
-      const badge = createText(type === 'start' ? 'START' : 'GOAL', 20, type === 'start' ? 0x0E744A : 0xBC771F);
-      badge.anchor.set(0.5);
-      badge.y = 40;
-      badge.alpha = DEBUG_MODE ? 1 : 0.0;
-      c.addChild(badge);
-    }
-
-    state.tiles[idx] = c;
-  }
-
-  async function pulseTile(idx) {
-    const t = state.tiles[idx]; if (!t) return;
-    const oy = t.y;
-    await animate(250, v => {
-      const s = 1 + Math.sin(v * Math.PI) * 0.06;
-      t.scale.set(s, 1 - Math.sin(v * Math.PI) * 0.03);
-      t.y = oy + Math.sin(v * Math.PI) * 8;
-    });
-    t.scale.set(1); t.y = oy;
-  }
-
-  function drawPawn(player) {
-    const c = new PIXI.Container(); c.zIndex = 100 + player.order; player.token = c; state.layers.token.addChild(c);
-    const sh = new PIXI.Graphics(); drawG(sh, 'circle', 0, 32, 0, 0, 32, 0, 0.15); sh.scale.y = 0.3; c.addChild(sh);
-    const b = new PIXI.Graphics(); drawG(b, 'circle', 0, 18, 0, 0, 32, player.edge);
-    drawG(b, 'circle', 0, 12, 0, 0, 32, player.fill, 1, 4, 0xFFFFFF); c.addChild(b);
-    
-    // v2.4 Pawn Sprite Support
-    const icon = createIcon(player.icon, 50, player.pawnId);
-    icon.y = -10; c.addChild(icon);
-    
-    const gl = new PIXI.Graphics(); drawG(gl, 'circle', 0, 10, 0, 0, 42, 0xFFE066, 0); gl.name = 'glow'; c.addChildAt(gl, 0);
-    updatePawnPos(player, true);
-  }
-
-  function updatePawnPos(player, instant) {
-    const tm = state.tileMap[player.index]; const count = state.players.filter(p => p.index === player.index).length;
-    const idx = state.players.filter(p => p.index === player.index).indexOf(player);
-    const offs = [{x:-20, y:-10}, {x:20, y:-10}, {x:-20, y:20}, {x:20, y:20}];
-    const o = offs[idx] || {x:0,y:0}; const tx = tm.x + o.x; const ty = tm.y + o.y - 32;
-    if (instant) { player.token.x = tx; player.token.y = ty; }
-    else { animate(200, v => { player.token.x += (tx - player.token.x) * v; player.token.y += (ty - player.token.y) * v; }); }
-  }
-
-  function pulseCurrentPawn() {
-    state.pulseVersion++; const v = state.pulseVersion; const p = state.players[state.currentPlayerIndex];
-    if (!p || !p.token) return; const oy = p.token.y;
-    addTicker(() => {
-      if (v !== state.pulseVersion || state.screen !== 'game' || state.isMoving || state.isSpinning || state.waitingEvent) {
-        if (p.token) p.token.scale.set(1); return v !== state.pulseVersion;
-      }
-      const c = Date.now() / 250; p.token.scale.set(1 + Math.sin(c) * 0.05, 1 - Math.sin(c) * 0.02);
-      p.token.y = oy + Math.min(0, Math.sin(c) * 8); return false;
-    });
-  }
-
-  async function hop(player) {
-    const t = player.token; const tm = state.tileMap[player.index];
-    const playersHere = state.players.filter(p => p.index === player.index);
-    const localIdx = playersHere.indexOf(player);
-    const offs = [{x:-20, y:-10}, {x:20, y:-10}, {x:-20, y:20}, {x:20, y:20}];
-    const o = offs[localIdx] || {x:0,y:0}; const tx = tm.x + o.x; const ty = tm.y + o.y - 32;
-    const sx = t.x; const sy = t.y;
-    await animate(MOVE_STEP_MS, v => {
-      const e = utils.easeInOutSine(v); t.x = sx + (tx - sx) * e; t.y = sy + (ty - sy) * e - Math.sin(v * Math.PI) * 60;
-      t.scale.set(1 + Math.sin(v * Math.PI) * 0.15, 1 - Math.sin(v * Math.PI) * 0.05);
-    });
-    t.x = tx; t.y = ty; t.scale.set(1); pulseTile(player.index);
-  }
-
-  // v2.4 Reward Collection Animation
-  async function collectReward(player, symbol, spriteId) {
-    player.inventory = player.inventory || [];
-    player.inventory.push({symbol: symbol, spriteId: spriteId});
-    
-    const fx = createIcon(symbol, 45, spriteId);
-    fx.x = CENTER.x; fx.y = CENTER.y; state.layers.fx.addChild(fx);
-    
-    const pPos = player.panel.getGlobalPosition();
-    const wPos = state.world.toLocal(pPos);
-    
-    await animate(800, t => {
-      const e = utils.easeInOutSine(t);
-      fx.x = CENTER.x + (wPos.x - CENTER.x) * e;
-      fx.y = CENTER.y + (wPos.y - CENTER.y) * e;
-      fx.scale.set(1 - t * 0.5); fx.rotation += 0.15;
-    });
-    if(fx.parent) fx.parent.removeChild(fx);
-    utils.vibrate(20);
-    drawPlayerPanels();
-  }
-
-  async function showEvent(card) {
-    state.waitingEvent = true; const l = state.layers.overlay; l.removeChildren();
-    const c = new PIXI.Container(); c.x = CENTER.x; c.y = CENTER.y; c.alpha = 0; l.addChild(c);
-    const bg = new PIXI.Graphics(); drawG(bg, 'round', -DESIGN_W, -DESIGN_H, DESIGN_W*2, DESIGN_H*2, 0, 0, 0.28); c.addChild(bg);
-    burst(CENTER.x, CENTER.y - 20, ['⭐', '✨', '❤️', '🎁'], 42, l);
-    
-    const p = new PIXI.Container(); p.y = -360; p.rotation = -0.18; c.addChild(p);
-    
-    // v2.4 Sprite Card Flip
-    let hasSprite = !!PIXI.utils.TextureCache['card_back'];
-    const cardBack = createIcon('🃏', 300, 'card_back');
-    const cardFront = new PIXI.Container();
-
-    if (PIXI.utils.TextureCache['card_front']) {
-      const frontSprite = createIcon('', 300, 'card_front');
-      frontSprite.alpha = 0.95;
-      cardFront.addChild(frontSprite);
-    } else {
-      const g = new PIXI.Graphics();
-      drawG(g, 'round', -200, -140, 400, 280, 30, 0xFFF5D8, 1, 6, 0xFFFFFF);
-      cardFront.addChild(g);
-    }
-    const ic = createIcon(card.icon, 72, card.type==='gift'?'icon_gift':'icon_star'); ic.y = -60; cardFront.addChild(ic);
-    const ti = createText(card.title, 32); ti.anchor.set(0.5); ti.y = 10; cardFront.addChild(ti);
-    const bo = createText(card.body, 22, 0x744820); bo.anchor.set(0.5); bo.y = 50; cardFront.addChild(bo);
-    const hi = createText('톡!', 24, 0xE05036); hi.anchor.set(0.5); hi.y = 100; cardFront.addChild(hi);
-    
-    cardFront.visible = false;
-    p.addChild(cardBack); p.addChild(cardFront);
-
-    utils.vibrate(30);
-    await animate(430, v => { 
-        c.alpha = v; const e = utils.easeOutBack(v); 
-        p.y = -360 + e * 360; p.rotation = -0.18 + Math.sin(v * Math.PI) * 0.22; p.scale.set(0.72 + e * 0.28); 
-    });
-    
-    // Flip interaction
-    await new Promise(res => { 
-        c.interactive = true; 
-        c.once('pointertap', async () => { 
-            utils.vibrate([40]);
-            await animate(200, t => { p.scale.x = 1 - t; });
-            cardBack.visible = false; cardFront.visible = true;
-            await animate(200, t => { p.scale.x = t; });
-            utils.vibrate([20, 40]);
-            burst(CENTER.x, CENTER.y, card.type === 'gift' ? ['🎁', '⭐', '❤️'] : ['⭐', '✨'], 42, state.layers.overlay);
-            res(); 
-        }); 
-    });
-    
-    await wait(1000);
-    await animate(300, v => { c.alpha = 1 - v; p.scale.set(1 + v * 0.2); });
-    l.removeChildren(); state.waitingEvent = false;
-    
-    // Reward Distribute
-    if(card.type === 'gift' || card.type === 'mission') {
-        await collectReward(state.players[state.currentPlayerIndex], card.type==='gift'?'🎁':'⭐', card.type==='gift'?'icon_gift':'icon_star');
-    }
-  }
-
-  async function showWin(player) {
-    state.waitingEvent = true; const l = state.layers.overlay; l.removeChildren();
-    utils.vibrate([70, 40, 70, 40, 100]);
-    for (let i = 0; i < 200; i++) {
-      const f = new PIXI.Graphics(); f.beginFill([0xFFE066, 0xF178A8, 0x60B7EA, 0x8BCB63, 0xFFFFFF, 0xFF9F1C][i%6]); f.drawRect(-5,-3,10,6); f.endFill();
-      f.x = utils.rand(50, DESIGN_W - 50); f.y = -20; l.addChild(f);
-      animate(utils.rand(2000, 4000), v => { f.y = -20 + v * (DESIGN_H + 50); f.x += Math.sin(v * 10) * 2; f.rotation += 0.1; }).then(() => f.parent && f.parent.removeChild(f));
-    }
-    const c = new PIXI.Container(); c.x = CENTER.x; c.y = CENTER.y; c.alpha = 0; l.addChild(c);
-    const g = new PIXI.Graphics(); drawG(g, 'round', -260, -170, 520, 340, 44, 0xFFF5D8, 1, 7, 0xF9B233); c.addChild(g);
-    const trophy = createText('🏆', 84); trophy.anchor.set(0.5); trophy.y = -84; c.addChild(trophy);
-    addTicker(() => { if (!trophy.parent) return true; trophy.y = -84 + Math.sin(Date.now() / 190) * 12; trophy.rotation = Math.sin(Date.now() / 330) * 0.08; return false; });
-    burst(CENTER.x, CENTER.y - 70, ['🏆', '🌈', '⭐', '❤️', '✨'], 200, l);
-    const t = createText(player.name + ' 우승!', 50); t.anchor.set(0.5); t.y = 16; c.addChild(t);
-    const s = createText('다시 하기', 30, 0x23B574); s.anchor.set(0.5); s.y = 98; c.addChild(s);
-    await animate(400, v => { c.alpha = v; c.scale.set(0.8 + utils.easeOutBack(v) * 0.2); });
-    c.interactive = true; c.once('pointertap', () => location.reload());
-  }
-
-  function burst(x, y, icons, count, layer) {
-    const targetLayer = layer || state.layers.overlay;
-    for (let i = 0; i < count; i += 1) {
-      const icon = createText(icons[i % icons.length], utils.rand(20, 38), 0xFFFFFF);
-      icon.anchor.set(0.5); icon.x = x; icon.y = y; icon.alpha = 1;
-      targetLayer.addChild(icon);
-      const angle = utils.rand(0, Math.PI * 2); const dist = utils.rand(90, 360); const rot = utils.rand(-3, 3);
-      animate(utils.rand(800, 1400), t => {
-        const e = utils.easeOutCubic(t);
-        icon.x = x + Math.cos(angle) * dist * e;
-        icon.y = y + Math.sin(angle) * dist * e - Math.sin(t * Math.PI) * 80;
-        icon.rotation = rot * t; icon.alpha = 1 - t; icon.scale.set(1 + Math.sin(t * Math.PI) * 0.25);
-      }).then(() => icon.parent && icon.parent.removeChild(icon));
-    }
-  }
-
-  function drawPlayerPanels() {
-    if (state.playerPanelLayer && state.playerPanelLayer.parent) state.playerPanelLayer.parent.removeChild(state.playerPanelLayer);
-    const layer = new PIXI.Container(); layer.zIndex = 40; state.layers.hud.addChild(layer); state.playerPanelLayer = layer;
-    const spots = [{ x: 174, y: 178 }, { x: 1424, y: 178 }, { x: 174, y: 790 }, { x: 1424, y: 790 }];
-    
-    state.players.forEach((player, idx) => {
-      const pos = spots[idx] || spots[0];
-      const panel = new PIXI.Container(); panel.x = pos.x; panel.y = pos.y; layer.addChild(panel);
-      player.panel = panel;
-      const isTurn = idx === state.currentPlayerIndex;
-      
-      const shadow = new PIXI.Graphics(); drawG(shadow, 'round', -112, -52 + 8, 224, 114, 28, 0x000000, 0.16); panel.addChild(shadow);
-      const body = new PIXI.Graphics(); drawG(body, 'round', -112, -52, 224, 114, 28, isTurn ? 0xFFF4C2 : 0xFFF8E5, 1, 5, isTurn ? 0xFFD957 : 0xFFFFFF);
-      body.name = 'panelBody'; panel.addChild(body);
-      
-      const pawn = new PIXI.Graphics(); drawG(pawn, 'circle', -68, -5, 0, 0, 34, player.edge, 1, 0); drawG(pawn, 'circle', -68, -10, 0, 0, 32, player.fill, 1, 3, 0xFFFFFF); panel.addChild(pawn);
-      const icon = createIcon(player.icon, 44, player.pawnId); icon.x = -68; icon.y = -13; panel.addChild(icon);
-      
-      const name = createText(player.name, 26, COLORS.ink); name.anchor.set(0, 0.5); name.x = -20; name.y = -24; panel.addChild(name);
-      
-      // v2.4 Sticker Book rendering
-      const stickerArea = new PIXI.Container(); stickerArea.x = -20; stickerArea.y = 12; panel.addChild(stickerArea);
-      if(player.inventory) {
-         player.inventory.forEach((item, i) => {
-             const sticker = createIcon(item.symbol, 24, item.spriteId);
-             sticker.x = (i % 5) * 26; sticker.y = Math.floor(i / 5) * 24;
-             sticker.rotation = (i%2===0 ? 0.1 : -0.1);
-             stickerArea.addChild(sticker);
-         });
-      }
-      
-      const turn = createText(isTurn ? '내 차례!' : (player.finished ? '완주!' : ''), isTurn ? 20 : 16, isTurn ? 0xE05036 : 0x7A5A38);
-      turn.anchor.set(0, 0.5); turn.x = -20; turn.y = 38; panel.addChild(turn);
-    });
-    
-    state.panelTickerVersion += 1; const version = state.panelTickerVersion;
-    addTicker(() => {
-      if (version !== state.panelTickerVersion || !state.playerPanelLayer || state.screen !== 'game') return true;
-      const panel = state.playerPanelLayer.children[state.currentPlayerIndex];
-      const body = panel && panel.getChildByName ? panel.getChildByName('panelBody') : null;
-      if (!body) return false;
-      body.alpha = 0.55 + Math.sin(Date.now() / 170) * 0.35;
-      panel.scale.set(1 + Math.sin(Date.now() / 240) * 0.018);
-      return false;
-    });
-  }
-
-  function drawSinglePawnSelector(parent, pawn, idx) {
-    const card = new PIXI.Container(); card.x = -255 + idx * 170; card.y = 34; parent.addChild(card);
-    const isActive = idx < state.setupPlayerCount;
-    const sh = new PIXI.Graphics(); drawG(sh, 'round', -68, -64 + 7, 136, 128, 26, 0x000000, 0.14); card.addChild(sh);
-    const box = new PIXI.Graphics(); drawG(box, 'round', -68, -64, 136, 128, 26, isActive ? 0xFFF6D7 : 0xF4E4C4, 1, 6, isActive ? 0xFFD957 : 0xFFFFFF); card.addChild(box);
-    const base = new PIXI.Graphics(); drawG(base, 'circle', 0, 12, 0, 0, 38, pawn.edge, 1, 0); drawG(base, 'circle', 0, 4, 0, 0, 36, pawn.fill, 1, 4, 0xFFFFFF); card.addChild(base);
-    const icon = createIcon(pawn.icon, 55, pawn.id); icon.y = -4; card.addChild(icon);
-    const label = createText(isActive ? '함께!' : '쉬기', 18, isActive ? 0xB96E1F : 0x7A6A58); label.anchor.set(0.5); label.y = 47; card.addChild(label);
-    card.interactive = true; card.cursor = 'pointer'; card.on('pointertap', () => { state.setupPlayerCount = utils.clamp(idx + 1, 2, 4); drawSetup(); });
-    return card;
-  }
-
-  function drawRoulette() {
-    const l = state.layers.hud; const c = new PIXI.Container(); c.x = 1380; c.y = 680; l.addChild(c);
-    const sh = new PIXI.Graphics(); drawG(sh, 'circle', 0, 30, 0, 0, 160, 0, 0.2); sh.scale.y = 0.3; c.addChild(sh);
-    const b = new PIXI.Graphics(); drawG(b, 'circle', 0, 0, 0, 0, 155, 0x9B5D31, 1, 6, 0xE9B467);
-    drawG(b, 'circle', 0, 0, 0, 0, 135, 0xF9D36D, 1, 5, 0xB96E1F); c.addChild(b);
-    const f = new PIXI.Container(); c.addChild(f);
-    const clrs = [0xFFE066, 0xF178A8, 0x60B7EA];
-    for (let i = 0; i < 6; i++) {
-      const g = new PIXI.Graphics(); g.beginFill(clrs[i%3]); g.lineStyle(2, 0xFFFFFF, 0.5); g.moveTo(0,0); g.arc(0,0,125, i*Math.PI/3, (i+1)*Math.PI/3); g.closePath(); g.endFill(); f.addChild(g);
-      const v = (i%3)+1; const st = createText('★'.repeat(v), 24); st.anchor.set(0.5);
-      const a = (i+0.5)*Math.PI/3; st.x = Math.cos(a)*80; st.y = Math.sin(a)*80; st.rotation = a + Math.PI/2; f.addChild(st);
-    }
-    const h = new PIXI.Graphics(); drawG(h, 'circle', 0, 0, 0, 0, 40, 0xB96E1F); drawG(h, 'circle', 0, -4, 0, 0, 36, 0xFBD04D, 1, 3, 0xFFFFFF); c.addChild(h);
-    if (PIXI.utils.TextureCache['roulette_pointer']) {
-      const p = createIcon('', 84, 'roulette_pointer');
-      p.y = -142;
-      c.addChild(p);
-    } else {
-      const p = new PIXI.Graphics();
-      p.beginFill(0xFF2D55);
-      p.lineStyle(6, 0xFFFFFF);
-      p.moveTo(0,-174);
-      p.lineTo(-30,-112);
-      p.lineTo(30,-112);
-      p.closePath();
-      p.endFill();
-      c.addChild(p);
-    }
-    const guide = new PIXI.Container(); guide.y = -225; c.addChild(guide);
-    const guideBg = new PIXI.Graphics(); drawG(guideBg, 'round', -112, -26, 224, 52, 26, 0xFFFFFF, 0.94, 4, 0xFFD957); guide.addChild(guideBg);
-    const guideText = createText('룰렛을 톡!', 26, 0xE05036); guideText.anchor.set(0.5); guideText.x = -12; guide.addChild(guideText);
-    const finger = createText('👇', 30); finger.anchor.set(0.5); finger.x = 84; guide.addChild(finger);
-    addTicker(() => {
-      if (state.screen !== 'game') return true;
-      finger.y = Math.sin(Date.now() / 180) * 8; guide.scale.set(1 + Math.sin(Date.now() / 350) * 0.025); return false;
-    });
-    c.eventMode = 'static'; c.cursor = 'pointer'; c.hitArea = new PIXI.Circle(0, 0, 200);
-    c.on('pointerdown', () => { if (!state.isSpinning && !state.isMoving && !state.waitingEvent) c.scale.set(0.96); });
-    c.on('pointerupoutside', () => { if (!state.isSpinning) c.scale.set(1); });
-    c.on('pointertap', async () => {
-      c.scale.set(1);
-      if (state.isSpinning || state.isMoving || state.waitingEvent) return;
-      state.isSpinning = true; state.isMoving = true; utils.vibrate([15, 20, 15]);
-      const ex = utils.rand(Math.PI*8, Math.PI*12); const st = f.rotation;
-      await animate(1800, v => { f.rotation = st + ex * utils.easeOutCubic(v); if (v < 0.8 && Math.floor(v * 36) % 3 === 0) utils.vibrate(4); });
-      const res = (Math.floor((((Math.PI*1.5 - f.rotation) % (Math.PI*2)) + Math.PI*2) % (Math.PI*2) / (Math.PI/3)) % 3) + 1;
-      await wait(300); state.isSpinning = false;
-      const pl = state.players[state.currentPlayerIndex];
-      for (let s = 0; s < res; s++) {
-        if (pl.index >= FINISH_INDEX) break; pl.index++; await hop(pl); utils.vibrate(10);
-      }
-      if (pl.index >= FINISH_INDEX) { pl.finished = true; await showWin(pl); }
-      else {
-        const t = TILE_PATTERN[pl.index];
-        if (t !== 'normal' && t !== 'start') await showEvent(EVENT_CARDS[Math.floor(Math.random()*EVENT_CARDS.length)]);
-        do { state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length; } while (state.players[state.currentPlayerIndex].finished);
-        
-        state.totalTurns++; updateAtmosphere(); // v2.4 Atmosphere Trigger
-        drawPlayerPanels(); pulseCurrentPawn();
-      }
-      state.isMoving = false;
-    });
-  }
-
-  function drawSetup() {
-    const l = state.layers.setup; l.removeChildren(); drawTable();
-    const card = new PIXI.Container(); card.x = DESIGN_W/2; card.y = DESIGN_H/2; l.addChild(card);
-    const g = new PIXI.Graphics(); drawG(g, 'round', -400, -250, 800, 500, 40, 0xFFF0C7, 1, 6, 0xFFFFFF); card.addChild(g);
-    const ti = createText('보드랜드 패밀리', 50); ti.anchor.set(0.5); ti.y = -190; card.addChild(ti);
-    const sub = createText('함께 놀 친구를 골라요', 26, 0x744820); sub.anchor.set(0.5); sub.y = -134; card.addChild(sub);
-    PAWNS.forEach((pawn, idx) => drawSinglePawnSelector(card, pawn, idx));
-    const countText = createText(state.setupPlayerCount + '명이 함께 해요', 26, 0xB96E1F); countText.anchor.set(0.5); countText.y = 120; card.addChild(countText);
-    const bt = new PIXI.Container(); bt.y = 194; card.addChild(bt);
-    const bg = new PIXI.Graphics(); drawG(bg, 'round', -120, -40, 240, 80, 40, 0x23B574, 1, 4, 0xFFFFFF); bt.addChild(bg);
-    const tx = createText('시작!', 36, 0xFFFFFF); tx.anchor.set(0.5); bt.addChild(tx);
-    bt.interactive = true; bt.on('pointertap', () => {
-      state.screen = 'game'; l.removeChildren(); state.players = [];
-      for (let i = 0; i < state.setupPlayerCount; i++) {
-        state.players.push({ order: i, index: 0, finished: false, inventory: [], name: ['시현이','엄마','아빠','친구'][i], icon: PAWNS[i].icon, pawnId: PAWNS[i].id, fill: PAWNS[i].fill, edge: PAWNS[i].edge });
-      }
-      drawBoard(); drawTiles(); state.players.forEach(drawPawn); drawRoulette(); drawPlayerPanels(); pulseCurrentPawn(); updateAtmosphere();
-    });
-  }
-
-  function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
-  function addTicker(fn) { state.tickerItems.push(fn); }
 
   async function loadAssets() {
-    state.assetAliases = {};
-    state.assetTextures = {};
-
-    const defaults = {
-board_bg: ['./assets/board/board-main.png', './assets/board/board-main.webp'],      card_back: ['./assets/boardland/events/card-back.webp', './assets/icons/card-back.webp'],
-      card_front: ['./assets/boardland/events/card-front.webp'],
-      roulette_pointer: ['./assets/boardland/events/roulette-pointer.webp'],
-      icon_gift: ['./assets/rewards/gift-box.webp'],
-      icon_star: ['./assets/rewards/sticker-star.webp'],
-      icon_heart: ['./assets/rewards/sticker-heart.webp'],
-      icon_rainbow: ['./assets/rewards/sticker-rainbow.webp'],
-      pawn_dog: ['./assets/pawns/dog-pawn.webp'],
-      pawn_cat: ['./assets/pawns/cat-pawn.webp'],
-      pawn_rabbit: ['./assets/pawns/rabbit-pawn.webp'],
-      pawn_bear: ['./assets/pawns/bear-pawn.webp']
-    };
-
     try {
       const res = await fetch('./assets/boardland_assets_manifest.json', { cache: 'no-store' });
       if (res.ok) {
         const manifest = await res.json();
+
         const push = (key, value) => {
           if (!value || typeof value !== 'string') return;
           const clean = value.trim();
-          if (clean && !defaults[key].includes(clean)) defaults[key].unshift(clean);
+          if (!clean) return;
+          if (!ASSET_CANDIDATES[key]) ASSET_CANDIDATES[key] = [];
+          if (!ASSET_CANDIDATES[key].includes(clean)) ASSET_CANDIDATES[key].unshift(clean);
         };
+
         push('board_bg', manifest.board_bg || manifest?.board?.main);
-        push('card_back', manifest.card_back || manifest?.events?.cardBack || manifest?.icons?.cardBack);
-        push('card_front', manifest.card_front || manifest?.events?.cardFront || manifest?.icons?.cardFront);
-        push('roulette_pointer', manifest.roulette_pointer || manifest?.events?.roulettePointer || manifest?.icons?.roulettePointer);
-        push('icon_gift', manifest.icon_gift || manifest?.events?.gift || manifest?.rewards?.gift);
+        push('roulette', manifest.roulette || manifest.roulette_wheel || manifest?.board?.roulette);
+        push('card_back', manifest.card_back || manifest?.cards?.back);
+        push('icon_gift', manifest.icon_gift || manifest?.rewards?.gift);
         push('icon_star', manifest.icon_star || manifest?.rewards?.star);
         push('icon_heart', manifest.icon_heart || manifest?.rewards?.heart);
         push('icon_rainbow', manifest.icon_rainbow || manifest?.rewards?.rainbow);
@@ -642,44 +375,682 @@ board_bg: ['./assets/board/board-main.png', './assets/board/board-main.webp'],  
       }
     } catch (error) {}
 
-    const loadOne = async (alias, candidates) => {
-      for (const src of candidates) {
-        try {
-          const texture = await PIXI.Assets.load(src);
-          if (texture) {
-            state.assetTextures[alias] = texture;
-            state.assetAliases[alias] = true;
-            return true;
-          }
-        } catch (error) {}
-      }
-      return false;
-    };
+    await Promise.all(
+      Object.keys(ASSET_CANDIDATES).map(key => loadOne(key, ASSET_CANDIDATES[key]))
+    );
+  }
 
-    await Promise.all(Object.keys(defaults).map(key => loadOne(key, defaults[key])));
+  function fitWorld() {
+    const root = getRoot();
+    const w = root.clientWidth || window.innerWidth;
+    const h = root.clientHeight || window.innerHeight;
+    const scale = Math.min(w / DESIGN_W, h / DESIGN_H);
+
+    state.world.scale.set(scale);
+    state.world.x = (w - DESIGN_W * scale) / 2;
+    state.world.y = (h - DESIGN_H * scale) / 2;
+  }
+
+  function makeContainer(parent, sortable) {
+    const c = new PIXI.Container();
+    c.sortableChildren = !!sortable;
+    parent.addChild(c);
+    return c;
+  }
+
+  function makeSprite(alias, x, y, w, h, anchor = 0.5) {
+    const texture = state.assetTextures[alias];
+    if (!texture) return null;
+
+    const sprite = new PIXI.Sprite(texture);
+    sprite.anchor.set(anchor);
+    sprite.x = x;
+    sprite.y = y;
+
+    if (w) sprite.width = w;
+    if (h) sprite.height = h;
+
+    return sprite;
+  }
+
+  function drawBoard() {
+    const layer = state.layers.board;
+    layer.removeChildren();
+
+    const fallback = new PIXI.Graphics();
+    drawG(fallback, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x7b421f, 1);
+    layer.addChild(fallback);
+
+    const bg = makeSprite('board_bg', DESIGN_W / 2, DESIGN_H / 2, DESIGN_W, DESIGN_H);
+    if (bg) layer.addChild(bg);
+  }
+
+  function drawTiles() {
+    state.layers.tile.removeChildren();
+    state.tiles = [];
+
+    TILE_COORDS.forEach((p, idx) => {
+      const c = new PIXI.Container();
+      c.x = p.x;
+      c.y = p.y;
+      c.zIndex = idx;
+      c.eventMode = 'static';
+      c.cursor = 'pointer';
+      c.hitArea = new PIXI.Circle(0, 0, 48);
+      state.layers.tile.addChild(c);
+      state.tiles[idx] = c;
+    });
+  }
+
+  function getPawnScale(y) {
+    return utils.clamp(1.05 + (y / DESIGN_H) * 0.26, 1.08, 1.34);
+  }
+
+  function getPawnTarget(player) {
+    if (!player.onBoard) {
+      return PLAYER_SEAT_COORDS[player.order] || TILE_COORDS[0];
+    }
+
+    const p = TILE_COORDS[player.index];
+    const same = state.players.filter(item => item.onBoard && item.index === player.index);
+    const idx = same.indexOf(player);
+    const offsets = [
+      { x: -24, y: -16 },
+      { x: 24, y: -16 },
+      { x: -24, y: 22 },
+      { x: 24, y: 22 }
+    ];
+    const off = offsets[idx] || { x: 0, y: 0 };
+
+    return {
+      x: p.x + off.x,
+      y: p.y + off.y - 28
+    };
+  }
+
+  function setPawnPosition(player, instant) {
+    if (!player.token) return;
+
+    const target = getPawnTarget(player);
+    const scale = getPawnScale(target.y);
+
+    if (instant) {
+      player.token.x = target.x;
+      player.token.y = target.y;
+      player.token.scale.set(scale);
+      return;
+    }
+
+    const sx = player.token.x;
+    const sy = player.token.y;
+    const ss = player.token.scale.x;
+
+    animate(220, t => {
+      const e = utils.easeInOutSine(t);
+      player.token.x = sx + (target.x - sx) * e;
+      player.token.y = sy + (target.y - sy) * e;
+      player.token.scale.set(ss + (scale - ss) * e);
+    });
+  }
+
+  function drawPawn(player) {
+    const c = new PIXI.Container();
+    c.zIndex = 100 + player.order;
+    player.token = c;
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 32, 0, 0, 38, 0x000000, 0.22);
+    shadow.scale.y = 0.28;
+    c.addChild(shadow);
+
+    const base = new PIXI.Graphics();
+    drawG(base, 'circle', 0, 22, 0, 0, 41, player.edge, 1);
+    drawG(base, 'circle', 0, 13, 0, 0, 41, player.fill, 1, 4, 0xffffff, 0.95);
+    drawG(base, 'circle', -14, 0, 0, 0, 8, 0xffffff, 0.35);
+    c.addChild(base);
+
+    const icon = createIcon(player.icon, 70, player.pawnId);
+    icon.y = -22;
+    c.addChild(icon);
+
+    state.layers.token.addChild(c);
+    setPawnPosition(player, true);
+  }
+
+  function createPlayers() {
+    state.layers.token.removeChildren();
+
+    state.players = PAWNS.slice(0, state.setupPlayerCount).map((pawn, order) => {
+      return {
+        order,
+        index: 0,
+        onBoard: false,
+        finished: false,
+        inventory: [],
+        name: pawn.name,
+        icon: pawn.icon,
+        pawnId: pawn.id,
+        fill: pawn.fill,
+        edge: pawn.edge,
+        token: null
+      };
+    });
+
+    state.players.forEach(drawPawn);
+    pulseCurrentPawn();
+  }
+
+  async function pulseTile(idx) {
+    const tile = state.tiles[idx];
+    if (!tile) return;
+
+    const originalY = tile.y;
+
+    await animate(250, t => {
+      const s = 1 + Math.sin(t * Math.PI) * 0.05;
+      tile.scale.set(s, 1 - Math.sin(t * Math.PI) * 0.02);
+      tile.y = originalY + Math.sin(t * Math.PI) * 7;
+    });
+
+    tile.scale.set(1);
+    tile.y = originalY;
+  }
+
+  function pulseCurrentPawn() {
+    state.pulseVersion += 1;
+    const version = state.pulseVersion;
+
+    addTicker(() => {
+      const player = state.players[state.currentPlayerIndex];
+      if (!player || !player.token || version !== state.pulseVersion) return true;
+      if (state.isMoving || state.isSpinning || state.waitingEvent) return false;
+
+      const target = getPawnTarget(player);
+      const base = getPawnScale(target.y);
+      const wave = Math.sin(Date.now() / 260);
+
+      player.token.scale.set(base + wave * 0.04, base - wave * 0.012);
+      return false;
+    });
+  }
+
+  async function hop(player) {
+    const target = getPawnTarget(player);
+    const token = player.token;
+
+    const sx = token.x;
+    const sy = token.y;
+    const ss = token.scale.x;
+    const ts = getPawnScale(target.y);
+
+    await animate(MOVE_STEP_MS, t => {
+      const e = utils.easeInOutSine(t);
+      token.x = sx + (target.x - sx) * e;
+      token.y = sy + (target.y - sy) * e - Math.sin(t * Math.PI) * 60;
+      token.scale.set(ss + (ts - ss) * e + Math.sin(t * Math.PI) * 0.12);
+    });
+
+    token.x = target.x;
+    token.y = target.y;
+    token.scale.set(ts);
+
+    playTone('move');
+    utils.vibrate(16);
+    pulseTile(player.index);
+  }
+
+  function drawRouletteFallback(parent) {
+    const g = new PIXI.Graphics();
+    const colors = [0x5bb8ec, 0xff7aa9, 0xffdc66, 0x6ed7b0];
+    const r = 160;
+
+    for (let i = 0; i < 4; i += 1) {
+      g.beginFill(colors[i], 1);
+      g.lineStyle(3, 0xffffff, 0.6);
+      g.moveTo(0, 0);
+      g.arc(0, 0, r, -Math.PI / 2 + i * Math.PI * 2 / 4, -Math.PI / 2 + (i + 1) * Math.PI * 2 / 4);
+      g.lineTo(0, 0);
+      g.endFill();
+    }
+
+    g.lineStyle(20, 0xd28a2f, 1);
+    g.drawCircle(0, 0, r);
+    g.lineStyle(8, 0xffe8a0, 1);
+    g.drawCircle(0, 0, r - 16);
+    parent.addChild(g);
+
+    [1, 2, 3, 1].forEach((n, i) => {
+      const a = -Math.PI / 2 + (i + 0.5) * Math.PI * 2 / 4;
+      const label = createText('★'.repeat(n), 34, 0xffffff);
+      label.anchor.set(0.5);
+      label.x = Math.cos(a) * 86;
+      label.y = Math.sin(a) * 86;
+      label.rotation = a + Math.PI / 2;
+      parent.addChild(label);
+    });
+
+    const hub = new PIXI.Graphics();
+    drawG(hub, 'circle', 0, 0, 0, 0, 42, 0xffd34d, 1, 7, 0xffffff, 0.75);
+    parent.addChild(hub);
+  }
+
+  function drawRoulette() {
+    const layer = state.layers.roulette;
+    layer.removeChildren();
+
+    const wheel = new PIXI.Container();
+    wheel.x = ROULETTE_COORD.x;
+    wheel.y = ROULETTE_COORD.y;
+    wheel.zIndex = 120;
+    wheel.eventMode = 'static';
+    wheel.cursor = 'pointer';
+    wheel.hitArea = new PIXI.Circle(0, 0, 205);
+    layer.addChild(wheel);
+    state.rouletteWheel = wheel;
+
+    const sprite = makeSprite('roulette', 0, 0, 420, 420);
+    if (sprite) {
+      wheel.addChild(sprite);
+    } else {
+      drawRouletteFallback(wheel);
+    }
+
+    wheel.on('pointertap', spinRoulette);
+  }
+
+  async function spinRoulette() {
+    if (state.isSpinning || state.isMoving || state.waitingEvent) return;
+
+    state.isSpinning = true;
+    state.isMoving = true;
+
+    initAudio();
+    utils.vibrate([20, 20, 20]);
+
+    const result = Math.floor(Math.random() * 3) + 1;
+    const start = state.rouletteWheel.rotation;
+    const stopAt = start + Math.PI * 8 + (3 - result) * (Math.PI * 2 / 3) + Math.random() * 0.18;
+
+    await animate(1550, t => {
+      state.rouletteWheel.rotation = start + (stopAt - start) * utils.easeOutCubic(t);
+    });
+
+    state.isSpinning = false;
+    await moveCurrentPlayer(result);
+    state.isMoving = false;
+  }
+
+  async function moveCurrentPlayer(steps) {
+    const player = state.players[state.currentPlayerIndex];
+    if (!player) return;
+
+    if (!player.onBoard) {
+      player.onBoard = true;
+      player.index = 0;
+      await hop(player);
+    }
+
+    for (let i = 0; i < steps; i += 1) {
+      if (player.index >= FINISH_INDEX) break;
+      player.index += 1;
+      await hop(player);
+      await wait(40);
+    }
+
+    if (player.index >= FINISH_INDEX || TILE_PATTERN[player.index] === 'finish') {
+      player.finished = true;
+      await showWin(player);
+      return;
+    }
+
+    await handleTileAction(player);
+    nextTurn();
+  }
+
+  async function handleTileAction(player) {
+    const type = TILE_PATTERN[player.index];
+
+    if (type === 'gift') {
+      await playGiftFx(player);
+      return;
+    }
+
+    if (type === 'mission' || type === 'family') {
+      const card = EVENT_CARDS[Math.floor(Math.random() * EVENT_CARDS.length)];
+      await showEvent(card);
+      return;
+    }
+
+    if (type === 'jump') {
+      await playJumpFx(player);
+      return;
+    }
+
+    if (type === 'rest') {
+      await playRestFx(player);
+      return;
+    }
+
+    await playNormalLandFx(player);
+  }
+
+  async function playNormalLandFx(player) {
+    const target = getPawnTarget(player);
+    burst(target.x, target.y, ['✨'], 10, state.layers.fx);
+    await wait(250);
+  }
+
+  async function playGiftFx(player) {
+    burst(GIFT_COORD.x, GIFT_COORD.y - 20, ['🎁', '⭐', '✨'], 34, state.layers.fx);
+    playTone('gift');
+    utils.vibrate([20, 30, 20]);
+    await wait(650);
+  }
+
+  async function playJumpFx(player) {
+    burst(player.token.x, player.token.y - 40, ['🌈', '✨'], 26, state.layers.fx);
+    await wait(300);
+
+    const next = Math.min(FINISH_INDEX, player.index + 3);
+    player.index = next;
+    await hop(player);
+  }
+
+  async function playRestFx(player) {
+    const cloud = createText('☁️', 60, 0xffffff);
+    cloud.anchor.set(0.5);
+    cloud.x = player.token.x;
+    cloud.y = player.token.y - 88;
+    state.layers.fx.addChild(cloud);
+
+    await animate(900, t => {
+      cloud.alpha = 1 - t;
+      cloud.y -= t * 34;
+      cloud.rotation = Math.sin(t * Math.PI * 2) * 0.12;
+    });
+
+    if (cloud.parent) cloud.parent.removeChild(cloud);
+  }
+
+  function getCardFrontAlias(card) {
+    if (card.id === 'family_hug') return 'card_front_family_hug';
+    if (card.id === 'high_five') return 'card_front_high_five';
+    if (card.id === 'dino') return 'card_front_dino';
+    if (card.id === 'gift') return 'card_front_gift';
+    return '';
+  }
+
+  function makeCardBack() {
+    const sprite = makeSprite('card_back', 0, 0, 300, 420);
+    if (sprite) return sprite;
+
+    const box = new PIXI.Container();
+    const g = new PIXI.Graphics();
+    drawG(g, 'round', -150, -210, 300, 420, 32, 0x6b3ba8, 1, 8, 0xffd66b, 1);
+    box.addChild(g);
+
+    const star = createText('⭐', 96, 0xffffff);
+    star.anchor.set(0.5);
+    box.addChild(star);
+
+    return box;
+  }
+
+  function makeCardFront(card) {
+    const alias = getCardFrontAlias(card);
+    const sprite = makeSprite(alias, 0, 0, 300, 420);
+    if (sprite) return sprite;
+
+    const box = new PIXI.Container();
+
+    const g = new PIXI.Graphics();
+    drawG(g, 'round', -150, -210, 300, 420, 32, 0xfff3cf, 1, 8, 0xffffff, 1);
+    box.addChild(g);
+
+    const icon = createText(card.icon, 96, 0xffffff);
+    icon.anchor.set(0.5);
+    icon.y = -70;
+    box.addChild(icon);
+
+    const title = createText(card.title, 34, 0x53311d);
+    title.anchor.set(0.5);
+    title.y = 44;
+    box.addChild(title);
+
+    const body = createText(card.body, 22, 0x744820);
+    body.anchor.set(0.5);
+    body.y = 94;
+    box.addChild(body);
+
+    return box;
+  }
+
+  async function showEvent(card) {
+    state.waitingEvent = true;
+
+    const layer = state.layers.overlay;
+    layer.removeChildren();
+
+    const root = new PIXI.Container();
+    root.x = CARD_COORD.x;
+    root.y = CARD_COORD.y;
+    root.scale.set(0.12);
+    root.alpha = 0;
+    root.zIndex = 300;
+    layer.addChild(root);
+
+    const dim = new PIXI.Graphics();
+    drawG(dim, 'round', -DESIGN_W, -DESIGN_H, DESIGN_W * 2, DESIGN_H * 2, 0, 0x000000, 0.25);
+    dim.x = DESIGN_W / 2 - CARD_COORD.x;
+    dim.y = DESIGN_H / 2 - CARD_COORD.y;
+    root.addChild(dim);
+
+    const cardBox = new PIXI.Container();
+    root.addChild(cardBox);
+
+    const back = makeCardBack();
+    const front = makeCardFront(card);
+    front.visible = false;
+
+    cardBox.addChild(back);
+    cardBox.addChild(front);
+
+    utils.vibrate(30);
+
+    await animate(520, t => {
+      const e = utils.easeOutBack(t);
+      root.alpha = t;
+      root.x = CARD_COORD.x + (DESIGN_W / 2 - CARD_COORD.x) * e;
+      root.y = CARD_COORD.y + (DESIGN_H / 2 - CARD_COORD.y) * e;
+      root.scale.set(0.12 + e * 0.9);
+      cardBox.rotation = -0.18 + Math.sin(t * Math.PI) * 0.22;
+    });
+
+    await animate(170, t => {
+      cardBox.scale.x = 1 - t;
+    });
+
+    back.visible = false;
+    front.visible = true;
+
+    await animate(170, t => {
+      cardBox.scale.x = t;
+    });
+
+    playBoardVoice(card.voiceId);
+    burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨'] : ['⭐', '❤️', '✨'], 48, layer);
+
+    await wait(1400);
+
+    await animate(300, t => {
+      root.alpha = 1 - t;
+      root.scale.set(1.02 + t * 0.25);
+      root.y -= t * 70;
+    });
+
+    layer.removeChildren();
+    state.waitingEvent = false;
+  }
+
+  async function showWin(player) {
+    state.waitingEvent = true;
+
+    const layer = state.layers.overlay;
+    layer.removeChildren();
+
+    playTone('win');
+    utils.vibrate([70, 40, 70, 40, 120]);
+    burst(DESIGN_W / 2, DESIGN_H / 2 - 70, ['🏆', '🌈', '⭐', '❤️', '✨'], 160, layer);
+
+    const panel = new PIXI.Container();
+    panel.x = DESIGN_W / 2;
+    panel.y = DESIGN_H / 2;
+    panel.alpha = 0;
+    layer.addChild(panel);
+
+    const dim = new PIXI.Graphics();
+    drawG(dim, 'round', -DESIGN_W, -DESIGN_H, DESIGN_W * 2, DESIGN_H * 2, 0, 0x000000, 0.32);
+    panel.addChild(dim);
+
+    const card = new PIXI.Graphics();
+    drawG(card, 'round', -260, -170, 520, 340, 44, 0xfff3cf, 1, 8, 0xffffff, 1);
+    panel.addChild(card);
+
+    const trophy = createText('🏆', 90, 0xffffff);
+    trophy.anchor.set(0.5);
+    trophy.y = -78;
+    panel.addChild(trophy);
+
+    const title = createText('우승!', 54, 0x53311d);
+    title.anchor.set(0.5);
+    title.y = 28;
+    panel.addChild(title);
+
+    const again = createText('다시하기', 34, 0x23a365);
+    again.anchor.set(0.5);
+    again.y = 104;
+    panel.addChild(again);
+
+    await animate(420, t => {
+      panel.alpha = t;
+      panel.scale.set(0.82 + utils.easeOutBack(t) * 0.18);
+    });
+
+    panel.eventMode = 'static';
+    panel.cursor = 'pointer';
+    panel.hitArea = new PIXI.Rectangle(-DESIGN_W, -DESIGN_H, DESIGN_W * 2, DESIGN_H * 2);
+    panel.once('pointertap', resetGame);
+  }
+
+  function burst(x, y, icons, count, layer) {
+    const targetLayer = layer || state.layers.fx;
+
+    for (let i = 0; i < count; i += 1) {
+      const icon = createText(icons[i % icons.length], utils.rand(20, 42), 0xffffff);
+      icon.anchor.set(0.5);
+      icon.x = x;
+      icon.y = y;
+      icon.alpha = 1;
+      targetLayer.addChild(icon);
+
+      const angle = utils.rand(0, Math.PI * 2);
+      const dist = utils.rand(70, 300);
+      const rot = utils.rand(-3, 3);
+
+      animate(utils.rand(700, 1350), t => {
+        const e = utils.easeOutCubic(t);
+        icon.x = x + Math.cos(angle) * dist * e;
+        icon.y = y + Math.sin(angle) * dist * e - Math.sin(t * Math.PI) * 80;
+        icon.rotation = rot * t;
+        icon.alpha = 1 - t;
+        icon.scale.set(1 + Math.sin(t * Math.PI) * 0.25);
+      }).then(() => {
+        if (icon.parent) icon.parent.removeChild(icon);
+      });
+    }
+  }
+
+  function nextTurn() {
+    for (let i = 1; i <= state.players.length; i += 1) {
+      const idx = (state.currentPlayerIndex + i) % state.players.length;
+      if (!state.players[idx].finished) {
+        state.currentPlayerIndex = idx;
+        break;
+      }
+    }
+
+    pulseCurrentPawn();
+  }
+
+  function resetGame() {
+    clearTickerItems();
+    state.layers.overlay.removeChildren();
+    state.layers.fx.removeChildren();
+    state.currentPlayerIndex = 0;
+    state.isSpinning = false;
+    state.isMoving = false;
+    state.waitingEvent = false;
+    createPlayers();
+    drawRoulette();
+  }
+
+  function createLayers() {
+    state.layers = {
+      board: makeContainer(state.world, true),
+      tile: makeContainer(state.world, true),
+      token: makeContainer(state.world, true),
+      roulette: makeContainer(state.world, true),
+      fx: makeContainer(state.world, true),
+      overlay: makeContainer(state.world, true)
+    };
+  }
+
+  function buildScene() {
+    state.world.removeChildren();
+    createLayers();
+    drawBoard();
+    drawTiles();
+    drawRoulette();
+    createPlayers();
   }
 
   async function init() {
-    const root = document.getElementById('app');
-    state.app = new PIXI.Application({ resizeTo: root, backgroundAlpha: 0, antialias: true, resolution: Math.min(window.devicePixelRatio, 2) });
-    root.appendChild(state.app.view);
-    state.world = new PIXI.Container(); state.app.stage.addChild(state.world);
-    ['table','board','tile','token','hud','overlay','fx','setup'].forEach(k => state.layers[k] = makeContainer(state.world, true));
-    
-    state.tileMap = TILE_COORDS.map(p => ({ x: p.x, y: p.y }));
+    const root = getRoot();
+    root.innerHTML = '';
 
-    if(PIXI.filters && PIXI.filters.ColorMatrixFilter) state.filters.colorMatrix = new PIXI.filters.ColorMatrixFilter();
+    if (!window.PIXI) {
+      root.innerHTML = '<div style="display:grid;place-items:center;width:100%;height:100%;background:#6a3d1f;color:white;font-family:sans-serif;font-size:28px;font-weight:900;">Pixi.js 로딩 실패</div>';
+      return;
+    }
 
-    handleResize(); window.addEventListener('resize', handleResize);
-    state.app.ticker.add(d => {
-      const keep = []; state.tickerItems.forEach(f => { if (!f(d)) keep.push(f); }); state.tickerItems = keep;
+    state.app = new PIXI.Application({
+      resizeTo: root,
+      backgroundAlpha: 0,
+      antialias: true,
+      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      autoDensity: true
     });
-    
+
+    state.world = new PIXI.Container();
+    state.world.sortableChildren = true;
+
+    state.app.stage.addChild(state.world);
+    root.appendChild(state.app.view);
+
+    state.app.ticker.add(runTicker);
+    window.addEventListener('resize', fitWorld);
+
     await loadAssets();
-    drawSetup(); document.getElementById('bootScreen').style.display = 'none';
+    buildScene();
+    fitWorld();
+
+    const boot = document.getElementById('bootScreen');
+    if (boot) boot.style.display = 'none';
   }
 
-  function makeContainer(p, s) { const c = new PIXI.Container(); c.sortableChildren = !!s; p.addChild(c); return c; }
-
-  init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
