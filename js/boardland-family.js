@@ -42,6 +42,42 @@
     'gift','normal','mission','normal','rest','normal','normal','finish'
   ];
 
+  const TILE_COORDS = [
+    { x: 250, y: 760 },
+    { x: 390, y: 775 },
+    { x: 530, y: 775 },
+    { x: 670, y: 770 },
+    { x: 810, y: 760 },
+    { x: 950, y: 740 },
+    { x: 1085, y: 705 },
+    { x: 1195, y: 650 },
+    { x: 1270, y: 560 },
+    { x: 1295, y: 455 },
+    { x: 1270, y: 350 },
+    { x: 1200, y: 260 },
+    { x: 1085, y: 205 },
+    { x: 945, y: 175 },
+    { x: 800, y: 165 },
+    { x: 660, y: 175 },
+    { x: 520, y: 205 },
+    { x: 405, y: 260 },
+    { x: 325, y: 350 },
+    { x: 285, y: 455 },
+    { x: 310, y: 560 },
+    { x: 390, y: 650 },
+    { x: 520, y: 700 },
+    { x: 660, y: 725 },
+    { x: 800, y: 735 },
+    { x: 940, y: 720 },
+    { x: 1065, y: 670 },
+    { x: 1145, y: 585 },
+    { x: 1150, y: 470 },
+    { x: 1085, y: 370 },
+    { x: 965, y: 305 },
+    { x: 830, y: 285 }
+  ];
+  const DEBUG_MODE = true;
+
   const PAWNS = [
     { id: 'pawn_dog', icon: '🐶', name: '강아지', fill: 0xFFD166, edge: 0xA86B18 },
     { id: 'pawn_cat', icon: '🐱', name: '눈이(고양이)', fill: 0xFF8FB3, edge: 0xB84970 },
@@ -164,36 +200,78 @@
   }
 
   function drawBoard() {
-    const l = state.layers.board; l.removeChildren();
-    const sh = new PIXI.Graphics(); drawG(sh, 'round', BOARD.x + 18, BOARD.y + 24, BOARD.w, BOARD.h, BOARD.r + 10, 0, 0.2);
-    l.addChild(sh);
-    const b = new PIXI.Graphics();
-    drawG(b, 'round', BOARD.x, BOARD.y, BOARD.w, BOARD.h, BOARD.r + 15, COLORS.boardEdge, 1, 6, 0xFFE5A2);
-    drawG(b, 'round', BOARD.x + 18, BOARD.y + 18, BOARD.w - 36, BOARD.h - 36, BOARD.r + 5, COLORS.boardBase, 1, 5, COLORS.boardGold);
-    l.addChild(b);
+    const l = state.layers.board;
+    l.removeChildren();
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'round', 80, 42, DESIGN_W - 160, DESIGN_H - 80, 52, 0x000000, 0.26);
+    shadow.y = 28;
+    l.addChild(shadow);
+
+    if (state.assetAliases && state.assetAliases.board_bg) {
+      const bg = PIXI.Sprite.from('board_bg');
+      bg.anchor.set(0.5);
+      bg.x = DESIGN_W / 2;
+      bg.y = DESIGN_H / 2;
+      bg.width = DESIGN_W;
+      bg.height = DESIGN_H;
+      l.addChild(bg);
+      return;
+    }
+
+    const table = new PIXI.Graphics();
+    drawG(table, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x9B5D31);
+    drawG(table, 'round', 126, 54, DESIGN_W - 252, DESIGN_H - 108, 50, COLORS.boardEdge, 1, 6, 0xFFE6A6);
+    drawG(table, 'round', 156, 84, DESIGN_W - 312, DESIGN_H - 168, 38, COLORS.boardBase, 1, 4, COLORS.boardGold);
+    l.addChild(table);
   }
 
   function drawTiles() {
-    state.layers.tile.removeChildren(); state.tiles = [];
-    for (let i = 0; i < TILE_PATTERN.length; i += 1) { drawTile(i); }
+    state.layers.tile.removeChildren();
+    state.tiles = [];
+    for (let i = 0; i < TILE_PATTERN.length; i += 1) drawTile(i);
   }
 
   function drawTile(idx) {
-    const p = state.tileMap[idx]; const type = TILE_PATTERN[idx]; const meta = TILE_TYPES[type];
-    const isC = idx % 8 === 0 || idx === FINISH_INDEX; const w = isC ? CORNER_SIZE : TILE_SIZE; const h = isC ? CORNER_SIZE : TILE_SIZE;
-    const zone = ZONES[Math.floor(idx / 8)] || ZONES[3];
-    const fill = type === 'normal' ? zone.fill : meta.fill; const edge = type === 'normal' ? zone.edge : meta.edge;
+    const p = state.tileMap[idx];
+    const type = TILE_PATTERN[idx];
+    const meta = TILE_TYPES[type];
+    const isCorner = idx === 0 || idx === 8 || idx === 16 || idx === 24 || idx === FINISH_INDEX;
 
-    const c = new PIXI.Container(); c.x = p.x; c.y = p.y; c.zIndex = idx; state.layers.tile.addChild(c);
-    const d = new PIXI.Graphics(); drawG(d, 'round', -w / 2, -h / 2 + 8, w, h, 16, edge); c.addChild(d);
-    const t = new PIXI.Graphics(); drawG(t, 'round', -w / 2, -h / 2, w, h - 6, 16, fill, 1, 3, 0xFFFFFF);
-    drawG(t, 'round', -w / 2 + 8, -h / 2 + 6, w - 16, 10, 5, 0xFFFFFF, 0.2); c.addChild(t);
+    const c = new PIXI.Container();
+    c.x = p.x;
+    c.y = p.y;
+    c.zIndex = idx;
+    c.eventMode = 'static';
+    c.cursor = 'pointer';
+    state.layers.tile.addChild(c);
 
-    if (type !== 'normal') {
-      const icon = createIcon(meta.icon, isC ? 54 : 44, type === 'gift' ? 'icon_gift' : null); 
-      icon.y = isC ? -10 : 0; c.addChild(icon);
-      if (meta.label) { const lb = createText(meta.label, 20); lb.anchor.set(0.5, 0); lb.y = 30; c.addChild(lb); }
+    const hit = new PIXI.Graphics();
+    drawG(hit, 'circle', 0, 0, 0, 0, isCorner ? 52 : 42, 0xFF2B2B, DEBUG_MODE ? 0.45 : 0.001, DEBUG_MODE ? 2 : 0, 0xFFFFFF);
+    c.addChild(hit);
+
+    if (DEBUG_MODE) {
+      const no = createText(String(idx), 22, 0xFFFFFF);
+      no.anchor.set(0.5);
+      c.addChild(no);
     }
+
+    if (type !== 'normal' && type !== 'start' && type !== 'finish') {
+      const spriteId = type === 'gift' ? 'icon_gift' : type === 'family' ? 'icon_heart' : type === 'jump' ? 'icon_rainbow' : 'icon_star';
+      const icon = createIcon(meta.icon, isCorner ? 64 : 48, spriteId);
+      icon.y = -8;
+      icon.alpha = 0.96;
+      c.addChild(icon);
+    }
+
+    if (type === 'start' || type === 'finish') {
+      const badge = createText(type === 'start' ? 'START' : 'GOAL', 20, type === 'start' ? 0x0E744A : 0xBC771F);
+      badge.anchor.set(0.5);
+      badge.y = 40;
+      badge.alpha = DEBUG_MODE ? 1 : 0.0;
+      c.addChild(badge);
+    }
+
     state.tiles[idx] = c;
   }
 
@@ -225,8 +303,8 @@
   function updatePawnPos(player, instant) {
     const tm = state.tileMap[player.index]; const count = state.players.filter(p => p.index === player.index).length;
     const idx = state.players.filter(p => p.index === player.index).indexOf(player);
-    const offs = [{x:-18,y:-12}, {x:18,y:-12}, {x:-18,y:15}, {x:18,y:15}];
-    const o = offs[idx] || {x:0,y:0}; const tx = tm.x + o.x; const ty = tm.y + o.y - 28;
+    const offs = [{x:-20, y:-10}, {x:20, y:-10}, {x:-20, y:20}, {x:20, y:20}];
+    const o = offs[idx] || {x:0,y:0}; const tx = tm.x + o.x; const ty = tm.y + o.y - 32;
     if (instant) { player.token.x = tx; player.token.y = ty; }
     else { animate(200, v => { player.token.x += (tx - player.token.x) * v; player.token.y += (ty - player.token.y) * v; }); }
   }
@@ -247,8 +325,8 @@
     const t = player.token; const tm = state.tileMap[player.index];
     const playersHere = state.players.filter(p => p.index === player.index);
     const localIdx = playersHere.indexOf(player);
-    const offs = [{x:-18,y:-12}, {x:18,y:-12}, {x:-18,y:15}, {x:18,y:15}];
-    const o = offs[localIdx] || {x:0,y:0}; const tx = tm.x + o.x; const ty = tm.y + o.y - 28;
+    const offs = [{x:-20, y:-10}, {x:20, y:-10}, {x:-20, y:20}, {x:20, y:20}];
+    const o = offs[localIdx] || {x:0,y:0}; const tx = tm.x + o.x; const ty = tm.y + o.y - 32;
     const sx = t.x; const sy = t.y;
     await animate(MOVE_STEP_MS, v => {
       const e = utils.easeInOutSine(v); t.x = sx + (tx - sx) * e; t.y = sy + (ty - sy) * e - Math.sin(v * Math.PI) * 60;
@@ -505,16 +583,32 @@
       if (!res.ok) throw new Error('asset manifest load failed');
       const manifest = await res.json();
       const bundle = {};
+      const add = (key, value) => {
+        if (typeof value === 'string' && value.trim()) bundle[key] = value.trim();
+      };
+
+      add('board_bg', manifest.board_bg || manifest?.board?.main);
+      add('card_back', manifest.card_back || manifest?.events?.cardBack || manifest?.icons?.cardBack);
+      add('icon_gift', manifest.icon_gift || manifest?.events?.gift || manifest?.rewards?.gift);
+      add('icon_star', manifest.icon_star || manifest?.rewards?.star);
+      add('icon_heart', manifest.icon_heart || manifest?.rewards?.heart);
+      add('icon_rainbow', manifest.icon_rainbow || manifest?.rewards?.rainbow);
+      add('pawn_dog', manifest.pawn_dog || manifest?.pawns?.dog);
+      add('pawn_cat', manifest.pawn_cat || manifest?.pawns?.cat);
+      add('pawn_rabbit', manifest.pawn_rabbit || manifest?.pawns?.rabbit);
+      add('pawn_bear', manifest.pawn_bear || manifest?.pawns?.bear);
+
       Object.keys(manifest || {}).forEach(key => {
-        if (manifest[key]) bundle[key] = manifest[key];
+        if (typeof manifest[key] === 'string' && !bundle[key]) bundle[key] = manifest[key];
       });
+
       if (!Object.keys(bundle).length) throw new Error('asset manifest is empty');
       PIXI.Assets.addBundle('boardlandPremium', bundle);
       await PIXI.Assets.loadBundle('boardlandPremium');
       Object.keys(bundle).forEach(key => { state.assetAliases[key] = true; });
     } catch (error) {
       state.assetAliases = {};
-      console.log('Boardland premium assets unavailable, falling back to emoji mode.');
+      console.log('Boardland premium assets unavailable, falling back to drawn mode.');
     }
   }
 
@@ -525,12 +619,7 @@
     state.world = new PIXI.Container(); state.app.stage.addChild(state.world);
     ['table','board','tile','token','hud','overlay','fx','setup'].forEach(k => state.layers[k] = makeContainer(state.world, true));
     
-    state.tileMap = [];
-    const l=250+72, r=250+960-72, t=82+72, b=82+690-72;
-    for(let i=0;i<9;i++) state.tileMap.push({x:l+(r-l)*i/8, y:b});
-    for(let i=1;i<8;i++) state.tileMap.push({x:r, y:b-(b-t)*i/8});
-    for(let i=8;i>=0;i--) state.tileMap.push({x:l+(r-l)*i/8, y:t});
-    for(let i=7;i>=1;i--) state.tileMap.push({x:l, y:t+(b-t)*i/8});
+    state.tileMap = TILE_COORDS.map(p => ({ x: p.x, y: p.y }));
 
     if(PIXI.filters && PIXI.filters.ColorMatrixFilter) state.filters.colorMatrix = new PIXI.filters.ColorMatrixFilter();
 

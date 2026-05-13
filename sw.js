@@ -1,4 +1,4 @@
-const CACHE = 'boardland-v2.4.2';
+const CACHE = 'boardland-v2.5-3d-edition';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './js/boardland-family.js',
   './assets/boardland_assets_manifest.json',
   './assets/icons/icon.png',
+  './assets/board/board-main.webp',
   './assets/icons/card-back.webp',
   './assets/pawns/dog-pawn.webp',
   './assets/pawns/cat-pawn.webp',
