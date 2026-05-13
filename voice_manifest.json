@@ -1,24 +1,6 @@
 {
-  "version": "boardland-family-pwa-v1",
-  "voices": {
-    "boardland.startGame": "assets/voice/games/boardland-startgame.mp3",
-    "boardland.spinning": "assets/voice/games/boardland-spinning.mp3",
-    "boardland.move1": "assets/voice/games/boardland-move1.mp3",
-    "boardland.move2": "assets/voice/games/boardland-move2.mp3",
-    "boardland.move3": "assets/voice/games/boardland-move3.mp3",
-    "boardland.spinAgain": "assets/voice/games/boardland-spinagain.mp3",
-    "boardland.giftCard": "assets/voice/games/boardland-giftcard.mp3",
-    "boardland.giftReceived": "assets/voice/games/boardland-giftreceived.mp3",
-    "boardland.missionSuccess": "assets/voice/games/boardland-missionsuccess.mp3",
-    "boardland.gameComplete": "assets/voice/games/boardland-gamecomplete.mp3",
-    "boardland.restart": "assets/voice/games/boardland-restart.mp3",
-    "boardland.wellDone": "assets/voice/games/boardland-welldone.mp3",
-    "boardland.mission.clap": "assets/voice/games/boardland-mission-clap.mp3",
-    "boardland.mission.hug": "assets/voice/games/boardland-mission-hug.mp3",
-    "boardland.mission.highfive": "assets/voice/games/boardland-mission-highfive.mp3",
-    "boardland.mission.smile": "assets/voice/games/boardland-mission-smile.mp3",
-    "boardland.mission.firetruck": "assets/voice/games/boardland-mission-firetruck.mp3",
-    "boardland.mission.police": "assets/voice/games/boardland-mission-police.mp3",
-    "boardland.mission.ambulance": "assets/voice/games/boardland-mission-ambulance.mp3"
-  }
+  "version": "boardland-family-voice-v2.1",
+  "format": "mp3",
+  "basePath": "./assets/voice/",
+  "voices": {}
 }

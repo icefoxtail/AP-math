@@ -5,16 +5,28 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "landscape-primary",
   "background_color": "#67c7ff",
   "theme_color": "#ff9d2e",
   "lang": "ko",
+  "categories": [
+    "kids",
+    "games",
+    "family"
+  ],
   "icons": [
     {
-      "src": "assets/icons/icon.svg",
+      "src": "assets/icons/icon.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }

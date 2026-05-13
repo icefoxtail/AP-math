@@ -1,0 +1,18 @@
+{
+    "sourceFile": "manifest.json",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778648335477,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778648335477,
+            "name": "Commit-0",
+            "content": "{\n  \"name\": \"보드랜드 패밀리\",\n  \"short_name\": \"보드랜드\",\n  \"description\": \"태블릿 가로 전용 가족 보드게임\",\n  \"start_url\": \"./index.html\",\n  \"scope\": \"./\",\n  \"display\": \"standalone\",\n  \"orientation\": \"landscape-primary\",\n  \"background_color\": \"#67c7ff\",\n  \"theme_color\": \"#ff9d2e\",\n  \"lang\": \"ko\",\n  \"categories\": [\n    \"kids\",\n    \"games\",\n    \"family\"\n  ],\n  \"icons\": [\n    {\n      \"src\": \"assets/icons/icon.png\",\n      \"sizes\": \"512x512\",\n      \"type\": \"image/png\",\n      \"purpose\": \"any\"\n    },\n    {\n      \"src\": \"assets/icons/icon.png\",\n      \"sizes\": \"512x512\",\n      \"type\": \"image/png\",\n      \"purpose\": \"maskable\"\n    }\n  ],\n  \"prefer_related_applications\": false\n}"
+        }
+    ]
+}

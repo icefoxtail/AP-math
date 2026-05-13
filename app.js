@@ -1,951 +1,1325 @@
-/* Boardland Family PWA — Pixi.js tablet landscape build v1.0 */
+/*
+ * 보드랜드 패밀리 Pixi.js PWA v2.2.1
+ * 디자인 기준판: 프리미엄 3D 동화책 + 실제 테이블 보드게임 감성
+ * - 1600×900 고정 좌표계
+ * - 태블릿 가로 전용, 세로 화면 회전 안내는 index.html에서 처리
+ * - 룰렛 원판 직접 터치
+ * - 2~4명 플레이어 선택 + 말 선택
+ * - 보드 외곽 사방 플레이어 자리
+ * - 시현이/가족/친구 공용 플레이 기준
+ * - Web Speech TTS / AI TTS / 브라우저 기본 음성 사용 없음
+ */
 (function () {
   'use strict';
 
-  const DESIGN_W = 1600;
-  const DESIGN_H = 900;
-  const CELL_COUNT = 28;
-  const FINISH_INDEX = 27;
+  var DESIGN_W = 1600;
+  var DESIGN_H = 900;
+  var BOARD = { x: 250, y: 82, w: 960, h: 690, r: 34 };
+  var CENTER = { x: BOARD.x + BOARD.w / 2, y: BOARD.y + BOARD.h / 2 };
+  var TILE_SIZE = 78;
+  var CORNER_SIZE = 110;
+  var FINISH_INDEX = 31;
+  var MOVE_STEP_MS = 300;
 
-  const COLORS = {
-    skyTop: 0x65d4ff,
-    skyBottom: 0xffefb0,
-    boardShadow: 0x26405c,
-    cream: 0xfff7da,
-    cream2: 0xffe8b6,
-    ink: 0x17324a,
-    blue: 0x51b8ff,
-    pink: 0xff79b0,
-    yellow: 0xffd447,
-    orange: 0xff982e,
-    green: 0x62cf76,
-    purple: 0x9e78ff,
-    white: 0xffffff,
-    red: 0xff5a6b
+  var COLORS = {
+    tableTop: 0x9B5D31,
+    tableDark: 0x4C2819,
+    boardBase: 0xFFF0C7,
+    boardInset: 0xFFEAB6,
+    boardEdge: 0xC27B36,
+    boardGold: 0xF9D36D,
+    ink: 0x53311D,
+    cream: 0xFFF8E5,
+    white: 0xFFFFFF,
+    shadow: 0x000000,
+    green: 0x8BCB63,
+    greenDark: 0x4B8D35,
+    orange: 0xF5B34D,
+    orangeDark: 0xB66B1E,
+    blue: 0x60B7EA,
+    blueDark: 0x1B76A8,
+    pink: 0xF178A8,
+    pinkDark: 0xB63D72,
+    purple: 0xB77AE8,
+    purpleDark: 0x6B3BA8,
+    yellow: 0xF8D64D,
+    red: 0xF56A66,
+    mint: 0x6ED7B0,
+    rest: 0x8FC8F8
   };
 
-  const CELL_TYPES = [
-    'start','normal','gift','normal','mission','normal','normal',
-    'giftCorner','normal','mission','normal','gift','normal','normal',
-    'missionCorner','normal','gift','normal','mission','normal','normal',
-    'family','normal','mission','normal','normal','gift','finish'
+  var ZONES = [
+    { id: 'nature', name: '숲', fill: COLORS.green, edge: COLORS.greenDark, icon: '🌳' },
+    { id: 'sunny', name: '햇빛', fill: COLORS.orange, edge: COLORS.orangeDark, icon: '☀️' },
+    { id: 'ocean', name: '바다', fill: COLORS.blue, edge: COLORS.blueDark, icon: '🌊' },
+    { id: 'magic', name: '마법', fill: COLORS.pink, edge: COLORS.pinkDark, icon: '✨' }
   ];
 
-  const CELL_NAMES = {
-    start: '출발',
-    normal: '',
-    gift: '선물',
-    mission: '미션',
-    giftCorner: '선물',
-    missionCorner: '미션',
-    family: '가족',
-    finish: '도착'
+  var TILE_TYPES = {
+    start:  { fill: 0x23B574, edge: 0x0E744A, icon: '🚀', label: '출발' },
+    normal: { fill: 0xFFF6D7, edge: 0xD8AA5B, icon: '', label: '' },
+    gift:  { fill: 0xF178A8, edge: 0xB63D72, icon: '🎁', label: '' },
+    mission:{ fill: 0xB77AE8, edge: 0x6B3BA8, icon: '⭐', label: '' },
+    family:{ fill: 0xF8D64D, edge: 0xC28A1A, icon: '❤️', label: '' },
+    jump:  { fill: 0x6ED7B0, edge: 0x22996F, icon: '🌈', label: '' },
+    rest:  { fill: 0x8FC8F8, edge: 0x2B78BA, icon: '🌙', label: '' },
+    finish:{ fill: 0xFFD957, edge: 0xBC771F, icon: '🏆', label: '도착' }
   };
 
-  const PLAYERS = [
-    { id: 'sihyeon', name: '시현이', color: 0xffd447, emoji: '시' },
-    { id: 'mom', name: '엄마', color: 0xff79b0, emoji: '엄' },
-    { id: 'dad', name: '아빠', color: 0x5fa8ff, emoji: '아' },
-    { id: 'sicheon', name: '시천이', color: 0x62cf76, emoji: '천' }
+  var TILE_PATTERN = [
+    'start','normal','gift','normal','mission','normal','family','normal',
+    'jump','normal','gift','normal','mission','normal','rest','normal',
+    'gift','normal','family','normal','mission','normal','jump','normal',
+    'gift','normal','mission','normal','rest','normal','normal','finish'
   ];
 
-  const MISSIONS = [
-    { id: 'clap', text: '손뼉을 짝짝 쳐봐요!', voice: 'boardland.mission.clap' },
-    { id: 'hug', text: '가족을 꼭 안아줘요!', voice: 'boardland.mission.hug' },
-    { id: 'highfive', text: '하이파이브 해볼까요?', voice: 'boardland.mission.highfive' },
-    { id: 'smile', text: '예쁜 웃음 보여줘요!', voice: 'boardland.mission.smile' },
-    { id: 'firetruck', text: '소방차처럼 출동!', voice: 'boardland.mission.firetruck' },
-    { id: 'police', text: '경찰차처럼 순찰!', voice: 'boardland.mission.police' },
-    { id: 'ambulance', text: '구급차처럼 도와주러 가요!', voice: 'boardland.mission.ambulance' }
+  var PAWNS = [
+    { id: 'puppy', name: '강아지', icon: '🐶', fill: 0xFFD166, edge: 0xA86B18 },
+    { id: 'cat', name: '고양이', icon: '🐱', fill: 0xFF8FB3, edge: 0xB84970 },
+    { id: 'rabbit', name: '토끼', icon: '🐰', fill: 0x86D8FF, edge: 0x2A7FA8 },
+    { id: 'bear', name: '곰', icon: '🐻', fill: 0xB8855B, edge: 0x6F4428 },
+    { id: 'car', name: '자동차', icon: '🚗', fill: 0xFF6B5E, edge: 0xB7322B },
+    { id: 'rocket', name: '로켓', icon: '🚀', fill: 0x9B7CFF, edge: 0x5432B5 },
+    { id: 'train', name: '기차', icon: '🚂', fill: 0x4FC3F7, edge: 0x147EA6 },
+    { id: 'star', name: '별', icon: '⭐', fill: 0xFFE066, edge: 0xB98512 }
   ];
 
-  const ROULETTE_SEGMENTS = [
-    { label: '1', move: 1, voice: 'boardland.move1', color: 0xfff1a6 },
-    { label: '2', move: 2, voice: 'boardland.move2', color: 0x97e6ff },
-    { label: '3', move: 3, voice: 'boardland.move3', color: 0xffa7d1 },
-    { label: '1', move: 1, voice: 'boardland.move1', color: 0xb8f5a5 },
-    { label: '2', move: 2, voice: 'boardland.move2', color: 0xffc17a },
-    { label: '3', move: 3, voice: 'boardland.move3', color: 0xd8c0ff },
-    { label: '1', move: 1, voice: 'boardland.move1', color: 0xfff1a6 },
-    { label: '2', move: 2, voice: 'boardland.move2', color: 0x97e6ff }
+  var PLAYER_PRESETS = [
+    { id: 'sihyeon', name: '시현이' },
+    { id: 'mom', name: '엄마' },
+    { id: 'dad', name: '아빠' },
+    { id: 'friend', name: '친구' }
   ];
 
-  const state = {
+  var EVENT_CARDS = [
+    { type: 'family', icon: '🫂', title: '사랑해 안아주기!', body: '옆에 있는 가족을 꼬옥 안아주세요' },
+    { type: 'family', icon: '✋', title: '하이파이브!', body: '옆 사람과 손바닥을 짝! 쳐보세요' },
+    { type: 'family', icon: '😘', title: '예쁜 말 하기!', body: '가족에게 사랑해요라고 말해 주세요' },
+    { type: 'family', icon: '❤️', title: '가족 하트!', body: '서로 하트를 보내요' },
+    { type: 'mission', icon: '👏', title: '손뼉 짝짝!', body: '다 같이 손뼉을 쳐요' },
+    { type: 'mission', icon: '🦖', title: '공룡 흉내!', body: '어흥! 공룡처럼 걸어요' },
+    { type: 'mission', icon: '🎵', title: '노래 한 소절!', body: '좋아하는 노래를 불러요' },
+    { type: 'mission', icon: '🙂', title: '웃는 얼굴!', body: '제일 크게 웃어 봐요' },
+    { type: 'mission', icon: '🕺', title: '빙글 한 바퀴!', body: '빙글빙글 돌아요' },
+    { type: 'gift', icon: '🎁', title: '선물 팡!', body: '반짝 선물이 열렸어요' },
+    { type: 'jump', icon: '🌈', title: '무지개 점프!', body: '앞으로 한 칸 더 가요' },
+    { type: 'rest', icon: '🌙', title: '잠깐 쉬기!', body: '구름 위에서 쉬어요' }
+  ];
+
+  var EXTRA_VOICE_NEEDED = [
+    '보드랜드 시작 안내', '룰렛을 눌러요', '한 칸 이동', '두 칸 이동', '세 칸 이동',
+    '선물칸 도착', '미션카드 열기', '다음 차례', '완주 축하', '가족/친구 공용 성공 칭찬'
+  ];
+
+  var state = {
     app: null,
-    stage: null,
     root: null,
-    board: null,
-    cells: [],
+    world: null,
+    tableLayer: null,
+    boardLayer: null,
+    objectLayer: null,
+    tileLayer: null,
+    tokenLayer: null,
+    hudLayer: null,
+    overlayLayer: null,
+    fxLayer: null,
+    setupLayer: null,
+    tiles: [],
+    tileMap: [],
     players: [],
+    setupPlayerCount: 3,
+    setupPawnIndex: [0, 1, 2, 3],
     currentPlayerIndex: 0,
-    started: false,
+    roulette: null,
+    rouletteFace: null,
+    rouletteGlow: null,
+    pointer: null,
+    resultText: null,
+    turnBadge: null,
     isSpinning: false,
     isMoving: false,
-    pendingEvent: null,
-    rouletteRotation: 0,
-    currentMission: null,
-    voiceManifest: {},
-    muted: false,
-    scale: 1,
-    offsetX: 0,
-    offsetY: 0,
-    timers: new Set(),
-    tickerJobs: new Set()
+    waitingEvent: false,
+    screen: 'setup',
+    audioCtx: null,
+    tickerItems: [],
+    pulseTickerVersion: 0,
+    roulettePressToken: 0,
+    bootHidden: false
   };
 
-  const wait = (ms) => new Promise(resolve => {
-    const id = setTimeout(() => {
-      state.timers.delete(id);
-      resolve();
-    }, ms);
-    state.timers.add(id);
-  });
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function rand(min, max) { return min + Math.random() * (max - min); }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function easeOutBack(t) { var c1 = 1.70158; var c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
+  function easeInOutSine(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
 
-  function clearTimers() {
-    state.timers.forEach(id => clearTimeout(id));
-    state.timers.clear();
+  function createText(text, size, fill, weight, align) {
+    return new PIXI.Text(text, {
+      fontFamily: 'Arial Rounded MT Bold, Apple SD Gothic Neo, Noto Sans KR, sans-serif',
+      fontSize: size,
+      fill: fill == null ? COLORS.ink : fill,
+      fontWeight: weight || '900',
+      align: align || 'center',
+      lineJoin: 'round',
+      stroke: 0xFFFFFF,
+      strokeThickness: Math.max(2, Math.floor(size / 12)),
+      dropShadow: false
+    });
   }
 
-  function randomInt(min, max) {
-    if (window.crypto && window.crypto.getRandomValues) {
-      const arr = new Uint32Array(1);
-      window.crypto.getRandomValues(arr);
-      return min + (arr[0] % (max - min + 1));
-    }
-    return min + Math.floor(Math.random() * (max - min + 1));
-  }
-
-  function playVoice(key) {
-    if (!key || state.muted) return;
-    const src = state.voiceManifest[key];
-    if (!src) return;
-    try {
-      const audio = new Audio(src);
-      audio.preload = 'auto';
-      audio.volume = 0.92;
-      audio.play().catch(() => {});
-    } catch (error) {}
-  }
-
-  function playTone(type) {
-    if (state.muted) return;
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      const gain = ctx.createGain();
-      gain.connect(ctx.destination);
-      const now = ctx.currentTime;
-
-      const note = (freq, delay, dur, vol, wave = 'sine') => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = wave;
-        osc.frequency.setValueAtTime(freq, now + delay);
-        g.gain.setValueAtTime(0.001, now + delay);
-        g.gain.exponentialRampToValueAtTime(vol, now + delay + 0.015);
-        g.gain.exponentialRampToValueAtTime(0.001, now + delay + dur);
-        osc.connect(g);
-        g.connect(gain);
-        osc.start(now + delay);
-        osc.stop(now + delay + dur + 0.03);
-      };
-
-      if (type === 'spin') note(520, 0, 0.12, 0.18, 'triangle');
-      if (type === 'step') note(420, 0, 0.08, 0.12, 'sine');
-      if (type === 'gift') [523, 659, 784].forEach((f, i) => note(f, i * 0.08, 0.22, 0.16));
-      if (type === 'card') note(260, 0, 0.24, 0.12, 'triangle');
-      if (type === 'finish') [523, 659, 784, 1046].forEach((f, i) => note(f, i * 0.1, 0.45, 0.18));
-      setTimeout(() => ctx.close().catch(() => {}), 900);
-    } catch (error) {}
-  }
-
-  function makeText(text, style = {}) {
-    const textStyle = {
-      fontFamily: 'Arial Rounded MT Bold, Jua, Apple SD Gothic Neo, sans-serif',
-      fill: style.fill ?? COLORS.ink,
-      fontSize: style.fontSize ?? 32,
-      fontWeight: style.fontWeight ?? '900',
-      align: style.align ?? 'center',
-      dropShadow: style.dropShadow ?? false,
-      dropShadowAlpha: style.dropShadowAlpha ?? 0.22,
-      dropShadowDistance: style.dropShadowDistance ?? 3,
-      wordWrap: style.wordWrap ?? false,
-      wordWrapWidth: style.wordWrapWidth ?? 320
-    };
-    if (style.stroke !== undefined && style.stroke !== null) {
-      textStyle.stroke = style.stroke;
-      textStyle.strokeThickness = style.strokeThickness ?? 0;
-    }
-    if (style.lineHeight !== undefined && style.lineHeight !== null) {
-      textStyle.lineHeight = style.lineHeight;
-    }
-    return new PIXI.Text(text, textStyle);
-  }
-
-  function roundedRect(g, x, y, w, h, r, fill, alpha = 1, stroke = null) {
-    g.beginFill(fill, alpha);
-    if (stroke) g.lineStyle(stroke.width, stroke.color, stroke.alpha ?? 1);
-    else g.lineStyle(0);
+  function gRoundRect(g, x, y, w, h, r, fill, alpha, lineWidth, lineColor, lineAlpha) {
+    g.lineStyle(lineWidth || 0, lineColor || 0, lineAlpha == null ? 1 : lineAlpha);
+    g.beginFill(fill, alpha == null ? 1 : alpha);
     g.drawRoundedRect(x, y, w, h, r);
     g.endFill();
   }
 
-  function drawIcon(g, type, cx, cy, s, color) {
-    g.lineStyle(0);
-    if (type === 'gift' || type === 'giftCorner') {
-      g.beginFill(0xff5a6b); g.drawRoundedRect(cx - s * .34, cy - s * .18, s * .68, s * .46, s * .08); g.endFill();
-      g.beginFill(0xffd447); g.drawRect(cx - s * .06, cy - s * .18, s * .12, s * .46); g.endFill();
-      g.beginFill(0xffffff); g.drawRoundedRect(cx - s * .40, cy - s * .32, s * .80, s * .16, s * .04); g.endFill();
-      g.beginFill(0xffd447); g.drawRect(cx - s * .05, cy - s * .33, s * .10, s * .65); g.endFill();
-      return;
-    }
-    if (type === 'mission' || type === 'missionCorner') {
-      g.beginFill(0xffffff); g.drawRoundedRect(cx - s * .30, cy - s * .34, s * .60, s * .68, s * .08); g.endFill();
-      g.beginFill(0xff79b0); g.drawRoundedRect(cx - s * .22, cy - s * .22, s * .44, s * .12, s * .03); g.endFill();
-      g.beginFill(0x9e78ff); g.drawRoundedRect(cx - s * .22, cy, s * .44, s * .12, s * .03); g.endFill();
-      return;
-    }
-    if (type === 'start') {
-      g.beginFill(0x2b7bff); g.drawRect(cx - s * .20, cy - s * .35, s * .08, s * .70); g.endFill();
-      g.beginFill(0xff5a6b); g.drawPolygon([cx - s * .12, cy - s * .34, cx + s * .34, cy - s * .22, cx - s * .12, cy - s * .08]); g.endFill();
-      return;
-    }
-    if (type === 'finish') {
-      g.beginFill(0x222222); g.drawRect(cx - s * .30, cy - s * .28, s * .12, s * .60); g.endFill();
-      for (let r = 0; r < 3; r++) {
-        for (let c = 0; c < 4; c++) {
-          g.beginFill((r + c) % 2 ? 0xffffff : 0x222222);
-          g.drawRect(cx - s * .18 + c * s * .12, cy - s * .28 + r * s * .12, s * .12, s * .12);
-          g.endFill();
-        }
-      }
-      return;
-    }
-    if (type === 'family') {
-      g.beginFill(0xff79b0); g.drawCircle(cx - s*.16, cy - s*.08, s*.12); g.endFill();
-      g.beginFill(0x5fa8ff); g.drawCircle(cx + s*.16, cy - s*.08, s*.12); g.endFill();
-      g.beginFill(0xffd447); g.drawCircle(cx, cy + s*.14, s*.13); g.endFill();
-      return;
-    }
-    g.beginFill(color || 0xffd447);
-    for (let i = 0; i < 5; i++) {
-      const a = -Math.PI / 2 + i * Math.PI * 2 / 5;
-      const b = a + Math.PI / 5;
-      if (i === 0) g.moveTo(cx + Math.cos(a) * s * .30, cy + Math.sin(a) * s * .30);
-      g.lineTo(cx + Math.cos(a) * s * .30, cy + Math.sin(a) * s * .30);
-      g.lineTo(cx + Math.cos(b) * s * .12, cy + Math.sin(b) * s * .12);
-    }
-    g.closePath(); g.endFill();
+  function gCircle(g, x, y, radius, fill, alpha, lineWidth, lineColor, lineAlpha) {
+    g.lineStyle(lineWidth || 0, lineColor || 0, lineAlpha == null ? 1 : lineAlpha);
+    g.beginFill(fill, alpha == null ? 1 : alpha);
+    g.drawCircle(x, y, radius);
+    g.endFill();
   }
 
-  function createButton(label, w, h, color, onTap) {
-    const c = new PIXI.Container();
-    c.eventMode = 'static';
-    c.cursor = 'pointer';
-    const bg = new PIXI.Graphics();
-    roundedRect(bg, -w/2, -h/2, w, h, h/2, color, 1, { width: 6, color: 0xffffff });
-    bg.beginFill(0xffffff, .22).drawRoundedRect(-w/2 + 8, -h/2 + 6, w - 16, h * .36, h * .18).endFill();
-    c.addChild(bg);
-    const t = makeText(label, { fontSize: Math.min(40, h * .42), fill: COLORS.ink });
-    t.anchor.set(.5);
-    c.addChild(t);
-    c.on('pointertap', onTap);
-    c.on('pointerdown', () => c.scale.set(.96));
-    c.on('pointerup', () => c.scale.set(1));
-    c.on('pointerupoutside', () => c.scale.set(1));
+  function gStar(g, cx, cy, outer, inner, fill, alpha, lineWidth, lineColor) {
+    g.lineStyle(lineWidth || 0, lineColor || 0, 1);
+    g.beginFill(fill, alpha == null ? 1 : alpha);
+    for (var i = 0; i < 10; i += 1) {
+      var radius = i % 2 === 0 ? outer : inner;
+      var angle = -Math.PI / 2 + (Math.PI * 2 * i) / 10;
+      var x = cx + Math.cos(angle) * radius;
+      var y = cy + Math.sin(angle) * radius;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.closePath();
+    g.endFill();
+  }
+
+  function setPivotCenter(display) {
+    var b = display.getLocalBounds();
+    display.pivot.set(b.x + b.width / 2, b.y + b.height / 2);
+  }
+
+  function initAudio() {
+    if (!window.AudioContext && !window.webkitAudioContext) return null;
+    if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(function () {});
+    return state.audioCtx;
+  }
+
+  function tone(type) {
+    var ctx = initAudio();
+    if (!ctx) return;
+    var now = ctx.currentTime;
+    function beep(freq, start, dur, wave, volume) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = wave || 'sine';
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(0.001, now + start);
+      gain.gain.exponentialRampToValueAtTime(volume || 0.12, now + start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + dur + 0.03);
+    }
+    if (type === 'tap') { beep(520, 0, 0.12, 'triangle', 0.12); }
+    if (type === 'tick') { beep(880, 0, 0.055, 'square', 0.045); }
+    if (type === 'hop') { beep(660, 0, 0.11, 'sine', 0.075); }
+    if (type === 'card') { beep(440, 0, 0.12, 'triangle', 0.08); beep(780, 0.08, 0.16, 'triangle', 0.1); }
+    if (type === 'gift') { [520, 660, 780, 1040].forEach(function (f, i) { beep(f, i * 0.07, 0.32, 'sine', 0.12); }); }
+    if (type === 'win') { [523, 659, 784, 1046, 1318].forEach(function (f, i) { beep(f, i * 0.09, 0.5, 'triangle', 0.16); }); }
+  }
+
+  function vibrate(pattern) {
+    if (!navigator.vibrate) return;
+    try { navigator.vibrate(pattern); } catch (e) {}
+  }
+
+  function addTicker(fn) { state.tickerItems.push(fn); }
+  function runTicker(delta) {
+    var keep = [];
+    for (var i = 0; i < state.tickerItems.length; i += 1) {
+      if (!state.tickerItems[i](delta)) keep.push(state.tickerItems[i]);
+    }
+    state.tickerItems = keep;
+  }
+  function animate(duration, update) {
+    return new Promise(function (resolve) {
+      var elapsed = 0;
+      addTicker(function (delta) {
+        elapsed += state.app.ticker.deltaMS || delta * 16.67;
+        var t = clamp(elapsed / duration, 0, 1);
+        update(t);
+        if (t >= 1) { resolve(); return true; }
+        return false;
+      });
+    });
+  }
+  function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+
+  function makeContainer(parent, sortable) {
+    var c = new PIXI.Container();
+    c.sortableChildren = !!sortable;
+    parent.addChild(c);
     return c;
   }
 
-  function createApp() {
-    if (!window.PIXI) {
-      document.getElementById('pixiError')?.classList.add('show');
-      return;
-    }
-
-    state.app = new PIXI.Application({
-      resizeTo: window,
-      backgroundAlpha: 0,
-      antialias: true,
-      resolution: Math.min(window.devicePixelRatio || 1, 2),
-      autoDensity: true
-    });
-    document.getElementById('app').appendChild(state.app.view);
-
-    state.root = new PIXI.Container();
-    state.app.stage.addChild(state.root);
-
-    window.addEventListener('resize', resize);
-    window.addEventListener('orientationchange', () => setTimeout(resize, 250));
-
-    loadVoices();
-    render();
-    resize();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    }
+  function hideBoot() {
+    if (state.bootHidden) return;
+    state.bootHidden = true;
+    var boot = document.getElementById('bootScreen');
+    if (boot) boot.style.display = 'none';
   }
 
-  async function loadVoices() {
-    try {
-      const res = await fetch('./voice_manifest.json', { cache: 'no-store' });
-      const data = await res.json();
-      state.voiceManifest = data.voices || {};
-    } catch (error) {
-      state.voiceManifest = {};
+  function buildTileMap() {
+    var coords = [];
+    var left = BOARD.x + 72;
+    var right = BOARD.x + BOARD.w - 72;
+    var top = BOARD.y + 72;
+    var bottom = BOARD.y + BOARD.h - 72;
+    var bottomCount = 9;
+    var rightCount = 7;
+    var topCount = 9;
+    var leftCount = 7;
+    var i;
+
+    for (i = 0; i < bottomCount; i += 1) {
+      coords.push({ x: left + (right - left) * i / (bottomCount - 1), y: bottom, side: 'bottom' });
     }
-  }
-
-  function resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    state.scale = Math.min(w / DESIGN_W, h / DESIGN_H);
-    state.offsetX = (w - DESIGN_W * state.scale) / 2;
-    state.offsetY = (h - DESIGN_H * state.scale) / 2;
-    if (state.stage) {
-      state.stage.position.set(state.offsetX, state.offsetY);
-      state.stage.scale.set(state.scale);
+    for (i = 1; i <= rightCount; i += 1) {
+      coords.push({ x: right, y: bottom - (bottom - top) * i / (rightCount + 1), side: 'right' });
     }
-  }
-
-  function clearRoot() {
-    state.root.removeChildren();
-    state.cells = [];
-    state.players = [];
-    state.currentPlayerIndex = 0;
-    state.started = false;
-    state.isSpinning = false;
-    state.isMoving = false;
-    state.pendingEvent = null;
-    clearTimers();
-  }
-
-  function render() {
-    clearRoot();
-    state.stage = new PIXI.Container();
-    state.root.addChild(state.stage);
-    state.stage.sortableChildren = true;
-
-    drawBackground();
-    drawBoard();
-    drawCenterObjects();
-    showStartOverlay();
-  }
-
-  function drawBackground() {
-    const bg = new PIXI.Graphics();
-    bg.beginFill(COLORS.skyTop).drawRect(0, 0, DESIGN_W, DESIGN_H).endFill();
-    bg.beginFill(COLORS.skyBottom, .92).drawEllipse(DESIGN_W/2, DESIGN_H + 190, 1020, 340).endFill();
-    bg.beginFill(0xffffff, .38).drawCircle(180, 120, 56).drawCircle(245, 108, 74).drawCircle(320, 128, 48).endFill();
-    bg.beginFill(0xffffff, .34).drawCircle(1260, 130, 50).drawCircle(1325, 112, 70).drawCircle(1398, 130, 48).endFill();
-    state.stage.addChild(bg);
-  }
-
-  function drawBoard() {
-    state.board = new PIXI.Container();
-    state.board.zIndex = 1;
-    state.stage.addChild(state.board);
-
-    const base = new PIXI.Graphics();
-    roundedRect(base, 55, 55, 1490, 790, 46, 0x8fd86c, 1, { width: 12, color: 0xffffff });
-    roundedRect(base, 82, 82, 1436, 736, 38, 0xfff0bd, 1, { width: 8, color: 0xf2b45a });
-    roundedRect(base, 318, 240, 965, 420, 42, 0xbbeaff, .85, { width: 10, color: 0xffffff });
-    base.beginFill(0xffffff, .18).drawRoundedRect(345, 265, 910, 368, 34).endFill();
-    state.board.addChild(base);
-
-    const positions = makeCellPositions();
-    positions.forEach((pos, index) => {
-      const type = CELL_TYPES[index];
-      const cell = createCell(index, type, pos.x, pos.y, pos.w, pos.h);
-      state.cells[index] = { index, type, x: pos.x, y: pos.y, w: pos.w, h: pos.h, container: cell };
-      state.board.addChild(cell);
-    });
-  }
-
-  function makeCellPositions() {
-    const cells = [];
-    const x0 = 105, x1 = 1495, yTop = 105, yBottom = 795;
-    const corner = 142, normalW = (x1 - x0 - corner*2) / 6, normalH = 102;
-    const sideH = (yBottom - yTop - corner*2) / 6, sideW = 112;
-
-    for (let i = 0; i <= 6; i++) {
-      const w = i === 0 ? corner : normalW;
-      const x = i === 0 ? x0 : x0 + corner + (i-1) * normalW;
-      cells.push({ x, y: yBottom - corner, w, h: corner });
+    for (i = topCount - 1; i >= 0; i -= 1) {
+      coords.push({ x: left + (right - left) * i / (topCount - 1), y: top, side: 'top' });
     }
-    cells.push({ x: x1 - corner, y: yBottom - corner, w: corner, h: corner });
-    for (let i = 0; i < 6; i++) {
-      cells.push({ x: x1 - sideW, y: yBottom - corner - (i+1) * sideH, w: sideW, h: sideH });
+    for (i = leftCount; i >= 1; i -= 1) {
+      coords.push({ x: left, y: top + (bottom - top) * i / (leftCount + 1), side: 'left' });
     }
-    cells.push({ x: x1 - corner, y: yTop, w: corner, h: corner });
-    for (let i = 0; i < 6; i++) {
-      cells.push({ x: x1 - corner - (i+1) * normalW, y: yTop, w: normalW, h: normalH });
-    }
-    cells.push({ x: x0, y: yTop, w: corner, h: corner });
-    for (let i = 0; i < 5; i++) {
-      cells.push({ x: x0, y: yTop + corner + i * sideH, w: sideW, h: sideH });
-    }
-    cells.push({ x: x0, y: yBottom - corner - sideH, w: sideW, h: sideH });
-    return cells.slice(0, CELL_COUNT);
+    return coords.slice(0, TILE_PATTERN.length);
   }
 
-  function createCell(index, type, x, y, w, h) {
-    const c = new PIXI.Container();
-    c.x = x; c.y = y; c.zIndex = 2;
-    const g = new PIXI.Graphics();
-    const style = cellStyle(type);
-    roundedRect(g, 0, 0, w, h, Math.min(28, w*.22, h*.22), style.bg, 1, { width: 5, color: 0xffffff });
-    g.beginFill(style.band, 1).drawRoundedRect(8, 8, w - 16, Math.max(14, h * .14), 10).endFill();
-    g.beginFill(0xffffff, .22).drawRoundedRect(10, 28, w-20, h*.28, 16).endFill();
-    drawIcon(g, type, w/2, h*.56, Math.min(w,h)*.62, style.band);
+  function boardToScreenScale() {
+    var root = document.getElementById('app');
+    var w = root.clientWidth || window.innerWidth;
+    var h = root.clientHeight || window.innerHeight;
+    var scale = Math.min(w / DESIGN_W, h / DESIGN_H);
+    state.world.scale.set(scale);
+    state.world.x = (w - DESIGN_W * scale) / 2;
+    state.world.y = (h - DESIGN_H * scale) / 2;
+  }
+
+  function drawTable() {
+    var layer = state.tableLayer;
+    layer.removeChildren();
+
+    var bg = new PIXI.Graphics();
+    gRoundRect(bg, -40, -40, DESIGN_W + 80, DESIGN_H + 80, 0, 0x8F552F, 1, 0);
+    for (var i = 0; i < 12; i += 1) {
+      bg.lineStyle(3, i % 2 ? 0x6D3C21 : 0xB97843, 0.22);
+      var y = i * 82 + 20;
+      bg.moveTo(-20, y);
+      bg.bezierCurveTo(360, y + rand(-18, 18), 900, y + rand(-18, 18), DESIGN_W + 20, y + rand(-18, 18));
+    }
+    layer.addChild(bg);
+
+    var glow = new PIXI.Graphics();
+    gCircle(glow, 790, 438, 560, 0xFFDFA7, 0.12, 0);
+    gCircle(glow, 1330, 620, 280, 0xFFB86B, 0.11, 0);
+    layer.addChild(glow);
+
+    addTableProp(92, 92, '보드랜드', '패밀리', 1.04);
+    addCrayon(118, 764, 0x4FC3F7, -0.32);
+    addCrayon(187, 808, 0xFF6B5E, -0.22);
+    addMug(318, 50);
+    addBlocks(1398, 60);
+    addTreeToy(1510, 90);
+    addButtonCoin(1222, 790, 0xD9972E);
+    addButtonCoin(1276, 824, 0x4DB6AC);
+  }
+
+  function addTableProp(x, y, t1, t2, scale) {
+    var c = new PIXI.Container();
+    c.x = x;
+    c.y = y;
+    c.scale.set(scale || 1);
+    c.rotation = -0.03;
+    state.tableLayer.addChild(c);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -92, -62, 184, 118, 26, 0xA96C35, 1, 6, 0xF6C66F, 1);
+    gRoundRect(g, -78, -42, 156, 76, 20, 0x734117, 1, 0);
     c.addChild(g);
+    var text1 = createText(t1, 34, 0x9FE5FF, '900');
+    text1.anchor.set(0.5);
+    text1.y = -15;
+    c.addChild(text1);
+    var text2 = createText(t2, 35, 0xFF8FB3, '900');
+    text2.anchor.set(0.5);
+    text2.y = 24;
+    c.addChild(text2);
+    var star = new PIXI.Graphics();
+    gStar(star, 78, -68, 20, 10, 0xFFE066, 1, 3, 0xB98512);
+    c.addChild(star);
+  }
 
-    const name = CELL_NAMES[type] || '';
-    if (name) {
-      const t = makeText(name, { fontSize: Math.min(24, Math.max(16, w*.18)), fill: COLORS.ink, stroke: 0xffffff, strokeThickness: 3 });
-      t.anchor.set(.5);
-      t.position.set(w/2, h - 24);
-      c.addChild(t);
+  function addCrayon(x, y, color, rot) {
+    var c = new PIXI.Container();
+    c.x = x; c.y = y; c.rotation = rot || 0;
+    state.tableLayer.addChild(c);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -8, -62, 16, 124, 7, color, 1, 2, 0xFFFFFF, 0.45);
+    g.beginFill(0xEFE6D3); g.drawPolygon([-8, -62, 8, -62, 0, -83]); g.endFill();
+    g.beginFill(0x2F1E13); g.drawPolygon([-3, -79, 3, -79, 0, -87]); g.endFill();
+    c.addChild(g);
+  }
+
+  function addMug(x, y) {
+    var c = new PIXI.Container(); c.x = x; c.y = y; state.tableLayer.addChild(c);
+    var g = new PIXI.Graphics();
+    gCircle(g, 0, 0, 42, 0xF1BDB0, 1, 5, 0xFFE1D8, 1);
+    gCircle(g, 0, 0, 28, 0x5B331D, 1, 0);
+    gCircle(g, 42, 4, 17, 0xF1BDB0, 1, 5, 0xFFE1D8, 1);
+    c.addChild(g);
+  }
+
+  function addBlocks(x, y) {
+    var colors = [0xF178A8, 0x60B7EA, 0xF8D64D, 0x8BCB63, 0xB77AE8];
+    for (var i = 0; i < 5; i += 1) {
+      var g = new PIXI.Graphics();
+      var bx = x + (i % 3) * 38;
+      var by = y + Math.floor(i / 3) * 36;
+      gRoundRect(g, bx, by, 36, 34, 8, colors[i], 1, 3, 0xFFFFFF, 0.5);
+      state.tableLayer.addChild(g);
     }
+  }
 
-    const n = makeText(String(index), { fontSize: 14, fill: 0x617586, fontWeight: '800' });
-    n.anchor.set(.5);
-    n.position.set(w - 18, h - 15);
-    c.addChild(n);
+  function addTreeToy(x, y) {
+    var g = new PIXI.Graphics();
+    gCircle(g, x, y + 22, 28, 0x5C9D43, 1, 3, 0x326924, 1);
+    gCircle(g, x + 4, y - 5, 24, 0x6DBA4D, 1, 3, 0x326924, 1);
+    gRoundRect(g, x - 8, y + 34, 16, 44, 6, 0x8D5A2B, 1, 0);
+    state.tableLayer.addChild(g);
+  }
 
-    const glow = new PIXI.Graphics();
-    roundedRect(glow, -6, -6, w+12, h+12, Math.min(32, w*.24, h*.24), 0xffff5a, 0.0, { width: 8, color: 0xffff5a, alpha: .0 });
-    glow.name = 'glow';
-    c.addChild(glow);
+  function addButtonCoin(x, y, color) {
+    var g = new PIXI.Graphics();
+    gCircle(g, x, y, 28, color, 1, 4, 0x8A5522, 1);
+    gCircle(g, x, y, 11, 0xF9D36D, 0.42, 0);
+    state.tableLayer.addChild(g);
+  }
+
+  function drawBoardBase() {
+    var layer = state.boardLayer;
+    layer.removeChildren();
+
+    var shadow = new PIXI.Graphics();
+    gRoundRect(shadow, BOARD.x + 18, BOARD.y + 26, BOARD.w, BOARD.h, BOARD.r + 12, 0x000000, 0.24, 0);
+    layer.addChild(shadow);
+
+    var board = new PIXI.Graphics();
+    gRoundRect(board, BOARD.x, BOARD.y, BOARD.w, BOARD.h, BOARD.r + 20, COLORS.boardEdge, 1, 8, 0xFFE5A2, 1);
+    gRoundRect(board, BOARD.x + 18, BOARD.y + 18, BOARD.w - 36, BOARD.h - 36, BOARD.r + 10, COLORS.boardBase, 1, 7, COLORS.boardGold, 1);
+    gRoundRect(board, BOARD.x + 148, BOARD.y + 142, BOARD.w - 296, BOARD.h - 284, 32, 0xFFE7AC, 1, 5, 0xE1B66C, 0.9);
+    layer.addChild(board);
+
+    var innerTexture = new PIXI.Graphics();
+    innerTexture.lineStyle(2, 0xB8855B, 0.12);
+    for (var i = 0; i < 9; i += 1) {
+      innerTexture.moveTo(BOARD.x + 184, BOARD.y + 188 + i * 34);
+      innerTexture.lineTo(BOARD.x + BOARD.w - 184, BOARD.y + 188 + i * 34 + Math.sin(i) * 5);
+    }
+    for (var j = 0; j < 12; j += 1) {
+      innerTexture.moveTo(BOARD.x + 190 + j * 48, BOARD.y + 174);
+      innerTexture.lineTo(BOARD.x + 190 + j * 48 + Math.cos(j) * 4, BOARD.y + BOARD.h - 174);
+    }
+    layer.addChild(innerTexture);
+
+    drawZoneBadges();
+  }
+
+  function drawZoneBadges() {
+    var data = [
+      { x: CENTER.x, y: BOARD.y + BOARD.h - 38, zone: ZONES[0] },
+      { x: BOARD.x + BOARD.w - 38, y: CENTER.y, zone: ZONES[1] },
+      { x: CENTER.x, y: BOARD.y + 38, zone: ZONES[2] },
+      { x: BOARD.x + 38, y: CENTER.y, zone: ZONES[3] }
+    ];
+    data.forEach(function (item) {
+      var c = new PIXI.Container(); c.x = item.x; c.y = item.y;
+      if (item.x === BOARD.x + 38) c.rotation = -Math.PI / 2;
+      if (item.x === BOARD.x + BOARD.w - 38) c.rotation = Math.PI / 2;
+      state.boardLayer.addChild(c);
+      var g = new PIXI.Graphics();
+      gRoundRect(g, -56, -23, 112, 46, 23, item.zone.fill, 0.55, 3, item.zone.edge, 0.55);
+      c.addChild(g);
+      var tx = createText(item.zone.icon, 28, 0xFFFFFF, '900');
+      tx.anchor.set(0.5); c.addChild(tx);
+    });
+  }
+
+  function drawObjects() {
+    var layer = state.objectLayer;
+    layer.removeChildren();
+    drawGiftBox(CENTER.x - 130, CENTER.y + 4, 1.2, true);
+    drawCardStack(CENTER.x + 112, CENTER.y + 6, 1.08, true);
+    drawSparkles(layer, CENTER.x, CENTER.y - 62, 16, 170);
+  }
+
+  function drawGiftBox(x, y, scale, idle) {
+    var c = new PIXI.Container(); c.x = x; c.y = y; c.scale.set(scale || 1); c.zIndex = 10;
+    state.objectLayer.addChild(c);
+    var shadow = new PIXI.Graphics(); gCircle(shadow, 0, 62, 72, 0x000000, 0.13, 0); shadow.scale.y = 0.25; c.addChild(shadow);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -56, -8, 112, 84, 14, 0xF9C22E, 1, 4, 0xBD7D13, 1);
+    gRoundRect(g, -66, -42, 132, 44, 13, 0xF9D34A, 1, 4, 0xBD7D13, 1);
+    gRoundRect(g, -11, -42, 22, 118, 8, 0xF05672, 1, 0);
+    gRoundRect(g, -66, -21, 132, 22, 7, 0xF05672, 1, 0);
+    gCircle(g, -23, -50, 25, 0xF05672, 1, 4, 0xFFFFFF, 0.4);
+    gCircle(g, 23, -50, 25, 0xF05672, 1, 4, 0xFFFFFF, 0.4);
+    c.addChild(g);
+    if (idle) {
+      addTicker(function () {
+        c.y = y + Math.sin(Date.now() / 470) * 3;
+        return false;
+      });
+    }
     return c;
   }
 
-  function cellStyle(type) {
-    if (type === 'start') return { bg: 0xcff0ff, band: COLORS.blue };
-    if (type === 'gift' || type === 'giftCorner') return { bg: 0xffefb8, band: COLORS.orange };
-    if (type === 'mission' || type === 'missionCorner') return { bg: 0xffd9eb, band: COLORS.pink };
-    if (type === 'family') return { bg: 0xe8ffd9, band: COLORS.green };
-    if (type === 'finish') return { bg: 0xfff0a0, band: COLORS.yellow };
-    return { bg: 0xffffff, band: 0x9fe5ff };
+  function drawCardStack(x, y, scale, idle) {
+    var c = new PIXI.Container(); c.x = x; c.y = y; c.scale.set(scale || 1); c.zIndex = 10;
+    state.objectLayer.addChild(c);
+    var shadow = new PIXI.Graphics(); gCircle(shadow, 0, 60, 58, 0x000000, 0.12, 0); shadow.scale.y = 0.22; c.addChild(shadow);
+    for (var i = 3; i >= 0; i -= 1) {
+      var g = new PIXI.Graphics();
+      g.rotation = (i - 1.5) * 0.035;
+      gRoundRect(g, -42 + i * 3, -58 + i * 4, 84, 118, 14, i === 0 ? 0xB77AE8 : 0x8F5BD5, 1, 4, 0xFFFFFF, 0.55);
+      gStar(g, i * 3, -2 + i * 4, 26, 13, 0xFFE066, 1, 2, 0x8758B8);
+      c.addChild(g);
+    }
+    if (idle) {
+      addTicker(function () {
+        c.rotation = Math.sin(Date.now() / 720) * 0.025;
+        c.y = y + Math.sin(Date.now() / 580) * 2.5;
+        return false;
+      });
+    }
+    return c;
   }
 
-  function drawCenterObjects() {
-    drawTitlePlate();
-    drawTurnBadge();
-    drawRoulette();
-    drawGiftBox();
-    drawMissionDeck();
-    drawSoundButton();
+  function drawSparkles(layer, cx, cy, count, radius) {
+    for (var i = 0; i < count; i += 1) {
+      var a = Math.PI * 2 * i / count;
+      var r = rand(radius * 0.4, radius);
+      var s = new PIXI.Graphics();
+      var color = [0xFFE066, 0xF178A8, 0x60B7EA, 0xFFFFFF][i % 4];
+      gStar(s, 0, 0, rand(6, 12), rand(3, 6), color, 0.8, 0);
+      s.x = cx + Math.cos(a) * r;
+      s.y = cy + Math.sin(a) * r;
+      s.alpha = 0.7;
+      layer.addChild(s);
+      addTicker(function (sp, off) {
+        return function () {
+          sp.rotation += 0.014;
+          sp.alpha = 0.35 + Math.sin(Date.now() / 420 + off) * 0.25;
+          return false;
+        };
+      }(s, i));
+    }
   }
 
-  function drawTitlePlate() {
-    const plate = new PIXI.Container();
-    plate.position.set(800, 182);
-    plate.zIndex = 5;
-    const bg = new PIXI.Graphics();
-    roundedRect(bg, -270, -42, 540, 84, 42, 0xffffff, .92, { width: 7, color: 0xffc46b });
-    plate.addChild(bg);
-    const t = makeText('보드랜드 패밀리', { fontSize: 44, fill: COLORS.ink, stroke: 0xffffff, strokeThickness: 3 });
-    t.anchor.set(.5);
-    plate.addChild(t);
-    state.board.addChild(plate);
+  function drawTiles() {
+    state.tileLayer.removeChildren();
+    state.tiles = [];
+    state.tileMap = buildTileMap();
+    for (var i = 0; i < state.tileMap.length; i += 1) drawTile(i);
   }
 
-  function drawTurnBadge() {
-    const badge = new PIXI.Container();
-    badge.name = 'turnBadge';
-    badge.position.set(800, 275);
-    badge.zIndex = 20;
-    const bg = new PIXI.Graphics();
-    roundedRect(bg, -180, -34, 360, 68, 34, 0xffffff, .9, { width: 5, color: COLORS.yellow });
-    badge.addChild(bg);
-    const t = makeText('가족을 골라주세요', { fontSize: 30, fill: COLORS.ink });
-    t.anchor.set(.5);
-    t.name = 'turnText';
-    badge.addChild(t);
-    state.board.addChild(badge);
+  function getZoneByIndex(index) {
+    if (index < 8) return ZONES[0];
+    if (index < 16) return ZONES[1];
+    if (index < 24) return ZONES[2];
+    return ZONES[3];
   }
 
-  function drawSoundButton() {
-    const btn = createButton('소리', 120, 56, 0xffffff, () => {
-      state.muted = !state.muted;
-      const t = btn.getChildByName('label');
+  function drawTile(index) {
+    var p = state.tileMap[index];
+    var typeId = TILE_PATTERN[index];
+    var meta = TILE_TYPES[typeId];
+    var zone = getZoneByIndex(index);
+    var isCorner = index === 0 || index === 8 || index === 16 || index === 24 || index === FINISH_INDEX;
+    var w = isCorner ? CORNER_SIZE : TILE_SIZE;
+    var h = isCorner ? CORNER_SIZE : TILE_SIZE;
+    var c = new PIXI.Container(); c.x = p.x; c.y = p.y; c.zIndex = index;
+    state.tileLayer.addChild(c);
+
+    var fill = typeId === 'normal' ? zone.fill : meta.fill;
+    var edge = typeId === 'normal' ? zone.edge : meta.edge;
+
+    var shadow = new PIXI.Graphics();
+    gRoundRect(shadow, -w / 2 + 7, -h / 2 + 13, w, h, 17, 0x000000, 0.14, 0);
+    c.addChild(shadow);
+
+    var depth = new PIXI.Graphics();
+    gRoundRect(depth, -w / 2, -h / 2 + 8, w, h, 18, edge, 1, 0);
+    c.addChild(depth);
+
+    var tile = new PIXI.Graphics();
+    gRoundRect(tile, -w / 2, -h / 2, w, h - 7, 17, fill, 1, 4, 0xFFFFFF, 0.4);
+    gRoundRect(tile, -w / 2 + 10, -h / 2 + 8, w - 20, 14, 8, 0xFFFFFF, 0.30, 0);
+    c.addChild(tile);
+
+    if (typeId !== 'normal') {
+      var iconBg = new PIXI.Graphics();
+      gCircle(iconBg, 0, 1, isCorner ? 34 : 24, 0xFFFFFF, 0.34, 0);
+      c.addChild(iconBg);
+      var icon = createText(meta.icon, isCorner ? 45 : 34, 0xFFFFFF, '900');
+      icon.anchor.set(0.5);
+      icon.y = 0;
+      c.addChild(icon);
+      if (meta.label) {
+        var label = createText(meta.label, 18, 0xFFFFFF, '900');
+        label.anchor.set(0.5);
+        label.y = isCorner ? 38 : 0;
+        c.addChild(label);
+      }
+    } else if (index % 3 === 0) {
+      var mini = createText(zone.icon, 24, 0xFFFFFF, '900');
+      mini.anchor.set(0.5);
+      mini.alpha = 0.62;
+      c.addChild(mini);
+    }
+
+    if (typeId === 'gift' || typeId === 'mission' || typeId === 'family') {
+      addTicker(function (node, offset) {
+        return function () {
+          if (state.screen !== 'game') return false;
+          node.scale.set(1 + Math.sin(Date.now() / 650 + offset) * 0.025);
+          return false;
+        };
+      }(c, index));
+    }
+
+    state.tiles[index] = c;
+  }
+
+  function makePlayer(playerPreset, pawn, order) {
+    return {
+      id: playerPreset.id,
+      name: playerPreset.name,
+      pawnId: pawn.id,
+      icon: pawn.icon,
+      fill: pawn.fill,
+      edge: pawn.edge,
+      index: 0,
+      finished: false,
+      token: null,
+      panel: null,
+      order: order
+    };
+  }
+
+  function resetPlayers() {
+    state.players = [];
+    for (var i = 0; i < state.setupPlayerCount; i += 1) {
+      var pawn = PAWNS[state.setupPawnIndex[i] % PAWNS.length];
+      state.players.push(makePlayer(PLAYER_PRESETS[i], pawn, i));
+    }
+    state.currentPlayerIndex = 0;
+  }
+
+  function drawPlayerToken(player) {
+    var c = new PIXI.Container();
+    c.zIndex = 80 + player.order;
+    player.token = c;
+    state.tokenLayer.addChild(c);
+
+    var shadow = new PIXI.Graphics();
+    gCircle(shadow, 0, 34, 34, 0x000000, 0.18, 0);
+    shadow.scale.y = 0.35;
+    c.addChild(shadow);
+
+    var base = new PIXI.Graphics();
+    gCircle(base, 0, 18, 33, player.edge, 1, 0);
+    gCircle(base, 0, 11, 32, player.fill, 1, 5, 0xFFFFFF, 0.48);
+    gCircle(base, -10, 2, 10, 0xFFFFFF, 0.30, 0);
+    c.addChild(base);
+
+    var icon = createText(player.icon, 38, 0xFFFFFF, '900');
+    icon.anchor.set(0.5);
+    icon.y = 3;
+    c.addChild(icon);
+
+    var glow = new PIXI.Graphics();
+    gCircle(glow, 0, 10, 43, 0xFFE066, 0.0, 6, 0xFFE066, 0.0);
+    glow.name = 'turnGlow';
+    c.addChildAt(glow, 0);
+
+    positionToken(player, true);
+  }
+
+  function positionToken(player, instant) {
+    if (!player.token) return;
+    var base = state.tileMap[player.index];
+    var playersHere = state.players.filter(function (p) { return p.index === player.index; });
+    var local = playersHere.indexOf(player);
+    var offsets = [
+      { x: -20, y: -14 }, { x: 20, y: -14 }, { x: -20, y: 18 }, { x: 20, y: 18 }
+    ];
+    var off = offsets[local] || { x: 0, y: 0 };
+    var x = base.x + off.x;
+    var y = base.y + off.y - 30;
+    if (instant) { player.token.x = x; player.token.y = y; }
+    else {
+      var sx = player.token.x;
+      var sy = player.token.y;
+      animate(260, function (t) {
+        var e = easeOutCubic(t);
+        player.token.x = sx + (x - sx) * e;
+        player.token.y = sy + (y - sy) * e;
+      });
+    }
+  }
+
+  function drawTokens() {
+    state.tokenLayer.removeChildren();
+    state.players.forEach(drawPlayerToken);
+    updateTurnGlow();
+  }
+
+  function updateTurnGlow() {
+    state.players.forEach(function (player, idx) {
+      if (!player.token) return;
+      var glow = player.token.getChildByName('turnGlow');
+      if (glow) {
+        glow.alpha = idx === state.currentPlayerIndex && !player.finished ? 1 : 0;
+        glow.clear();
+        gCircle(glow, 0, 10, 45, 0xFFE066, idx === state.currentPlayerIndex ? 0.14 : 0, 7, 0xFFE066, idx === state.currentPlayerIndex ? 0.9 : 0);
+      }
     });
-    btn.position.set(1440, 178);
-    btn.zIndex = 30;
-    btn.scale.set(.86);
-    state.board.addChild(btn);
+  }
+
+  function pulseCurrentToken() {
+    var player = state.players[state.currentPlayerIndex];
+    if (!player || !player.token) return;
+    state.pulseTickerVersion += 1;
+    var version = state.pulseTickerVersion;
+    addTicker(function () {
+      if (version !== state.pulseTickerVersion || state.screen !== 'game') {
+        if (player.token) player.token.scale.set(1);
+        return true;
+      }
+      if (state.isMoving || state.isSpinning || state.waitingEvent || player.finished) {
+        if (player.token) player.token.scale.set(1);
+        return false;
+      }
+      player.token.scale.set(1 + Math.sin(Date.now() / 260) * 0.045);
+      return false;
+    });
+  }
+
+  function drawHud() {
+    state.hudLayer.removeChildren();
+    drawPlayerPanels();
+    drawRoulette();
+    drawTinyControls();
+    updateTurnBadge();
+  }
+
+  function panelPosition(i, count) {
+    if (count === 2) return [{ x: 118, y: 250 }, { x: 1348, y: 250 }][i];
+    if (count === 3) return [{ x: 118, y: 226 }, { x: 1348, y: 226 }, { x: 118, y: 606 }][i];
+    return [{ x: 118, y: 226 }, { x: 1348, y: 226 }, { x: 118, y: 606 }, { x: 1348, y: 606 }][i];
+  }
+
+  function clearPlayerPanels() {
+    state.players.forEach(function (player) {
+      if (player.panel && player.panel.parent) player.panel.parent.removeChild(player.panel);
+      player.panel = null;
+    });
+  }
+
+  function drawPlayerPanels() {
+    clearPlayerPanels();
+    var count = state.players.length;
+    state.players.forEach(function (player, i) {
+      var pos = panelPosition(i, count);
+      var c = new PIXI.Container(); c.x = pos.x; c.y = pos.y; c.zIndex = 30 + i;
+      player.panel = c;
+      state.hudLayer.addChild(c);
+      var g = new PIXI.Graphics();
+      gRoundRect(g, -90, -48, 180, 96, 22, player.fill, 1, 5, 0xFFFFFF, 0.85);
+      gRoundRect(g, -84, -42, 168, 84, 18, 0xFFF9E8, 0.88, 0);
+      gCircle(g, -52, 0, 30, player.fill, 1, 4, player.edge, 1);
+      c.addChild(g);
+      var icon = createText(player.icon, 34, 0xFFFFFF, '900'); icon.anchor.set(0.5); icon.x = -52; icon.y = -2; c.addChild(icon);
+      var name = createText(player.name, 23, COLORS.ink, '900', 'left'); name.anchor.set(0, 0.5); name.x = -10; name.y = -16; c.addChild(name);
+      var stars = createText('★ ' + (player.index + 1), 21, 0xB87512, '900', 'left'); stars.anchor.set(0, 0.5); stars.x = -10; stars.y = 17; c.addChild(stars);
+      if (i === state.currentPlayerIndex) {
+        var mark = createText('내 차례', 17, 0xE05036, '900'); mark.anchor.set(0.5); mark.x = 42; mark.y = -45; c.addChild(mark);
+      }
+    });
+  }
+
+  function updatePlayerPanels() {
+    drawPlayerPanels();
+  }
+
+  function drawTurnBanner(text) {
+    if (state.turnBadge && state.turnBadge.parent) state.turnBadge.parent.removeChild(state.turnBadge);
+    var c = new PIXI.Container(); c.x = CENTER.x; c.y = 56; c.zIndex = 120;
+    state.turnBadge = c;
+    state.hudLayer.addChild(c);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -160, -30, 320, 60, 30, 0xFFF9E8, 0.96, 5, 0xF9D36D, 1);
+    c.addChild(g);
+    var t = createText(text, 28, COLORS.ink, '900'); t.anchor.set(0.5); c.addChild(t);
+  }
+
+  function updateTurnBadge() {
+    var player = state.players[state.currentPlayerIndex];
+    if (!player) return;
+    drawTurnBanner(player.name + ' 차례');
   }
 
   function drawRoulette() {
-    const wrap = new PIXI.Container();
-    wrap.name = 'rouletteWrap';
-    wrap.position.set(1035, 448);
-    wrap.zIndex = 10;
-    state.board.addChild(wrap);
+    var c = new PIXI.Container();
+    c.x = 1368;
+    c.y = 660;
+    c.zIndex = 80;
+    state.roulette = c;
+    state.hudLayer.addChild(c);
 
-    const shadow = new PIXI.Graphics();
-    shadow.beginFill(0x24405e, .18).drawEllipse(8, 30, 190, 38).endFill();
-    wrap.addChild(shadow);
+    var shadow = new PIXI.Graphics();
+    gCircle(shadow, 0, 34, 168, 0x000000, 0.22, 0); shadow.scale.y = 0.33; c.addChild(shadow);
 
-    const wheel = new PIXI.Container();
-    wheel.name = 'wheel';
-    wrap.addChild(wheel);
+    var base = new PIXI.Graphics();
+    gCircle(base, 0, 0, 164, 0x9B5D31, 1, 8, 0xE9B467, 1);
+    gCircle(base, 0, 0, 145, 0xF9D36D, 1, 6, 0xB96E1F, 1);
+    c.addChild(base);
 
-    const r = 155;
-    const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS.length;
-    ROULETTE_SEGMENTS.forEach((seg, i) => {
-      const start = -Math.PI / 2 + i * segmentAngle;
-      const end = start + segmentAngle;
-      const g = new PIXI.Graphics();
-      g.beginFill(seg.color);
-      g.lineStyle(5, 0xffffff, 1);
-      g.moveTo(0,0);
-      g.arc(0,0,r,start,end);
-      g.lineTo(0,0);
+    var face = new PIXI.Container();
+    state.rouletteFace = face;
+    c.addChild(face);
+    drawRouletteFace(face);
+
+    var glass = new PIXI.Graphics();
+    gCircle(glass, -44, -56, 56, 0xFFFFFF, 0.16, 0);
+    glass.scale.y = 0.52;
+    c.addChild(glass);
+
+    var hub = new PIXI.Graphics();
+    gCircle(hub, 0, 0, 48, 0xB96E1F, 1, 0);
+    gCircle(hub, 0, -5, 45, 0xFBD04D, 1, 4, 0xFFFFFF, 0.52);
+    gStar(hub, 0, -5, 25, 12, 0xFFFFFF, 1, 2, 0xB98512);
+    c.addChild(hub);
+
+    var pointer = new PIXI.Graphics();
+    pointer.beginFill(0xF05672, 1);
+    pointer.lineStyle(5, 0xFFFFFF, 1);
+    pointer.moveTo(0, -180);
+    pointer.lineTo(-28, -124);
+    pointer.lineTo(28, -124);
+    pointer.closePath();
+    pointer.endFill();
+    pointer.y = -2;
+    state.pointer = pointer;
+    c.addChild(pointer);
+
+    var guide = createText('룰렛을 톡!', 28, 0xFFFFFF, '900');
+    guide.anchor.set(0.5); guide.x = 0; guide.y = -202; c.addChild(guide);
+
+    c.interactive = true;
+    c.buttonMode = true;
+    c.hitArea = new PIXI.Circle(0, 0, 180);
+    c.on('pointerdown', function () { pressRoulette(); });
+    c.on('pointertap', function () { spinRoulette(); });
+
+    addTicker(function () {
+      if (state.screen !== 'game' || state.isSpinning || state.isMoving || state.waitingEvent) return false;
+      c.y = 660 + Math.sin(Date.now() / 600) * 4;
+      face.rotation += 0.0018;
+      return false;
+    });
+  }
+
+  function drawRouletteFace(face) {
+    face.removeChildren();
+    var colors = [0xFFE066, 0xF178A8, 0x60B7EA, 0x8BCB63, 0xB77AE8, 0xF5B34D];
+    for (var i = 0; i < 6; i += 1) {
+      var g = new PIXI.Graphics();
+      g.beginFill(colors[i], 1);
+      g.lineStyle(3, 0xFFFFFF, 0.48);
+      g.moveTo(0, 0);
+      g.arc(0, 0, 133, -Math.PI / 2 + i * Math.PI / 3, -Math.PI / 2 + (i + 1) * Math.PI / 3);
+      g.closePath();
       g.endFill();
-      wheel.addChild(g);
-
-      const label = makeText(seg.label, { fontSize: 58, fill: COLORS.ink, stroke: 0xffffff, strokeThickness: 7 });
-      label.anchor.set(.5);
-      const mid = start + segmentAngle/2;
-      label.position.set(Math.cos(mid)*92, Math.sin(mid)*92);
-      label.rotation = mid + Math.PI/2;
-      wheel.addChild(label);
-    });
-
-    const center = new PIXI.Graphics();
-    center.beginFill(0xffffff).lineStyle(7, COLORS.orange).drawCircle(0,0,68).endFill();
-    center.beginFill(COLORS.yellow).drawCircle(0,0,50).endFill();
-    wheel.addChild(center);
-    const star = makeText('★', { fontSize: 54, fill: 0xffffff, stroke: 0xd89100, strokeThickness: 4 });
-    star.anchor.set(.5);
-    wheel.addChild(star);
-
-    const pointer = new PIXI.Graphics();
-    pointer.beginFill(0xff4f68).lineStyle(5, 0xffffff).drawPolygon([-24,-184,24,-184,0,-132]).endFill();
-    wrap.addChild(pointer);
-
-    const btn = createButton('돌리기', 170, 68, COLORS.orange, () => spinRoulette());
-    btn.position.set(0, 218);
-    wrap.addChild(btn);
-  }
-
-  function drawGiftBox() {
-    const box = new PIXI.Container();
-    box.name = 'giftBox';
-    box.position.set(618, 466);
-    box.zIndex = 12;
-    box.eventMode = 'static';
-    box.cursor = 'pointer';
-    const g = new PIXI.Graphics();
-    g.beginFill(0x2a5d9f, .12).drawEllipse(0, 83, 116, 22).endFill();
-    g.beginFill(0xff5a6b).lineStyle(7, 0xffffff).drawRoundedRect(-72,-25,144,116,18).endFill();
-    g.beginFill(0xffd447).drawRect(-12,-25,24,116).drawRect(-82,-42,164,30).endFill();
-    g.beginFill(0xff79b0).drawCircle(-34,-58,28).drawCircle(34,-58,28).endFill();
-    box.addChild(g);
-    const t = makeText('선물상자', { fontSize: 24, fill: COLORS.ink, stroke: 0xffffff, strokeThickness: 4 });
-    t.anchor.set(.5); t.position.set(0,120); box.addChild(t);
-    box.on('pointertap', () => openGift());
-    state.board.addChild(box);
-  }
-
-  function drawMissionDeck() {
-    const deck = new PIXI.Container();
-    deck.name = 'missionDeck';
-    deck.position.set(470, 398);
-    deck.zIndex = 12;
-    deck.eventMode = 'static';
-    deck.cursor = 'pointer';
-    for (let i = 0; i < 3; i++) {
-      const c = new PIXI.Graphics();
-      c.beginFill(i === 2 ? 0xffffff : 0xffd8eb).lineStyle(6, i === 2 ? COLORS.pink : 0xffffff)
-        .drawRoundedRect(-70 + i*8, -92 + i*8, 140, 184, 18).endFill();
-      c.beginFill(COLORS.pink).drawRoundedRect(-45 + i*8, -46 + i*8, 90, 22, 8).endFill();
-      c.beginFill(COLORS.purple).drawRoundedRect(-45 + i*8, 10 + i*8, 90, 22, 8).endFill();
-      deck.addChild(c);
+      face.addChild(g);
+      var value = (i % 3) + 1;
+      var stars = value === 1 ? '★' : value === 2 ? '★★' : '★★★';
+      var txt = createText(stars, value === 3 ? 24 : 30, 0xFFFFFF, '900');
+      txt.anchor.set(0.5);
+      var a = -Math.PI / 2 + (i + 0.5) * Math.PI / 3;
+      txt.x = Math.cos(a) * 83;
+      txt.y = Math.sin(a) * 83;
+      txt.rotation = a + Math.PI / 2;
+      face.addChild(txt);
     }
-    const t = makeText('미션카드', { fontSize: 24, fill: COLORS.ink, stroke: 0xffffff, strokeThickness: 4 });
-    t.anchor.set(.5); t.position.set(8,130); deck.addChild(t);
-    deck.on('pointertap', () => openMission());
-    state.board.addChild(deck);
   }
 
-  function showStartOverlay() {
-    const overlay = new PIXI.Container();
-    overlay.name = 'startOverlay';
-    overlay.zIndex = 100;
-    state.stage.addChild(overlay);
-
-    const dim = new PIXI.Graphics();
-    dim.beginFill(0x12304b, .44).drawRect(0,0,DESIGN_W,DESIGN_H).endFill();
-    overlay.addChild(dim);
-
-    const panel = new PIXI.Container();
-    panel.position.set(800, 450);
-    overlay.addChild(panel);
-    const bg = new PIXI.Graphics();
-    roundedRect(bg, -430, -245, 860, 490, 42, 0xffffff, .96, { width: 10, color: COLORS.yellow });
-    panel.addChild(bg);
-
-    const title = makeText('누구랑 보드랜드 할까요?', { fontSize: 48, fill: COLORS.ink });
-    title.anchor.set(.5); title.position.set(0, -170); panel.addChild(title);
-    const sub = makeText('태블릿을 가운데 두고 가족이 함께 룰렛을 돌려요.', { fontSize: 25, fill: 0x4c6478 });
-    sub.anchor.set(.5); sub.position.set(0, -118); panel.addChild(sub);
-
-    const options = [
-      { label: '시현이 혼자', count: 1 },
-      { label: '시현이 + 엄마', count: 2 },
-      { label: '세 명', count: 3 },
-      { label: '가족 모두', count: 4 }
-    ];
-    options.forEach((op, i) => {
-      const btn = createButton(op.label, 300, 82, [COLORS.yellow, COLORS.pink, COLORS.blue, COLORS.green][i], () => startGame(op.count));
-      btn.position.set(i % 2 ? 170 : -170, i < 2 ? -20 : 88);
-      panel.addChild(btn);
+  function pressRoulette() {
+    if (state.isSpinning || state.isMoving || state.waitingEvent || state.screen !== 'game') return;
+    tone('tap');
+    vibrate(20);
+    var c = state.roulette;
+    if (!c) return;
+    state.roulettePressToken += 1;
+    var pressToken = state.roulettePressToken;
+    animate(110, function (t) {
+      if (pressToken !== state.roulettePressToken || state.isSpinning) return;
+      var s = 1 - Math.sin(t * Math.PI) * 0.07;
+      c.scale.set(s);
+    }).then(function () {
+      if (c && pressToken === state.roulettePressToken && !state.isSpinning) c.scale.set(1);
     });
   }
 
-  function startGame(count) {
-    const overlay = state.stage.getChildByName('startOverlay');
-    if (overlay) overlay.destroy({ children: true });
-    const order = count === 1 ? ['sihyeon'] : count === 2 ? ['sihyeon', 'mom'] : count === 3 ? ['sihyeon', 'mom', 'dad'] : ['sihyeon', 'mom', 'dad', 'sicheon'];
-    state.players = order.map(id => {
-      const meta = PLAYERS.find(p => p.id === id);
-      return { ...meta, position: 0, finished: false, token: null };
-    });
-    state.currentPlayerIndex = 0;
-    state.started = true;
-    createTokens();
-    updateTurnBadge();
-    updateTokenPositions();
-    playVoice('boardland.startGame');
-  }
-
-  function createTokens() {
-    const layer = new PIXI.Container();
-    layer.name = 'tokenLayer';
-    layer.zIndex = 50;
-    state.board.addChild(layer);
-
-    state.players.forEach(player => {
-      const token = new PIXI.Container();
-      token.zIndex = 60;
-      const shadow = new PIXI.Graphics();
-      shadow.beginFill(0x12213a, .18).drawEllipse(0, 30, 42, 12).endFill();
-      token.addChild(shadow);
-
-      const g = new PIXI.Graphics();
-      g.beginFill(player.color).lineStyle(7, 0xffffff).drawCircle(0,0,37).endFill();
-      g.beginFill(0xffffff, .2).drawCircle(-12,-14,12).endFill();
-      token.addChild(g);
-
-      const txt = makeText(player.emoji, { fontSize: 31, fill: COLORS.ink });
-      txt.anchor.set(.5); token.addChild(txt);
-
-      const badge = makeText(player.name, { fontSize: 15, fill: COLORS.ink, stroke: 0xffffff, strokeThickness: 4 });
-      badge.anchor.set(.5); badge.position.set(0, 53); token.addChild(badge);
-
-      player.token = token;
-      layer.addChild(token);
-    });
-  }
-
-  function getCellCenter(index) {
-    const cell = state.cells[Math.max(0, Math.min(FINISH_INDEX, index))];
-    return { x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
-  }
-
-  function tokenOffset(player) {
-    const same = state.players.filter(p => p.position === player.position && !p.finished);
-    const idx = same.findIndex(p => p.id === player.id);
-    const n = same.length;
-    const offsets = {
-      1: [[0,0]],
-      2: [[-18,-12],[18,12]],
-      3: [[-22,-12],[22,-12],[0,20]],
-      4: [[-22,-18],[22,-18],[-22,20],[22,20]]
-    }[n] || [[0,0]];
-    return offsets[idx] || [0,0];
-  }
-
-  function updateTokenPositions() {
-    state.players.forEach(player => {
-      if (!player.token) return;
-      const c = getCellCenter(player.position);
-      const off = tokenOffset(player);
-      player.token.position.set(c.x + off[0], c.y + off[1]);
-      player.token.scale.set(player.id === currentPlayer()?.id ? 1.12 : 1);
-      player.token.alpha = player.finished ? .65 : 1;
-    });
-  }
-
-  function currentPlayer() {
-    return state.players[state.currentPlayerIndex];
-  }
-
-  function updateTurnBadge(message) {
-    const badge = state.board.getChildByName('turnBadge');
-    const text = badge?.getChildByName('turnText');
-    const player = currentPlayer();
-    if (text) text.text = message || (player ? `${player.name} 차례예요` : '보드랜드');
-    updateTokenPositions();
+  function getRouletteResultFromAngle(angle) {
+    var normalized = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    var pointerAngle = Math.PI * 1.5;
+    var local = ((pointerAngle - normalized) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    var segment = Math.floor(local / (Math.PI / 3)) % 6;
+    return (segment % 3) + 1;
   }
 
   async function spinRoulette() {
-    if (!state.started || state.isSpinning || state.isMoving || state.pendingEvent) return;
-    const player = currentPlayer();
-    if (!player || player.finished) return;
-
+    if (state.isSpinning || state.isMoving || state.waitingEvent || state.screen !== 'game') return;
     state.isSpinning = true;
-    updateTurnBadge('빙글빙글 돌아가요!');
-    playVoice('boardland.spinning');
-    playTone('spin');
-
-    const roulette = state.board.getChildByName('rouletteWrap');
-    const wheel = roulette.getChildByName('wheel');
-    const resultIndex = randomInt(0, ROULETTE_SEGMENTS.length - 1);
-    const segAngle = Math.PI * 2 / ROULETTE_SEGMENTS.length;
-    const targetAngle = Math.PI * 2 * 5 + (Math.PI * 2 - (resultIndex * segAngle + segAngle / 2));
-    const startRot = state.rouletteRotation;
-    const endRot = startRot + targetAngle;
-    const duration = 2600 + randomInt(0, 650);
-    const start = performance.now();
-
-    await animate(duration, (t) => {
-      const eased = 1 - Math.pow(1 - t, 4);
-      state.rouletteRotation = startRot + (endRot - startRot) * eased;
-      wheel.rotation = state.rouletteRotation;
-    });
-
-    const result = ROULETTE_SEGMENTS[resultIndex];
-    state.isSpinning = false;
-    playVoice(result.voice);
-    await showResultBurst(result.label);
-    await movePlayer(player, result.move);
-  }
-
-  function animate(duration, update) {
-    return new Promise(resolve => {
-      const start = performance.now();
-      const job = () => {
-        const t = Math.min(1, (performance.now() - start) / duration);
-        update(t);
-        if (t >= 1) {
-          state.app.ticker.remove(job);
-          state.tickerJobs.delete(job);
-          resolve();
-        }
-      };
-      state.tickerJobs.add(job);
-      state.app.ticker.add(job);
-    });
-  }
-
-  async function showResultBurst(label) {
-    const burst = makeText(label, { fontSize: 96, fill: COLORS.orange, stroke: 0xffffff, strokeThickness: 12, dropShadow: true });
-    burst.anchor.set(.5);
-    burst.position.set(1035, 448);
-    burst.zIndex = 90;
-    state.board.addChild(burst);
-    await animate(520, (t) => {
-      burst.scale.set(.4 + t * 1.2);
-      burst.alpha = 1 - Math.max(0, t - .55) / .45;
-    });
-    burst.destroy();
-  }
-
-  async function movePlayer(player, steps) {
     state.isMoving = true;
-    const count = Math.max(0, steps);
-    for (let i = 0; i < count; i++) {
-      if (player.position >= FINISH_INDEX) break;
-      player.position += 1;
-      if (player.position >= FINISH_INDEX) {
-        player.position = FINISH_INDEX;
-        player.finished = true;
-      }
-      updateTokenPositions();
-      pulseCell(player.position);
-      playTone('step');
-      await bounceToken(player.token);
-      await wait(120);
-    }
+    state.roulettePressToken += 1;
+    if (state.roulette) state.roulette.scale.set(1);
+    vibrate([12, 18, 12]);
+    var face = state.rouletteFace;
+    var start = face.rotation;
+    var extra = rand(Math.PI * 8, Math.PI * 13);
+    var desiredResult = 1 + Math.floor(Math.random() * 3);
+    var segmentCandidates = desiredResult === 1 ? [0, 3] : desiredResult === 2 ? [1, 4] : [2, 5];
+    var segment = segmentCandidates[Math.floor(Math.random() * segmentCandidates.length)];
+    var segmentCenter = -Math.PI / 2 + (segment + 0.5) * Math.PI / 3;
+    var pointerAngle = Math.PI * 1.5;
+    var targetRotation = pointerAngle - segmentCenter + extra;
+
+    await animate(1700, function (t) {
+      var e = easeOutCubic(t);
+      face.rotation = start + (targetRotation - start) * e;
+      if (Math.floor(t * 42) !== Math.floor((t - 0.03) * 42)) tone('tick');
+    });
+
+    var result = getRouletteResultFromAngle(face.rotation);
+    flashRouletteResult(result);
+    await wait(260);
+    state.isSpinning = false;
+    await moveCurrentPlayer(result);
     state.isMoving = false;
-    handleCellEvent(player);
   }
 
-  async function bounceToken(token) {
-    if (!token) return;
-    const y = token.y;
-    await animate(220, t => token.y = y - Math.sin(t * Math.PI) * 24);
-    token.y = y;
+  function flashRouletteResult(result) {
+    var c = state.roulette;
+    if (!c) return;
+    var txt = createText(result + '칸!', 54, 0xFFFFFF, '900');
+    txt.anchor.set(0.5);
+    txt.y = 194;
+    c.addChild(txt);
+    tone('gift');
+    burst(c.x, c.y - 30, ['⭐', '✨'], 24, state.hudLayer);
+    animate(850, function (t) {
+      txt.alpha = 1 - t;
+      txt.scale.set(0.6 + easeOutBack(t) * 0.8);
+      txt.y = 194 - t * 70;
+    }).then(function () { if (txt.parent) txt.parent.removeChild(txt); });
   }
 
-  function pulseCell(index) {
-    const cell = state.cells[index]?.container;
-    if (!cell) return;
-    const glow = cell.getChildByName('glow');
-    if (!glow) return;
-    animate(380, (t) => {
-      const a = Math.sin(t * Math.PI);
-      glow.alpha = a;
-      glow.scale.set(1 + a * .05);
-    }).then(() => { glow.alpha = 0; glow.scale.set(1); });
-  }
-
-  function handleCellEvent(player) {
-    if (player.position >= FINISH_INDEX) {
-      celebrateFinish(player);
+  async function moveCurrentPlayer(steps) {
+    var player = state.players[state.currentPlayerIndex];
+    if (!player || player.finished) return;
+    for (var s = 0; s < steps; s += 1) {
+      if (player.index >= FINISH_INDEX) break;
+      player.index += 1;
+      await hopToken(player);
+      updatePlayerPanels();
+      tone('hop');
+      vibrate(12);
+    }
+    if (player.index >= FINISH_INDEX) {
+      player.finished = true;
+      await showWin(player);
       return;
     }
-    const type = state.cells[player.position]?.type || 'normal';
-    if (type === 'gift' || type === 'giftCorner') {
-      state.pendingEvent = { type: 'gift', playerId: player.id };
-      updateTurnBadge('선물상자를 눌러요!');
-      pulseObject('giftBox');
-      playVoice('boardland.giftCard');
+    await handleTileEvent(player);
+  }
+
+  async function hopToken(player) {
+    var token = player.token;
+    var target = state.tileMap[player.index];
+    var playersHere = state.players.filter(function (p) { return p.index === player.index; });
+    var local = playersHere.indexOf(player);
+    var offsets = [{ x: -20, y: -14 }, { x: 20, y: -14 }, { x: -20, y: 18 }, { x: 20, y: 18 }];
+    var off = offsets[local] || { x: 0, y: 0 };
+    var tx = target.x + off.x;
+    var ty = target.y + off.y - 30;
+    var sx = token.x;
+    var sy = token.y;
+    await animate(MOVE_STEP_MS, function (t) {
+      var e = easeInOutSine(t);
+      token.x = sx + (tx - sx) * e;
+      token.y = sy + (ty - sy) * e - Math.sin(t * Math.PI) * 55;
+      token.scale.set(1 + Math.sin(t * Math.PI) * 0.12, 1 - Math.sin(t * Math.PI) * 0.04);
+    });
+    token.x = tx; token.y = ty; token.scale.set(1);
+    pulseTile(player.index);
+  }
+
+  function pulseTile(index) {
+    var tile = state.tiles[index];
+    if (!tile) return;
+    animate(260, function (t) {
+      var s = 1 + Math.sin(t * Math.PI) * 0.08;
+      tile.scale.set(s, 1 - Math.sin(t * Math.PI) * 0.03);
+    }).then(function () { tile.scale.set(1); });
+  }
+
+  async function handleTileEvent(player) {
+    var typeId = TILE_PATTERN[player.index];
+    if (typeId === 'normal' || typeId === 'start') {
+      nextTurn();
       return;
     }
-    if (type === 'mission' || type === 'missionCorner') {
-      state.pendingEvent = { type: 'mission', playerId: player.id };
-      updateTurnBadge('미션카드를 눌러요!');
-      pulseObject('missionDeck');
-      playTone('card');
+    if (typeId === 'jump') {
+      await showCard({ type: 'jump', icon: '🌈', title: '무지개 점프!', body: '앞으로 한 칸 더 가요' }, true);
+      if (player.index < FINISH_INDEX) {
+        player.index += 1;
+        await hopToken(player);
+      }
+      nextTurn();
       return;
     }
-    if (type === 'family') {
-      playVoice('boardland.wellDone');
-      updateTurnBadge('참 잘했어요!');
-      setNextTurnLater();
+    if (typeId === 'rest') {
+      await showCard({ type: 'rest', icon: '🌙', title: '잠깐 쉬기!', body: '구름 위에서 쉬어요' }, true);
+      nextTurn();
       return;
     }
-    setNextTurnLater();
-  }
-
-  function pulseObject(name) {
-    const obj = state.board.getChildByName(name);
-    if (!obj) return;
-    animate(780, t => {
-      const a = Math.sin(t * Math.PI * 4);
-      obj.scale.set(1 + Math.max(0, a) * .12);
-      obj.rotation = Math.sin(t * Math.PI * 8) * .04;
-    }).then(() => { obj.scale.set(1); obj.rotation = 0; });
-  }
-
-  function openGift() {
-    if (!state.pendingEvent || state.pendingEvent.type !== 'gift') return;
-    const box = state.board.getChildByName('giftBox');
-    playVoice('boardland.giftReceived');
-    playTone('gift');
-    createParticles(box.x, box.y, ['★','♥','●'], [COLORS.yellow, COLORS.pink, COLORS.green, COLORS.blue], 42);
-    updateTurnBadge('선물 팡!');
-    state.pendingEvent = null;
-    setNextTurnLater(1050);
-  }
-
-  function openMission() {
-    if (!state.pendingEvent || state.pendingEvent.type !== 'mission') return;
-    const mission = MISSIONS[randomInt(0, MISSIONS.length - 1)];
-    state.currentMission = mission;
-    state.pendingEvent = { type: 'missionOpen', playerId: state.pendingEvent.playerId };
-    showMissionPanel(mission);
-  }
-
-  function showMissionPanel(mission) {
-    const panel = new PIXI.Container();
-    panel.name = 'missionPanel';
-    panel.zIndex = 120;
-    state.stage.addChild(panel);
-    const dim = new PIXI.Graphics();
-    dim.beginFill(0x132a44, .36).drawRect(0,0,DESIGN_W,DESIGN_H).endFill();
-    panel.addChild(dim);
-    const card = new PIXI.Container();
-    card.position.set(800, 450);
-    panel.addChild(card);
-    const bg = new PIXI.Graphics();
-    roundedRect(bg, -310, -200, 620, 400, 38, 0xffffff, .98, { width: 10, color: COLORS.pink });
-    bg.beginFill(COLORS.pink).drawRoundedRect(-250, -140, 500, 70, 30).endFill();
-    card.addChild(bg);
-    const title = makeText('미션 카드', { fontSize: 46, fill: 0xffffff, stroke: 0xc84c84, strokeThickness: 5 });
-    title.anchor.set(.5); title.position.set(0, -105); card.addChild(title);
-    const txt = makeText(mission.text, { fontSize: 42, fill: COLORS.ink, wordWrap: true, wordWrapWidth: 500, lineHeight: 50 });
-    txt.anchor.set(.5); txt.position.set(0, 0); card.addChild(txt);
-    const btn = createButton('성공!', 210, 76, COLORS.green, () => completeMission());
-    btn.position.set(0, 125); card.addChild(btn);
-    playVoice(mission.voice);
-  }
-
-  function completeMission() {
-    const panel = state.stage.getChildByName('missionPanel');
-    if (panel) panel.destroy({ children: true });
-    playVoice('boardland.missionSuccess');
-    playTone('gift');
-    createParticles(800, 450, ['★','●'], [COLORS.yellow, COLORS.green, COLORS.pink], 34);
-    state.pendingEvent = null;
-    updateTurnBadge('성공! 정말 잘했어요!');
-    setNextTurnLater(950);
-  }
-
-  function createParticles(x, y, shapes, colors, count) {
-    for (let i = 0; i < count; i++) {
-      const text = makeText(shapes[randomInt(0, shapes.length - 1)], { fontSize: randomInt(24, 42), fill: colors[randomInt(0, colors.length - 1)], stroke: 0xffffff, strokeThickness: 3 });
-      text.anchor.set(.5);
-      text.position.set(x, y);
-      text.zIndex = 130;
-      state.board.addChild(text);
-      const dx = randomInt(-280, 280), dy = randomInt(-230, -40);
-      animate(900 + randomInt(0, 360), t => {
-        const e = 1 - Math.pow(1 - t, 3);
-        text.x = x + dx * e;
-        text.y = y + dy * e + 260 * t * t;
-        text.rotation += .08;
-        text.alpha = 1 - t;
-      }).then(() => text.destroy());
-    }
-  }
-
-  function setNextTurnLater(delay = 720) {
-    wait(delay).then(nextTurn);
+    var card;
+    if (typeId === 'gift') card = { type: 'gift', icon: '🎁', title: '선물 팡!', body: '상자를 톡 눌러 열어요' };
+    else if (typeId === 'family') card = { type: 'family', icon: '❤️', title: '가족 하트!', body: '다 같이 하트를 보내요' };
+    else card = EVENT_CARDS[Math.floor(Math.random() * EVENT_CARDS.length)];
+    await showInteractiveEvent(card);
+    nextTurn();
   }
 
   function nextTurn() {
-    if (!state.started) return;
-    let guard = 0;
+    var tries = 0;
     do {
       state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-      guard++;
-    } while (currentPlayer()?.finished && guard < 10);
+      tries += 1;
+    } while (state.players[state.currentPlayerIndex].finished && tries < state.players.length);
+    updateTurnGlow();
+    updatePlayerPanels();
     updateTurnBadge();
+    pulseCurrentToken();
   }
 
-  function celebrateFinish(player) {
-    state.started = false;
-    playVoice('boardland.gameComplete');
-    playTone('finish');
-    createParticles(800, 420, ['★','♥','●'], [COLORS.yellow, COLORS.pink, COLORS.green, COLORS.blue, COLORS.orange], 96);
-
-    const overlay = new PIXI.Container();
-    overlay.name = 'finishOverlay';
-    overlay.zIndex = 140;
-    state.stage.addChild(overlay);
-    const dim = new PIXI.Graphics();
-    dim.beginFill(0x112c46, .38).drawRect(0,0,DESIGN_W,DESIGN_H).endFill();
-    overlay.addChild(dim);
-    const panel = new PIXI.Container();
-    panel.position.set(800, 450);
-    overlay.addChild(panel);
-    const bg = new PIXI.Graphics();
-    roundedRect(bg, -400, -220, 800, 440, 42, 0xffffff, .98, { width: 10, color: COLORS.yellow });
-    panel.addChild(bg);
-    const title = makeText(`${player.name} 도착!`, { fontSize: 60, fill: COLORS.orange, stroke: 0xffffff, strokeThickness: 6 });
-    title.anchor.set(.5); title.position.set(0, -96); panel.addChild(title);
-    const sub = makeText('정말 정말 잘했어요!', { fontSize: 40, fill: COLORS.ink });
-    sub.anchor.set(.5); sub.position.set(0, -26); panel.addChild(sub);
-    const replay = createButton('다시 하기', 240, 82, COLORS.green, () => render());
-    replay.position.set(0, 96); panel.addChild(replay);
+  async function showInteractiveEvent(card) {
+    state.waitingEvent = true;
+    var overlay = makeEventOverlay(card, false);
+    state.overlayLayer.addChild(overlay);
+    vibrate(30);
+    await animate(320, function (t) {
+      overlay.alpha = t;
+      overlay.scale.x = Math.max(0.02, Math.sin(t * Math.PI / 2));
+      overlay.scale.y = 0.8 + easeOutBack(t) * 0.2;
+    });
+    overlay.scale.set(1);
+    await new Promise(function (resolve) {
+      overlay.interactive = true;
+      overlay.buttonMode = true;
+      overlay.once('pointertap', function () {
+        tone(card.type === 'gift' ? 'gift' : 'card');
+        vibrate([40, 20, 40]);
+        burst(CENTER.x, CENTER.y, card.type === 'gift' ? ['🎁', '⭐', '❤️', '✨'] : ['⭐', '✨', '🌈'], 42, state.overlayLayer);
+        resolve();
+      });
+    });
+    await animate(360, function (t) {
+      overlay.alpha = 1 - t;
+      overlay.scale.set(1 + t * 0.2);
+    });
+    if (overlay.parent) overlay.parent.removeChild(overlay);
+    state.waitingEvent = false;
   }
 
-  window.addEventListener('load', createApp);
+  async function showCard(card, autoClose) {
+    state.waitingEvent = true;
+    var overlay = makeEventOverlay(card, true);
+    state.overlayLayer.addChild(overlay);
+    tone('card');
+    await animate(280, function (t) { overlay.alpha = t; overlay.scale.set(0.82 + easeOutBack(t) * 0.18); });
+    if (autoClose) await wait(850);
+    await animate(280, function (t) { overlay.alpha = 1 - t; overlay.y = t * -30; });
+    if (overlay.parent) overlay.parent.removeChild(overlay);
+    state.waitingEvent = false;
+  }
+
+  function makeEventOverlay(card, small) {
+    var c = new PIXI.Container();
+    c.x = CENTER.x;
+    c.y = CENTER.y;
+    c.alpha = 0;
+    c.zIndex = 200;
+
+    var dim = new PIXI.Graphics();
+    dim.beginFill(0x000000, 0.20);
+    dim.drawRect(-DESIGN_W, -DESIGN_H, DESIGN_W * 2, DESIGN_H * 2);
+    dim.endFill();
+    c.addChild(dim);
+
+    var panel = new PIXI.Container();
+    c.addChild(panel);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -210, -150, 420, 300, 36, 0xFFF5D8, 1, 8, 0xFFFFFF, 0.9);
+    gRoundRect(g, -188, -128, 376, 256, 26, card.type === 'gift' ? 0xFFE6AB : card.type === 'family' ? 0xFFE8F1 : 0xEEE0FF, 1, 4, 0xF9D36D, 0.85);
+    panel.addChild(g);
+
+    var icon = createText(card.icon, 84, 0xFFFFFF, '900'); icon.anchor.set(0.5); icon.y = -62; panel.addChild(icon);
+    var title = createText(card.title, 40, COLORS.ink, '900'); title.anchor.set(0.5); title.y = 20; panel.addChild(title);
+    var body = createText(card.body, 26, 0x744820, '900'); body.anchor.set(0.5); body.y = 66; panel.addChild(body);
+    var hint = createText(small ? '' : '톡!', 24, 0xE05036, '900'); hint.anchor.set(0.5); hint.y = 115; panel.addChild(hint);
+
+    if (card.type === 'gift') {
+      var gift = drawGiftBox(0, -168, 0.75, false);
+      gift.parent.removeChild(gift);
+      panel.addChild(gift);
+    }
+    return c;
+  }
+
+  function burst(x, y, icons, count, layer) {
+    var targetLayer = layer || state.fxLayer;
+    for (var i = 0; i < count; i += 1) {
+      var txt = createText(icons[i % icons.length], rand(20, 36), 0xFFFFFF, '900');
+      txt.anchor.set(0.5);
+      txt.x = x;
+      txt.y = y;
+      txt.rotation = rand(-0.5, 0.5);
+      targetLayer.addChild(txt);
+      var angle = rand(0, Math.PI * 2);
+      var dist = rand(90, 260);
+      var tx = x + Math.cos(angle) * dist;
+      var ty = y + Math.sin(angle) * dist;
+      animate(rand(700, 1050), function (node, ex, ey) {
+        return function (t) {
+          var e = easeOutCubic(t);
+          node.x = x + (ex - x) * e;
+          node.y = y + (ey - y) * e + Math.sin(t * Math.PI) * -90;
+          node.alpha = 1 - t;
+          node.rotation += 0.05;
+          node.scale.set(1 + t * 0.4);
+        };
+      }(txt, tx, ty)).then(function (node) {
+        return function () { if (node.parent) node.parent.removeChild(node); };
+      }(txt));
+    }
+  }
+
+  async function showWin(player) {
+    state.waitingEvent = true;
+    tone('win');
+    vibrate([70, 40, 70, 40, 120]);
+    burst(CENTER.x, CENTER.y, ['🏆', '🌈', '⭐', '❤️', '✨'], 80, state.overlayLayer);
+    var overlay = new PIXI.Container(); overlay.x = CENTER.x; overlay.y = CENTER.y; overlay.alpha = 0; overlay.zIndex = 250;
+    state.overlayLayer.addChild(overlay);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -260, -160, 520, 320, 42, 0xFFF5D8, 1, 8, 0xFFFFFF, 1);
+    gRoundRect(g, -236, -136, 472, 272, 34, 0xFFE58A, 1, 5, 0xF9B233, 1);
+    overlay.addChild(g);
+    var cup = createText('🏆', 96, 0xFFFFFF, '900'); cup.anchor.set(0.5); cup.y = -62; overlay.addChild(cup);
+    var title = createText(player.name + ' 도착!', 46, COLORS.ink, '900'); title.anchor.set(0.5); title.y = 36; overlay.addChild(title);
+    var sub = createText('보드랜드 최고!', 30, 0xB96E1F, '900'); sub.anchor.set(0.5); sub.y = 88; overlay.addChild(sub);
+    await animate(350, function (t) { overlay.alpha = t; overlay.scale.set(0.75 + easeOutBack(t) * 0.25); });
+    overlay.interactive = true;
+    overlay.buttonMode = true;
+    overlay.once('pointertap', function () { restartGame(); });
+  }
+
+  function drawTinyControls() {
+    var btn = new PIXI.Container(); btn.x = 1492; btn.y = 48; btn.zIndex = 100;
+    state.hudLayer.addChild(btn);
+    var g = new PIXI.Graphics(); gCircle(g, 0, 0, 34, 0xFFF9E8, 0.92, 4, 0xFFFFFF, 0.9); btn.addChild(g);
+    var text = createText('↺', 30, COLORS.ink, '900'); text.anchor.set(0.5); text.y = -2; btn.addChild(text);
+    btn.interactive = true; btn.buttonMode = true; btn.on('pointertap', restartGame);
+
+    var note = createText('v2.2.1 로컬 Pixi', 16, 0xFFF0C7, '800'); note.anchor.set(1, 0.5); note.x = 1578; note.y = 872; note.alpha = 0.55; state.hudLayer.addChild(note);
+  }
+
+  function drawSetupScreen() {
+    state.screen = 'setup';
+    state.setupLayer.removeChildren();
+    clearGameLayers();
+    drawTable();
+
+    var c = state.setupLayer;
+    var card = new PIXI.Container(); card.x = DESIGN_W / 2; card.y = DESIGN_H / 2; c.addChild(card);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -520, -322, 1040, 644, 44, 0xFFF0C7, 0.96, 8, 0xFFFFFF, 0.92);
+    gRoundRect(g, -492, -294, 984, 588, 34, 0xFFEAB6, 1, 5, 0xF9D36D, 1);
+    card.addChild(g);
+
+    var title = createText('보드랜드 패밀리', 58, COLORS.ink, '900'); title.anchor.set(0.5); title.y = -246; card.addChild(title);
+    var sub = createText('가족과 친구가 말 하나씩 고르고 룰렛을 눌러요', 26, 0x8A5A2E, '900'); sub.anchor.set(0.5); sub.y = -196; card.addChild(sub);
+
+    drawPlayerCountButtons(card);
+    drawPawnSelectors(card);
+
+    var start = new PIXI.Container(); start.x = 0; start.y = 248; card.addChild(start);
+    var sg = new PIXI.Graphics();
+    gRoundRect(sg, -160, -42, 320, 84, 42, 0x23B574, 1, 6, 0xFFFFFF, 0.9);
+    gRoundRect(sg, -150, -34, 300, 58, 29, 0x6EDB93, 1, 0);
+    start.addChild(sg);
+    var st = createText('시작!', 44, 0xFFFFFF, '900'); st.anchor.set(0.5); st.y = -3; start.addChild(st);
+    start.interactive = true; start.buttonMode = true;
+    start.on('pointertap', function () { tone('gift'); startGame(); });
+
+    var ref = createText('테이블 위에 펼친 진짜 보드게임 느낌으로 제작', 20, 0x8A5A2E, '800');
+    ref.anchor.set(0.5); ref.y = 306; card.addChild(ref);
+  }
+
+  function drawPlayerCountButtons(parent) {
+    var title = createText('몇 명이 할까요?', 30, COLORS.ink, '900'); title.anchor.set(0.5); title.y = -142; parent.addChild(title);
+    [2, 3, 4].forEach(function (n, i) {
+      var btn = new PIXI.Container(); btn.x = -132 + i * 132; btn.y = -90; parent.addChild(btn);
+      var active = state.setupPlayerCount === n;
+      var g = new PIXI.Graphics();
+      gRoundRect(g, -52, -34, 104, 68, 24, active ? 0xF178A8 : 0xFFF9E8, 1, 5, active ? 0xB63D72 : 0xFFFFFF, 1);
+      btn.addChild(g);
+      var t = createText(n + '명', 28, active ? 0xFFFFFF : COLORS.ink, '900'); t.anchor.set(0.5); btn.addChild(t);
+      btn.interactive = true; btn.buttonMode = true;
+      btn.on('pointertap', function () { state.setupPlayerCount = n; tone('tap'); drawSetupScreen(); });
+    });
+  }
+
+  function drawPawnSelectors(parent) {
+    var title = createText('말을 골라요', 30, COLORS.ink, '900'); title.anchor.set(0.5); title.y = -10; parent.addChild(title);
+    for (var i = 0; i < state.setupPlayerCount; i += 1) {
+      drawSinglePawnSelector(parent, i, -360 + i * 240, 84);
+    }
+  }
+
+  function drawSinglePawnSelector(parent, playerIndex, x, y) {
+    var pawn = PAWNS[state.setupPawnIndex[playerIndex] % PAWNS.length];
+    var c = new PIXI.Container(); c.x = x; c.y = y; parent.addChild(c);
+    var g = new PIXI.Graphics();
+    gRoundRect(g, -92, -92, 184, 184, 32, 0xFFF9E8, 1, 5, 0xFFFFFF, 1);
+    gRoundRect(g, -80, -80, 160, 118, 26, pawn.fill, 1, 4, pawn.edge, 1);
+    c.addChild(g);
+    var icon = createText(pawn.icon, 64, 0xFFFFFF, '900'); icon.anchor.set(0.5); icon.y = -20; c.addChild(icon);
+    var name = createText(PLAYER_PRESETS[playerIndex].name, 24, COLORS.ink, '900'); name.anchor.set(0.5); name.y = 56; c.addChild(name);
+    var pawnName = createText(pawn.name, 18, 0x8A5A2E, '900'); pawnName.anchor.set(0.5); pawnName.y = 82; c.addChild(pawnName);
+    var left = makeArrow(-116, 0, '◀');
+    var right = makeArrow(116, 0, '▶');
+    c.addChild(left); c.addChild(right);
+    left.on('pointertap', function () { state.setupPawnIndex[playerIndex] = (state.setupPawnIndex[playerIndex] + PAWNS.length - 1) % PAWNS.length; tone('tap'); drawSetupScreen(); });
+    right.on('pointertap', function () { state.setupPawnIndex[playerIndex] = (state.setupPawnIndex[playerIndex] + 1) % PAWNS.length; tone('tap'); drawSetupScreen(); });
+  }
+
+  function makeArrow(x, y, icon) {
+    var c = new PIXI.Container(); c.x = x; c.y = y; c.interactive = true; c.buttonMode = true;
+    var g = new PIXI.Graphics(); gCircle(g, 0, 0, 30, 0xF9D36D, 1, 4, 0xFFFFFF, 0.9); c.addChild(g);
+    var t = createText(icon, 26, COLORS.ink, '900'); t.anchor.set(0.5); c.addChild(t);
+    return c;
+  }
+
+  function clearGameLayers() {
+    state.tickerItems = [];
+    state.pulseTickerVersion += 1;
+    state.roulettePressToken += 1;
+    [state.boardLayer, state.objectLayer, state.tileLayer, state.tokenLayer, state.hudLayer, state.overlayLayer, state.fxLayer].forEach(function (layer) {
+      if (layer) layer.removeChildren();
+    });
+    state.tiles = [];
+    state.tileMap = [];
+    state.turnBadge = null;
+    state.roulette = null;
+    state.rouletteFace = null;
+    state.rouletteGlow = null;
+    state.pointer = null;
+    state.resultText = null;
+    clearPlayerPanels();
+  }
+
+  function startGame() {
+    state.screen = 'game';
+    state.setupLayer.removeChildren();
+    clearGameLayers();
+    resetPlayers();
+    drawTable();
+    drawBoardBase();
+    drawObjects();
+    drawTiles();
+    drawTokens();
+    drawHud();
+    pulseCurrentToken();
+  }
+
+  function restartGame() {
+    state.isSpinning = false;
+    state.isMoving = false;
+    state.waitingEvent = false;
+    state.currentPlayerIndex = 0;
+    tone('tap');
+    drawSetupScreen();
+  }
+
+  async function init() {
+    if (!window.PIXI) {
+      var boot = document.getElementById('bootScreen');
+      if (boot) boot.innerHTML = '<div class="boot-card"><h1 class="boot-title">Pixi.js 로딩 실패</h1><p class="boot-sub">인터넷 연결을 확인해 주세요</p></div>';
+      return;
+    }
+    var root = document.getElementById('app');
+    var app = new PIXI.Application({
+      resizeTo: root,
+      backgroundAlpha: 0,
+      antialias: true,
+      autoDensity: true,
+      resolution: Math.min(window.devicePixelRatio || 1, 2)
+    });
+    state.app = app;
+    root.appendChild(app.view);
+
+    state.root = root;
+    state.world = new PIXI.Container();
+    state.world.sortableChildren = true;
+    app.stage.addChild(state.world);
+
+    state.tableLayer = makeContainer(state.world, true);
+    state.boardLayer = makeContainer(state.world, true);
+    state.objectLayer = makeContainer(state.world, true);
+    state.tileLayer = makeContainer(state.world, true);
+    state.tokenLayer = makeContainer(state.world, true);
+    state.hudLayer = makeContainer(state.world, true);
+    state.overlayLayer = makeContainer(state.world, true);
+    state.fxLayer = makeContainer(state.world, true);
+    state.setupLayer = makeContainer(state.world, true);
+
+    boardToScreenScale();
+    window.addEventListener('resize', boardToScreenScale);
+    window.addEventListener('orientationchange', function () { setTimeout(boardToScreenScale, 120); });
+    app.ticker.add(runTicker);
+    drawSetupScreen();
+    hideBoot();
+    console.info('[Boardland] v2.2.1 ready. 추가 녹음 필요:', EXTRA_VOICE_NEEDED);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
