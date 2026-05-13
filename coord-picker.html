@@ -3,42 +3,45 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Boardland Coordinate Picker</title>
+<title>Boardland Coordinate Picker v3.0</title>
 <style>
   * {
     box-sizing: border-box;
   }
 
+  html,
   body {
     margin: 0;
-    background: #1f1208;
-    color: #fff;
-    font-family: Consolas, monospace;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    background: #15110d;
+    color: #fff;
   }
 
-  .wrap {
-    width: 100vw;
-    height: 100vh;
+  body {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr 420px;
   }
 
-  .stage {
-    position: relative;
+  #stageWrap {
     width: 100%;
     height: 100%;
     display: grid;
     place-items: center;
-    background: #2b180c;
     overflow: hidden;
+    background: #1d140f;
   }
 
-  .board-box {
+  #stage {
     position: relative;
-    width: min(100vw - 360px, calc(100vh * 16 / 9));
+    width: min(calc(100vw - 420px), calc(100vh * 16 / 9));
     aspect-ratio: 16 / 9;
     background: #000;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.25), 0 20px 60px rgba(0,0,0,0.55);
+    user-select: none;
+    cursor: crosshair;
   }
 
   #board {
@@ -47,181 +50,582 @@
     width: 100%;
     height: 100%;
     object-fit: fill;
-    user-select: none;
     pointer-events: none;
+    display: block;
   }
 
-  .dot {
+  .point {
     position: absolute;
     width: 34px;
     height: 34px;
-    border-radius: 50%;
-    background: rgba(255, 43, 43, 0.72);
-    border: 3px solid #fff;
     transform: translate(-50%, -50%);
+    border-radius: 999px;
+    border: 3px solid #fff;
     display: grid;
     place-items: center;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 900;
     color: #fff;
-    text-shadow: 0 2px 3px #000;
-    z-index: 5;
+    text-shadow: 0 2px 2px rgba(0,0,0,0.55);
+    pointer-events: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    z-index: 10;
   }
 
-  .panel {
+  .point.tile {
+    background: rgba(255, 78, 78, 0.82);
+  }
+
+  .point.card {
+    background: rgba(131, 80, 255, 0.9);
+  }
+
+  .point.gift {
+    background: rgba(255, 190, 40, 0.95);
+    color: #432000;
+    text-shadow: none;
+  }
+
+  .point.roulette {
+    background: rgba(30, 180, 255, 0.95);
+  }
+
+  .point.seat {
+    background: rgba(80, 210, 110, 0.95);
+    color: #062913;
+    text-shadow: none;
+  }
+
+  .point.start {
+    background: rgba(255, 100, 180, 0.95);
+  }
+
+  .path-line {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 8;
+  }
+
+  #side {
     height: 100vh;
-    padding: 14px;
-    background: #111;
-    border-left: 2px solid #444;
     overflow: auto;
+    padding: 16px;
+    background: #24170f;
+    border-left: 1px solid rgba(255,255,255,0.18);
   }
 
   h1 {
     margin: 0 0 10px;
-    font-size: 18px;
+    font-size: 22px;
   }
 
-  .btns {
+  .guide {
+    margin: 0 0 14px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    line-height: 1.5;
+    font-size: 13px;
+    color: #ffe9c7;
+  }
+
+  .counter {
+    margin: 0 0 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #fff3cf;
+    color: #42250e;
+    font-size: 19px;
+    font-weight: 900;
+    text-align: center;
+  }
+
+  .status {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    font-size: 13px;
+    line-height: 1.45;
+    color: #eee;
+  }
+
+  .status.pass {
+    background: rgba(71, 255, 163, 0.15);
+    color: #adffd5;
+  }
+
+  .status.warn {
+    background: rgba(255, 210, 90, 0.16);
+    color: #ffe49c;
+  }
+
+  .buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   button {
-    min-height: 40px;
+    min-height: 44px;
     border: 0;
-    border-radius: 8px;
-    background: #ffd45a;
-    color: #2a1600;
+    border-radius: 12px;
+    padding: 0 10px;
+    font-size: 14px;
     font-weight: 900;
     cursor: pointer;
   }
 
-  button.danger {
-    background: #ff6969;
+  #undoBtn {
+    background: #ffd166;
+    color: #402300;
+  }
+
+  #resetBtn {
+    background: #ff6b6b;
     color: #fff;
+  }
+
+  #copyBtn {
+    grid-column: 1 / -1;
+    background: #6ee7b7;
+    color: #073b2a;
+  }
+
+  #saveBtn {
+    background: #93c5fd;
+    color: #082f49;
+  }
+
+  #loadBtn {
+    background: #c4b5fd;
+    color: #2e1065;
   }
 
   textarea {
     width: 100%;
-    height: calc(100vh - 180px);
-    resize: none;
-    background: #000;
-    color: #8cff8c;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 10px;
+    height: 470px;
+    resize: vertical;
+    border: 0;
+    border-radius: 12px;
+    padding: 12px;
+    background: #0e0b08;
+    color: #f8f8f2;
+    font-family: Consolas, Monaco, monospace;
     font-size: 12px;
     line-height: 1.45;
+    outline: none;
   }
 
-  .info {
-    margin-bottom: 10px;
-    font-size: 13px;
+  .list {
+    margin-top: 12px;
+    display: grid;
+    gap: 5px;
+    font-size: 12px;
     color: #ddd;
-    line-height: 1.5;
+    padding-bottom: 30px;
   }
 
-  .warn {
-    color: #ffcf5a;
+  .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .name {
+    color: #ffe9c7;
+  }
+
+  .xy {
+    color: #8fffc1;
+    font-family: Consolas, Monaco, monospace;
+    white-space: nowrap;
+  }
+
+  .load-error {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    padding: 30px;
+    background: #050505;
+    color: #ffdddd;
+    font-size: 18px;
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.55;
+    z-index: 50;
+  }
+
+  .mini {
+    opacity: 0.78;
+    font-size: 12px;
+  }
+
+  @media (max-width: 980px) {
+    html,
+    body {
+      overflow: auto;
+    }
+
+    body {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+    }
+
+    #stageWrap {
+      height: auto;
+      padding: 8px;
+    }
+
+    #stage {
+      width: 100%;
+      max-width: 100vw;
+    }
+
+    #side {
+      height: auto;
+      border-left: 0;
+      border-top: 1px solid rgba(255,255,255,0.18);
+    }
+
+    textarea {
+      height: 360px;
+    }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="stage">
-    <div class="board-box" id="boardBox">
+  <main id="stageWrap">
+    <div id="stage">
       <img id="board" src="./assets/board/board-main.webp" alt="board" />
+      <svg id="pathLine" class="path-line" viewBox="0 0 1600 900" preserveAspectRatio="none"></svg>
+      <div id="loadError" class="load-error">
+        보드 이미지를 불러오지 못했습니다.<br />
+        아래 파일 중 하나가 필요합니다.<br /><br />
+        assets/board/board-main.webp<br />
+        assets/board/board-main.png
+      </div>
     </div>
-  </div>
+  </main>
 
-  <div class="panel">
-    <h1>좌표 찍기</h1>
-    <div class="info">
-      기준 좌표계: <b>1600 × 900</b><br>
-      보드 위 길 중앙을 <b>0번부터 31번까지 순서대로 클릭</b><br>
-      <span class="warn">0 = 출발, 31 = 도착</span>
+  <aside id="side">
+    <h1>보드랜드 좌표 찍기 v3.0</h1>
+
+    <div class="guide">
+      <b>클릭 순서 고정</b><br>
+      1~30: 보드 이동칸<br>
+      31: 카드더미 중심<br>
+      32: 선물상자 중심<br>
+      33: 룰렛 접시 중심<br>
+      34~37: 말 시작 구멍 4개<br><br>
+      <b>이동칸 순서</b><br>
+      1 START 집 → 하단 7칸 → 우하단 코너 → 우측 6칸 → 우상단 코너 → 상단 7칸 → 좌상단 코너 → 좌측 6칸
     </div>
 
-    <div class="btns">
-      <button onclick="undoPoint()">되돌리기</button>
-      <button class="danger" onclick="clearPoints()">전체삭제</button>
-      <button onclick="copyCoords()">복사</button>
-      <button onclick="downloadCoords()">txt 저장</button>
+    <div class="counter" id="counter">다음: 1번 START 집</div>
+    <div class="status warn" id="status">0 / 37 입력됨</div>
+
+    <div class="buttons">
+      <button id="undoBtn" type="button">되돌리기</button>
+      <button id="resetBtn" type="button">전체삭제</button>
+      <button id="saveBtn" type="button">임시저장</button>
+      <button id="loadBtn" type="button">불러오기</button>
+      <button id="copyBtn" type="button">좌표 복사</button>
     </div>
 
     <textarea id="output" spellcheck="false"></textarea>
-  </div>
-</div>
+    <div class="list" id="list"></div>
+  </aside>
 
 <script>
-const DESIGN_W = 1600;
-const DESIGN_H = 900;
-const points = [];
+(function () {
+  'use strict';
 
-const boardBox = document.getElementById('boardBox');
-const output = document.getElementById('output');
+  const DESIGN_W = 1600;
+  const DESIGN_H = 900;
+  const MAX_POINTS = 37;
+  const STORAGE_KEY = 'boardland-coordinate-picker-v3';
 
-boardBox.addEventListener('click', function (e) {
-  if (points.length >= 32) return;
+  const stage = document.getElementById('stage');
+  const board = document.getElementById('board');
+  const loadError = document.getElementById('loadError');
+  const pathLine = document.getElementById('pathLine');
+  const counter = document.getElementById('counter');
+  const statusBox = document.getElementById('status');
+  const output = document.getElementById('output');
+  const list = document.getElementById('list');
+  const undoBtn = document.getElementById('undoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const loadBtn = document.getElementById('loadBtn');
 
-  const rect = boardBox.getBoundingClientRect();
-  const relX = (e.clientX - rect.left) / rect.width;
-  const relY = (e.clientY - rect.top) / rect.height;
+  const points = [];
 
-  const x = Math.round(relX * DESIGN_W);
-  const y = Math.round(relY * DESIGN_H);
+  board.addEventListener('error', function () {
+    if (board.dataset.fallbackTried === '1') {
+      loadError.style.display = 'grid';
+      return;
+    }
 
-  points.push({ x, y });
-  render();
-});
-
-function render() {
-  boardBox.querySelectorAll('.dot').forEach(el => el.remove());
-
-  points.forEach((p, i) => {
-    const dot = document.createElement('div');
-    dot.className = 'dot';
-    dot.textContent = i;
-    dot.style.left = (p.x / DESIGN_W * 100) + '%';
-    dot.style.top = (p.y / DESIGN_H * 100) + '%';
-    boardBox.appendChild(dot);
+    board.dataset.fallbackTried = '1';
+    board.src = './assets/board/board-main.png';
   });
 
-  output.value =
-`const TILE_COORDS = [
-${points.map(p => `  { x: ${p.x}, y: ${p.y} }`).join(',\n')}
+  board.addEventListener('load', function () {
+    loadError.style.display = 'none';
+  });
+
+  function getPointName(index) {
+    if (index === 1) return 'START 집';
+    if (index >= 2 && index <= 8) return `하단 ${index - 1}칸`;
+    if (index === 9) return '우하단 코너';
+    if (index >= 10 && index <= 15) return `우측 ${index - 9}칸`;
+    if (index === 16) return '우상단 코너';
+    if (index >= 17 && index <= 23) return `상단 ${index - 16}칸`;
+    if (index === 24) return '좌상단 코너';
+    if (index >= 25 && index <= 30) return `좌측 ${index - 24}칸`;
+    if (index === 31) return '카드더미 중심';
+    if (index === 32) return '선물상자 중심';
+    if (index === 33) return '룰렛 접시 중심';
+    if (index >= 34 && index <= 37) return `${index - 33}번 말 시작 구멍`;
+    return `${index}번`;
+  }
+
+  function getPointClass(index) {
+    if (index === 1) return 'start';
+    if (index >= 1 && index <= 30) return 'tile';
+    if (index === 31) return 'card';
+    if (index === 32) return 'gift';
+    if (index === 33) return 'roulette';
+    if (index >= 34 && index <= 37) return 'seat';
+    return 'tile';
+  }
+
+  function renderPathLine() {
+    const tilePoints = points.slice(0, 30);
+    pathLine.innerHTML = '';
+
+    if (tilePoints.length < 2) return;
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', tilePoints.map(p => `${p.x},${p.y}`).join(' '));
+    polyline.setAttribute('fill', 'none');
+    polyline.setAttribute('stroke', 'rgba(255, 255, 255, 0.72)');
+    polyline.setAttribute('stroke-width', '5');
+    polyline.setAttribute('stroke-linecap', 'round');
+    polyline.setAttribute('stroke-linejoin', 'round');
+    pathLine.appendChild(polyline);
+
+    if (tilePoints.length === 30) {
+      const closeLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      closeLine.setAttribute('x1', String(tilePoints[29].x));
+      closeLine.setAttribute('y1', String(tilePoints[29].y));
+      closeLine.setAttribute('x2', String(tilePoints[0].x));
+      closeLine.setAttribute('y2', String(tilePoints[0].y));
+      closeLine.setAttribute('stroke', 'rgba(110, 231, 183, 0.75)');
+      closeLine.setAttribute('stroke-width', '4');
+      closeLine.setAttribute('stroke-dasharray', '12 10');
+      closeLine.setAttribute('stroke-linecap', 'round');
+      pathLine.appendChild(closeLine);
+    }
+  }
+
+  function renderPoints() {
+    stage.querySelectorAll('.point').forEach(el => el.remove());
+
+    points.forEach((p, i) => {
+      const idx = i + 1;
+      const dot = document.createElement('div');
+      dot.className = `point ${getPointClass(idx)}`;
+      dot.style.left = `${p.x / DESIGN_W * 100}%`;
+      dot.style.top = `${p.y / DESIGN_H * 100}%`;
+      dot.textContent = String(idx);
+      dot.title = `${idx}. ${getPointName(idx)} / x:${p.x}, y:${p.y}`;
+      stage.appendChild(dot);
+    });
+
+    renderPathLine();
+  }
+
+  function makePointLine(p) {
+    return `  { x: ${p.x}, y: ${p.y} }`;
+  }
+
+  function buildOutput() {
+    const tilePoints = points.slice(0, 30);
+    const card = points[30] || { x: 0, y: 0 };
+    const gift = points[31] || { x: 0, y: 0 };
+    const roulette = points[32] || { x: 0, y: 0 };
+    const seats = points.slice(33, 37);
+
+    const tileText = tilePoints.map(makePointLine).join(',\n');
+    const seatText = seats.map(makePointLine).join(',\n');
+    const start = tilePoints[0] || { x: 0, y: 0 };
+
+    return `const START_HOME_COORD = { x: ${start.x}, y: ${start.y} };
+
+const TILE_COORDS = [
+${tileText}
+];
+
+const CARD_COORD = { x: ${card.x}, y: ${card.y} };
+const GIFT_COORD = { x: ${gift.x}, y: ${gift.y} };
+const ROULETTE_COORD = { x: ${roulette.x}, y: ${roulette.y} };
+
+const PLAYER_SEAT_COORDS = [
+${seatText}
 ];`;
-}
+  }
 
-function undoPoint() {
-  points.pop();
-  render();
-}
+  function renderList() {
+    list.innerHTML = '';
 
-function clearPoints() {
-  points.length = 0;
-  render();
-}
+    points.forEach((p, i) => {
+      const idx = i + 1;
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `
+        <span class="name">${idx}. ${getPointName(idx)}</span>
+        <span class="xy">x:${p.x}, y:${p.y}</span>
+      `;
+      list.appendChild(row);
+    });
+  }
 
-async function copyCoords() {
-  await navigator.clipboard.writeText(output.value);
-  alert('좌표 복사 완료');
-}
+  function validate() {
+    const count = points.length;
+    const tileCount = Math.min(count, 30);
+    const seatCount = Math.max(0, Math.min(count - 33, 4));
 
-function downloadCoords() {
-  const blob = new Blob([output.value], { type: 'text/plain;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'tile-coords.txt';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+    if (count === MAX_POINTS) {
+      statusBox.className = 'status pass';
+      statusBox.innerHTML = `PASS: 37 / 37 완료<br><span class="mini">TILE_COORDS 30개, 카드/선물/룰렛, 말 4개 입력 완료</span>`;
+      return;
+    }
 
-document.getElementById('board').addEventListener('error', function () {
-  alert('board-main.webp 로딩 실패: assets/board/board-main.webp 위치 확인');
-});
+    statusBox.className = 'status warn';
+    statusBox.innerHTML = `${count} / ${MAX_POINTS} 입력됨<br><span class="mini">보드칸 ${tileCount}/30 · 말 ${seatCount}/4</span>`;
+  }
+
+  function update() {
+    renderPoints();
+    renderList();
+    output.value = buildOutput();
+    validate();
+
+    const next = points.length + 1;
+    if (next <= MAX_POINTS) {
+      counter.textContent = `다음: ${next}번 ${getPointName(next)}`;
+    } else {
+      counter.textContent = '좌표 완료';
+    }
+  }
+
+  function addPoint(clientX, clientY) {
+    if (points.length >= MAX_POINTS) return;
+
+    const rect = stage.getBoundingClientRect();
+    const px = (clientX - rect.left) / rect.width;
+    const py = (clientY - rect.top) / rect.height;
+
+    const x = Math.round(px * DESIGN_W);
+    const y = Math.round(py * DESIGN_H);
+
+    points.push({ x, y });
+    update();
+  }
+
+  function savePoints() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
+    saveBtn.textContent = '저장 완료';
+    setTimeout(() => {
+      saveBtn.textContent = '임시저장';
+    }, 900);
+  }
+
+  function loadPoints() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+
+      points.length = 0;
+      parsed.slice(0, MAX_POINTS).forEach(p => {
+        if (!p || typeof p.x !== 'number' || typeof p.y !== 'number') return;
+        points.push({ x: Math.round(p.x), y: Math.round(p.y) });
+      });
+
+      update();
+      loadBtn.textContent = '불러옴';
+      setTimeout(() => {
+        loadBtn.textContent = '불러오기';
+      }, 900);
+    } catch (error) {}
+  }
+
+  stage.addEventListener('click', function (event) {
+    if (event.target === loadError) return;
+    addPoint(event.clientX, event.clientY);
+  });
+
+  undoBtn.addEventListener('click', function () {
+    points.pop();
+    update();
+  });
+
+  resetBtn.addEventListener('click', function () {
+    if (!confirm('좌표를 전부 삭제할까요?')) return;
+    points.length = 0;
+    update();
+  });
+
+  saveBtn.addEventListener('click', savePoints);
+  loadBtn.addEventListener('click', loadPoints);
+
+  copyBtn.addEventListener('click', async function () {
+    output.select();
+    output.setSelectionRange(0, output.value.length);
+
+    try {
+      await navigator.clipboard.writeText(output.value);
+      copyBtn.textContent = '복사 완료';
+      setTimeout(() => {
+        copyBtn.textContent = '좌표 복사';
+      }, 900);
+    } catch (error) {
+      document.execCommand('copy');
+      copyBtn.textContent = '복사 완료';
+      setTimeout(() => {
+        copyBtn.textContent = '좌표 복사';
+      }, 900);
+    }
+  });
+
+  window.addEventListener('keydown', function (event) {
+    const key = event.key.toLowerCase();
+
+    if ((event.ctrlKey || event.metaKey) && key === 'z') {
+      event.preventDefault();
+      points.pop();
+      update();
+    }
+
+    if ((event.ctrlKey || event.metaKey) && key === 's') {
+      event.preventDefault();
+      savePoints();
+    }
+  });
+
+  update();
+})();
 </script>
 </body>
 </html>
