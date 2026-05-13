@@ -7,7 +7,7 @@
   const START_HOME_COORD = { x: 106, y: 776 };
   const CARD_COORD = { x: 450, y: 420 };
   const GIFT_COORD = { x: 750, y: 420 };
-  const ROULETTE_COORD = { x: 750, y: 560 };
+  const ROULETTE_COORD = { x: 1332, y: 635 };
 
   const TILE_COORDS = [
     { x: 106, y: 776 },
