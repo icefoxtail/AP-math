@@ -10,54 +10,48 @@
   const ROULETTE_COORD = { x: 1408, y: 369 };
 
   const TILE_COORDS = [
-    { x: 206, y: 650 },
-    { x: 389, y: 650 },
-    { x: 498, y: 650 },
-    { x: 607, y: 650 },
-    { x: 713, y: 650 },
-    { x: 816, y: 650 },
-    { x: 919, y: 650 },
-    { x: 1017, y: 650 },
+    { x: 206, y: 679 },
+    { x: 389, y: 676 },
+    { x: 498, y: 675 },
+    { x: 607, y: 674 },
+    { x: 713, y: 671 },
+    { x: 816, y: 674 },
+    { x: 919, y: 673 },
+    { x: 1017, y: 675 },
     { x: 1142, y: 650 },
-    { x: 1137, y: 527 },
-    { x: 1132, y: 456 },
-    { x: 1123, y: 380 },
-    { x: 1121, y: 316 },
-    { x: 1116, y: 250 },
-    { x: 1114, y: 188 },
-    { x: 1099, y: 130 },
-    { x: 986, y: 130 },
-    { x: 898, y: 130 },
-    { x: 803, y: 130 },
-    { x: 709, y: 130 },
-    { x: 611, y: 130 },
-    { x: 508, y: 130 },
-    { x: 412, y: 130 },
-    { x: 292, y: 130 },
-    { x: 274, y: 188 },
-    { x: 268, y: 250 },
-    { x: 263, y: 316 },
-    { x: 259, y: 450 },
-    { x: 254, y: 456 },
-    { x: 250, y: 527 }
+    { x: 1137, y: 547 },
+    { x: 1132, y: 476 },
+    { x: 1123, y: 400 },
+    { x: 1121, y: 336 },
+    { x: 1116, y: 270 },
+    { x: 1114, y: 208 },
+    { x: 1099, y: 114 },
+    { x: 986, y: 115 },
+    { x: 898, y: 116 },
+    { x: 803, y: 113 },
+    { x: 709, y: 111 },
+    { x: 611, y: 118 },
+    { x: 508, y: 115 },
+    { x: 412, y: 113 },
+    { x: 292, y: 116 },
+    { x: 274, y: 196 },
+    { x: 268, y: 269 },
+    { x: 263, y: 345 },
+    { x: 259, y: 414 },
+    { x: 254, y: 487 },
+    { x: 250, y: 561 }
   ];
 
   const PLAYER_SEAT_COORDS = [
     { x: 74, y: 822 },
     { x: 150, y: 822 },
-    { x: 229, y: 822 },
-    { x: 308, y: 822 }
+    { x: 229, y: 820 },
+    { x: 308, y: 815 }
   ];
 
   const FINISH_INDEX = TILE_COORDS.length - 1;
   const MOVE_STEP_MS = 300;
   const ROULETTE_SEGMENTS = 5;
-  const ROULETTE_SIZE = 360;
-  const ROULETTE_POINTER_SIZE = 150;
-  const ROULETTE_POINTER_OFFSET_Y = -110;
-  const ROULETTE_HIT_RADIUS = 190;
-  const PAWN_IMAGE_SIZE = 76;
-
 
   const TILE_PATTERN = [
     'start',
@@ -559,7 +553,7 @@
   }
 
   function getPawnScale(y) {
-    return utils.clamp(0.88 + (y / DESIGN_H) * 0.14, 0.9, 1.02);
+    return utils.clamp(1.05 + (y / DESIGN_H) * 0.26, 1.08, 1.34);
   }
 
   function getPawnTarget(player) {
@@ -580,7 +574,7 @@
 
     return {
       x: p.x + off.x,
-      y: p.y + off.y - 28
+      y: p.y + off.y - 2
     };
   }
 
@@ -615,12 +609,18 @@
     player.token = c;
 
     const shadow = new PIXI.Graphics();
-    drawG(shadow, 'circle', 0, 30, 0, 0, 31, 0x000000, 0.16);
-    shadow.scale.y = 0.24;
+    drawG(shadow, 'circle', 0, 32, 0, 0, 38, 0x000000, 0.22);
+    shadow.scale.y = 0.28;
     c.addChild(shadow);
 
-    const icon = createIcon(player.icon, PAWN_IMAGE_SIZE, player.pawnId);
-    icon.y = -8;
+    const base = new PIXI.Graphics();
+    drawG(base, 'circle', 0, 22, 0, 0, 41, player.edge, 1);
+    drawG(base, 'circle', 0, 13, 0, 0, 41, player.fill, 1, 4, 0xffffff, 0.95);
+    drawG(base, 'circle', -14, 0, 0, 0, 8, 0xffffff, 0.35);
+    c.addChild(base);
+
+    const icon = createIcon(player.icon, 70, player.pawnId);
+    icon.y = -22;
     c.addChild(icon);
 
     state.layers.token.addChild(c);
@@ -712,7 +712,7 @@
   function drawRouletteFallback(parent) {
     const g = new PIXI.Graphics();
     const colors = [0x5bb8ec, 0xff7aa9, 0xffdc66, 0x6ed7b0, 0xb996ff];
-    const r = ROULETTE_SIZE / 2;
+    const r = 160;
     const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS;
 
     for (let i = 0; i < ROULETTE_SEGMENTS; i += 1) {
@@ -734,20 +734,19 @@
       const a = -Math.PI / 2 + (i + 0.5) * segmentAngle;
       const label = createText(String(n), 48, 0xffffff);
       label.anchor.set(0.5);
-      label.x = Math.cos(a) * (r * 0.55);
-      label.y = Math.sin(a) * (r * 0.55);
+      label.x = Math.cos(a) * 88;
+      label.y = Math.sin(a) * 88;
       label.rotation = a + Math.PI / 2;
       parent.addChild(label);
     });
 
     const hub = new PIXI.Graphics();
-    drawG(hub, 'circle', 0, 0, 0, 0, ROULETTE_SIZE * 0.13, 0xffd34d, 1, 7, 0xffffff, 0.75);
+    drawG(hub, 'circle', 0, 0, 0, 0, 42, 0xffd34d, 1, 7, 0xffffff, 0.75);
     parent.addChild(hub);
   }
 
   function drawRoulettePointer(parent) {
-    const pointerY = ROULETTE_COORD.y + ROULETTE_POINTER_OFFSET_Y;
-    const pointer = makeSprite('roulette_pointer', ROULETTE_COORD.x, pointerY, ROULETTE_POINTER_SIZE, ROULETTE_POINTER_SIZE);
+    const pointer = makeSprite('roulette_pointer', ROULETTE_COORD.x, ROULETTE_COORD.y - 230, 92, 92);
     if (pointer) {
       pointer.zIndex = 130;
       parent.addChild(pointer);
@@ -756,16 +755,16 @@
 
     const fallback = new PIXI.Container();
     fallback.x = ROULETTE_COORD.x;
-    fallback.y = pointerY;
+    fallback.y = ROULETTE_COORD.y - 230;
     fallback.zIndex = 130;
 
     const g = new PIXI.Graphics();
     g.beginFill(0xfff3cf, 1);
     g.lineStyle(8, 0xffffff, 0.95);
-    g.moveTo(0, 58);
-    g.lineTo(-46, -38);
-    g.lineTo(46, -38);
-    g.lineTo(0, 58);
+    g.moveTo(0, 42);
+    g.lineTo(-34, -28);
+    g.lineTo(34, -28);
+    g.lineTo(0, 42);
     g.endFill();
     fallback.addChild(g);
 
@@ -782,11 +781,11 @@
     wheel.zIndex = 120;
     wheel.eventMode = 'static';
     wheel.cursor = 'pointer';
-    wheel.hitArea = new PIXI.Circle(0, 0, ROULETTE_HIT_RADIUS);
+    wheel.hitArea = new PIXI.Circle(0, 0, 205);
     layer.addChild(wheel);
     state.rouletteWheel = wheel;
 
-    const sprite = makeSprite('roulette', 0, 0, ROULETTE_SIZE, ROULETTE_SIZE);
+    const sprite = makeSprite('roulette', 0, 0, 420, 420);
     if (sprite) {
       wheel.addChild(sprite);
     } else {
