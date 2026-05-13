@@ -1,6 +1,7 @@
 {
   "version": "boardland-v2.5.2-3d-coords-fix",
   "board_bg": "./assets/board/board-main.webp",
+  "roulette_pointer": "./assets/board/roulette-pointer.webp",
   "card_back": "./assets/icons/card-back.webp",
   "pawn_dog": "./assets/pawns/dog-pawn.webp",
   "pawn_cat": "./assets/pawns/cat-pawn.webp",

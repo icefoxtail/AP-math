@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Boardland Coordinate Picker</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: #1f1208;
+    color: #fff;
+    font-family: Consolas, monospace;
+    overflow: hidden;
+  }
+
+  .wrap {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: #2b180c;
+    overflow: hidden;
+  }
+
+  .board-box {
+    position: relative;
+    width: min(100vw - 360px, calc(100vh * 16 / 9));
+    aspect-ratio: 16 / 9;
+    background: #000;
+  }
+
+  #board {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .dot {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 43, 43, 0.72);
+    border: 3px solid #fff;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 2px 3px #000;
+    z-index: 5;
+  }
+
+  .panel {
+    height: 100vh;
+    padding: 14px;
+    background: #111;
+    border-left: 2px solid #444;
+    overflow: auto;
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: 18px;
+  }
+
+  .btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  button {
+    min-height: 40px;
+    border: 0;
+    border-radius: 8px;
+    background: #ffd45a;
+    color: #2a1600;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  button.danger {
+    background: #ff6969;
+    color: #fff;
+  }
+
+  textarea {
+    width: 100%;
+    height: calc(100vh - 180px);
+    resize: none;
+    background: #000;
+    color: #8cff8c;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .info {
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #ddd;
+    line-height: 1.5;
+  }
+
+  .warn {
+    color: #ffcf5a;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage">
+    <div class="board-box" id="boardBox">
+      <img id="board" src="./assets/board/board-main.webp" alt="board" />
+    </div>
+  </div>
+
+  <div class="panel">
+    <h1>좌표 찍기</h1>
+    <div class="info">
+      기준 좌표계: <b>1600 × 900</b><br>
+      보드 위 길 중앙을 <b>0번부터 31번까지 순서대로 클릭</b><br>
+      <span class="warn">0 = 출발, 31 = 도착</span>
+    </div>
+
+    <div class="btns">
+      <button onclick="undoPoint()">되돌리기</button>
+      <button class="danger" onclick="clearPoints()">전체삭제</button>
+      <button onclick="copyCoords()">복사</button>
+      <button onclick="downloadCoords()">txt 저장</button>
+    </div>
+
+    <textarea id="output" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<script>
+const DESIGN_W = 1600;
+const DESIGN_H = 900;
+const points = [];
+
+const boardBox = document.getElementById('boardBox');
+const output = document.getElementById('output');
+
+boardBox.addEventListener('click', function (e) {
+  if (points.length >= 32) return;
+
+  const rect = boardBox.getBoundingClientRect();
+  const relX = (e.clientX - rect.left) / rect.width;
+  const relY = (e.clientY - rect.top) / rect.height;
+
+  const x = Math.round(relX * DESIGN_W);
+  const y = Math.round(relY * DESIGN_H);
+
+  points.push({ x, y });
+  render();
+});
+
+function render() {
+  boardBox.querySelectorAll('.dot').forEach(el => el.remove());
+
+  points.forEach((p, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.textContent = i;
+    dot.style.left = (p.x / DESIGN_W * 100) + '%';
+    dot.style.top = (p.y / DESIGN_H * 100) + '%';
+    boardBox.appendChild(dot);
+  });
+
+  output.value =
+`const TILE_COORDS = [
+${points.map(p => `  { x: ${p.x}, y: ${p.y} }`).join(',\n')}
+];`;
+}
+
+function undoPoint() {
+  points.pop();
+  render();
+}
+
+function clearPoints() {
+  points.length = 0;
+  render();
+}
+
+async function copyCoords() {
+  await navigator.clipboard.writeText(output.value);
+  alert('좌표 복사 완료');
+}
+
+function downloadCoords() {
+  const blob = new Blob([output.value], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tile-coords.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('board').addEventListener('error', function () {
+  alert('board-main.webp 로딩 실패: assets/board/board-main.webp 위치 확인');
+});
+</script>
+</body>
+</html>

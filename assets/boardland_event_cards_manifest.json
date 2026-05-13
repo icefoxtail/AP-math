@@ -1,0 +1,14 @@
+{
+  "events": {
+    "card-back": "./assets/boardland/events/card-back.webp",
+    "card-gift": "./assets/boardland/events/card-gift.webp",
+    "card-high-five": "./assets/boardland/events/card-high-five.webp",
+    "card-hug": "./assets/boardland/events/card-hug.webp",
+    "card-love": "./assets/boardland/events/card-love.webp",
+    "card-clap": "./assets/boardland/events/card-clap.webp",
+    "card-dance": "./assets/boardland/events/card-dance.webp",
+    "card-rainbow-jump": "./assets/boardland/events/card-rainbow-jump.webp",
+    "card-forward-two": "./assets/boardland/events/card-forward-two.webp",
+    "card-spin-again": "./assets/boardland/events/card-spin-again.webp"
+  }
+}

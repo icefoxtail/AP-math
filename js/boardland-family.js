@@ -4,46 +4,54 @@
   const DESIGN_W = 1600;
   const DESIGN_H = 900;
 
-  const CARD_COORD = { x: 899, y: 346 };
-  const GIFT_COORD = { x: 681, y: 336 };
-  const ROULETTE_COORD = { x: 1332, y: 635 };
+  const START_HOME_COORD = { x: 106, y: 776 };
+  const CARD_COORD = { x: 450, y: 420 };
+  const GIFT_COORD = { x: 750, y: 420 };
+  const ROULETTE_COORD = { x: 750, y: 560 };
 
   const TILE_COORDS = [
-    { x: 396, y: 606 },
-    { x: 524, y: 606 },
-    { x: 623, y: 606 },
-    { x: 722, y: 606 },
-    { x: 839, y: 606 },
-    { x: 938, y: 606 },
-    { x: 1064, y: 606 },
-    { x: 1162, y: 492 },
-    { x: 1150, y: 417 },
-    { x: 1135, y: 350 },
-    { x: 1121, y: 286 },
-    { x: 1108, y: 226 },
-    { x: 1090, y: 149 },
-    { x: 990, y: 142 },
-    { x: 912, y: 142 },
-    { x: 835, y: 142 },
-    { x: 757, y: 142 },
-    { x: 680, y: 142 },
-    { x: 604, y: 142 },
-    { x: 490, y: 142 },
-    { x: 472, y: 222 },
-    { x: 461, y: 279 },
-    { x: 445, y: 345 },
-    { x: 432, y: 408 }
+    { x: 106, y: 776 },
+    { x: 233, y: 776 },
+    { x: 360, y: 776 },
+    { x: 487, y: 776 },
+    { x: 614, y: 776 },
+    { x: 741, y: 776 },
+    { x: 868, y: 776 },
+    { x: 995, y: 776 },
+    { x: 1091, y: 776 },
+    { x: 1091, y: 673 },
+    { x: 1091, y: 570 },
+    { x: 1091, y: 467 },
+    { x: 1091, y: 364 },
+    { x: 1091, y: 261 },
+    { x: 1091, y: 158 },
+    { x: 1091, y: 76 },
+    { x: 964, y: 76 },
+    { x: 837, y: 76 },
+    { x: 710, y: 76 },
+    { x: 583, y: 76 },
+    { x: 456, y: 76 },
+    { x: 329, y: 76 },
+    { x: 202, y: 76 },
+    { x: 106, y: 76 },
+    { x: 106, y: 179 },
+    { x: 106, y: 282 },
+    { x: 106, y: 385 },
+    { x: 106, y: 488 },
+    { x: 106, y: 591 },
+    { x: 106, y: 694 }
   ];
 
   const PLAYER_SEAT_COORDS = [
-    { x: 1328, y: 174 },
-    { x: 183, y: 331 },
-    { x: 135, y: 549 },
-    { x: 279, y: 785 }
+    { x: 410, y: 560 },
+    { x: 490, y: 560 },
+    { x: 410, y: 640 },
+    { x: 490, y: 640 }
   ];
 
   const FINISH_INDEX = TILE_COORDS.length - 1;
   const MOVE_STEP_MS = 300;
+  const ROULETTE_SEGMENTS = 5;
 
   const TILE_PATTERN = [
     'start',
@@ -68,6 +76,12 @@
     'jump',
     'normal',
     'mission',
+    'normal',
+    'family',
+    'normal',
+    'gift',
+    'normal',
+    'rest',
     'normal',
     'finish'
   ];
@@ -116,12 +130,17 @@
 
   const ASSET_CANDIDATES = {
     board_bg: [
-      './assets/board/board-main.png',
-      './assets/board/board-main.webp'
+      './assets/board/board-main.webp',
+      './assets/board/board-main.png'
     ],
     roulette: [
       './assets/board/roulette-wheel.webp',
-      './assets/board/roulette-wheel.png'
+      './assets/board/roulette-wheel.png',
+      './assets/board/roulette.webp'
+    ],
+    roulette_pointer: [
+      './assets/board/roulette-pointer.webp',
+      './assets/board/roulette-pointer.png'
     ],
     card_back: [
       './assets/boardland/cards/card-back-main.webp',
@@ -135,10 +154,31 @@
       './assets/boardland/cards/card-high-five.webp'
     ],
     card_front_dino: [
-      './assets/boardland/cards/card-dino.webp'
+      './assets/boardland/events/card-love.webp'
     ],
     card_front_gift: [
-      './assets/boardland/cards/card-gift.webp'
+      './assets/boardland/events/card-gift.webp'
+    ],
+    card_front_default: [
+      './assets/boardland/events/card-front.webp'
+    ],
+    card_front_clap: [
+      './assets/boardland/events/card-clap.webp'
+    ],
+    card_front_dance: [
+      './assets/boardland/events/card-dance.webp'
+    ],
+    card_front_love: [
+      './assets/boardland/events/card-love.webp'
+    ],
+    card_front_rainbow: [
+      './assets/boardland/events/card-rainbow-jump.webp'
+    ],
+    card_front_forward_two: [
+      './assets/boardland/events/card-forward-two.webp'
+    ],
+    card_front_spin_again: [
+      './assets/boardland/events/card-spin-again.webp'
     ],
     icon_gift: [
       './assets/rewards/gift-box.webp'
@@ -363,6 +403,7 @@
 
         push('board_bg', manifest.board_bg || manifest?.board?.main);
         push('roulette', manifest.roulette || manifest.roulette_wheel || manifest?.board?.roulette);
+        push('roulette_pointer', manifest.roulette_pointer || manifest.pointer || manifest?.board?.roulette_pointer || manifest?.board?.pointer);
         push('card_back', manifest.card_back || manifest?.cards?.back);
         push('icon_gift', manifest.icon_gift || manifest?.rewards?.gift);
         push('icon_star', manifest.icon_star || manifest?.rewards?.star);
@@ -448,7 +489,7 @@
 
   function getPawnTarget(player) {
     if (!player.onBoard) {
-      return PLAYER_SEAT_COORDS[player.order] || TILE_COORDS[0];
+      return PLAYER_SEAT_COORDS[player.order] || START_HOME_COORD;
     }
 
     const p = TILE_COORDS[player.index];
@@ -601,14 +642,15 @@
 
   function drawRouletteFallback(parent) {
     const g = new PIXI.Graphics();
-    const colors = [0x5bb8ec, 0xff7aa9, 0xffdc66, 0x6ed7b0];
+    const colors = [0x5bb8ec, 0xff7aa9, 0xffdc66, 0x6ed7b0, 0xb996ff];
     const r = 160;
+    const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS;
 
-    for (let i = 0; i < 4; i += 1) {
-      g.beginFill(colors[i], 1);
+    for (let i = 0; i < ROULETTE_SEGMENTS; i += 1) {
+      g.beginFill(colors[i % colors.length], 1);
       g.lineStyle(3, 0xffffff, 0.6);
       g.moveTo(0, 0);
-      g.arc(0, 0, r, -Math.PI / 2 + i * Math.PI * 2 / 4, -Math.PI / 2 + (i + 1) * Math.PI * 2 / 4);
+      g.arc(0, 0, r, -Math.PI / 2 + i * segmentAngle, -Math.PI / 2 + (i + 1) * segmentAngle);
       g.lineTo(0, 0);
       g.endFill();
     }
@@ -619,12 +661,12 @@
     g.drawCircle(0, 0, r - 16);
     parent.addChild(g);
 
-    [1, 2, 3, 1].forEach((n, i) => {
-      const a = -Math.PI / 2 + (i + 0.5) * Math.PI * 2 / 4;
-      const label = createText('★'.repeat(n), 34, 0xffffff);
+    [1, 2, 3, 4, 5].forEach((n, i) => {
+      const a = -Math.PI / 2 + (i + 0.5) * segmentAngle;
+      const label = createText(String(n), 48, 0xffffff);
       label.anchor.set(0.5);
-      label.x = Math.cos(a) * 86;
-      label.y = Math.sin(a) * 86;
+      label.x = Math.cos(a) * 88;
+      label.y = Math.sin(a) * 88;
       label.rotation = a + Math.PI / 2;
       parent.addChild(label);
     });
@@ -632,6 +674,32 @@
     const hub = new PIXI.Graphics();
     drawG(hub, 'circle', 0, 0, 0, 0, 42, 0xffd34d, 1, 7, 0xffffff, 0.75);
     parent.addChild(hub);
+  }
+
+  function drawRoulettePointer(parent) {
+    const pointer = makeSprite('roulette_pointer', ROULETTE_COORD.x, ROULETTE_COORD.y - 230, 92, 92);
+    if (pointer) {
+      pointer.zIndex = 130;
+      parent.addChild(pointer);
+      return;
+    }
+
+    const fallback = new PIXI.Container();
+    fallback.x = ROULETTE_COORD.x;
+    fallback.y = ROULETTE_COORD.y - 230;
+    fallback.zIndex = 130;
+
+    const g = new PIXI.Graphics();
+    g.beginFill(0xfff3cf, 1);
+    g.lineStyle(8, 0xffffff, 0.95);
+    g.moveTo(0, 42);
+    g.lineTo(-34, -28);
+    g.lineTo(34, -28);
+    g.lineTo(0, 42);
+    g.endFill();
+    fallback.addChild(g);
+
+    parent.addChild(fallback);
   }
 
   function drawRoulette() {
@@ -655,6 +723,7 @@
       drawRouletteFallback(wheel);
     }
 
+    drawRoulettePointer(layer);
     wheel.on('pointertap', spinRoulette);
   }
 
@@ -667,9 +736,10 @@
     initAudio();
     utils.vibrate([20, 20, 20]);
 
-    const result = Math.floor(Math.random() * 3) + 1;
+    const result = Math.floor(Math.random() * ROULETTE_SEGMENTS) + 1;
     const start = state.rouletteWheel.rotation;
-    const stopAt = start + Math.PI * 8 + (3 - result) * (Math.PI * 2 / 3) + Math.random() * 0.18;
+    const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS;
+    const stopAt = start + Math.PI * 10 + (ROULETTE_SEGMENTS - result) * segmentAngle + Math.random() * 0.12;
 
     await animate(1550, t => {
       state.rouletteWheel.rotation = start + (stopAt - start) * utils.easeOutCubic(t);
