@@ -1,12 +1,10 @@
 {
-  "version": "boardland-v2.5.3-assets-cleanup",
+  "version": "boardland-v2.5.5-integrated-assets-fix",
   "board_bg": "./assets/board/board-main.webp",
   "roulette": "./assets/board/roulette-wheel.webp",
   "roulette_pointer": "./assets/board/roulette-pointer.webp",
-
   "card_back": "./assets/boardland/events/card-back.webp",
   "card_front": "./assets/boardland/events/card-front.webp",
-
   "card_gift": "./assets/boardland/events/card-gift.webp",
   "card_high_five": "./assets/boardland/events/card-high-five.webp",
   "card_hug": "./assets/boardland/events/card-hug.webp",
@@ -16,12 +14,10 @@
   "card_rainbow_jump": "./assets/boardland/events/card-rainbow-jump.webp",
   "card_forward_two": "./assets/boardland/events/card-forward-two.webp",
   "card_spin_again": "./assets/boardland/events/card-spin-again.webp",
-
   "pawn_dog": "./assets/boardland/pawns/dog-pawn.webp",
   "pawn_cat": "./assets/boardland/pawns/cat-pawn.webp",
   "pawn_rabbit": "./assets/boardland/pawns/rabbit-pawn.webp",
   "pawn_bear": "./assets/boardland/pawns/bear-pawn.webp",
-
   "icon_star": "./assets/rewards/sticker-star.webp",
   "icon_heart": "./assets/rewards/sticker-heart.webp",
   "icon_rainbow": "./assets/rewards/sticker-rainbow.webp",
