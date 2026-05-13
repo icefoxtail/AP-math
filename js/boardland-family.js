@@ -54,10 +54,9 @@
   const ROULETTE_SEGMENTS = 5;
   const ROULETTE_SIZE = 360;
   const ROULETTE_POINTER_SIZE = 150;
-  const ROULETTE_POINTER_OFFSET_Y = -90;
+  const ROULETTE_POINTER_OFFSET_Y = -80;
   const ROULETTE_HIT_RADIUS = 190;
   const PAWN_IMAGE_SIZE = 76;
-
 
   const TILE_PATTERN = [
     'start',
@@ -653,35 +652,17 @@
   async function pulseTile(idx) {
     const tile = state.tiles[idx];
     if (!tile) return;
-
-    const originalY = tile.y;
-
-    await animate(250, t => {
-      const s = 1 + Math.sin(t * Math.PI) * 0.05;
-      tile.scale.set(s, 1 - Math.sin(t * Math.PI) * 0.02);
-      tile.y = originalY + Math.sin(t * Math.PI) * 7;
-    });
-
     tile.scale.set(1);
-    tile.y = originalY;
   }
 
   function pulseCurrentPawn() {
     state.pulseVersion += 1;
-    const version = state.pulseVersion;
+    const player = state.players[state.currentPlayerIndex];
+    if (!player || !player.token) return;
 
-    addTicker(() => {
-      const player = state.players[state.currentPlayerIndex];
-      if (!player || !player.token || version !== state.pulseVersion) return true;
-      if (state.isMoving || state.isSpinning || state.waitingEvent) return false;
-
-      const target = getPawnTarget(player);
-      const base = getPawnScale(target.y);
-      const wave = Math.sin(Date.now() / 260);
-
-      player.token.scale.set(base + wave * 0.04, base - wave * 0.012);
-      return false;
-    });
+    const target = getPawnTarget(player);
+    const base = getPawnScale(target.y);
+    player.token.scale.set(base);
   }
 
   async function hop(player) {
@@ -696,8 +677,8 @@
     await animate(MOVE_STEP_MS, t => {
       const e = utils.easeInOutSine(t);
       token.x = sx + (target.x - sx) * e;
-      token.y = sy + (target.y - sy) * e - Math.sin(t * Math.PI) * 60;
-      token.scale.set(ss + (ts - ss) * e + Math.sin(t * Math.PI) * 0.12);
+      token.y = sy + (target.y - sy) * e;
+      token.scale.set(ss + (ts - ss) * e);
     });
 
     token.x = target.x;
