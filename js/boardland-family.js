@@ -107,6 +107,26 @@
     win: './assets/boardland/sfx/win-fanfare.mp3'
   };
 
+  const BGM_TRACKS = [
+    './assets/audio/bgm/bgm_01.mp3',
+    './assets/audio/bgm/bgm_02.mp3',
+    './assets/audio/bgm/bgm_03.mp3',
+    './assets/audio/bgm/bgm_04.mp3',
+    './assets/audio/bgm/bgm_05.mp3',
+    './assets/audio/bgm/bgm_06.mp3',
+    './assets/audio/bgm/bgm_07.mp3',
+    './assets/audio/bgm/bgm_08.mp3',
+    './assets/audio/bgm/bgm_09.mp3',
+    './assets/audio/bgm/bgm_10.mp3',
+    './assets/audio/bgm/bgm_11.mp3',
+    './assets/audio/bgm/bgm_12.mp3'
+  ];
+
+  const BGM_VOLUME = {
+    normal: 0.22,
+    ducked: 0.08
+  };
+
 
   const TILE_PATTERN = [
     'start',
@@ -438,7 +458,11 @@
     audioCtx: null,
     voiceMap: {},
     voiceReadyPromise: null,
-    sfxAudio: {}
+    sfxAudio: {},
+    bgmAudio: null,
+    bgmIndex: 0,
+    bgmUnlocked: false,
+    bgmWanted: false
   };
 
   const utils = {
@@ -573,6 +597,83 @@
     if (fallbackTone) playTone(fallbackTone);
   }
 
+  function pickNextBgmIndex() {
+    if (!BGM_TRACKS.length) return 0;
+    const current = state.bgmIndex;
+    if (BGM_TRACKS.length === 1) return 0;
+
+    let next = Math.floor(Math.random() * BGM_TRACKS.length);
+    if (next === current) next = (next + 1) % BGM_TRACKS.length;
+    return next;
+  }
+
+  function createBgmAudio(index) {
+    const safeIndex = Math.max(0, Math.min(BGM_TRACKS.length - 1, index || 0));
+    const src = BGM_TRACKS[safeIndex];
+    if (!src) return null;
+
+    const audio = new Audio(src);
+    audio.preload = 'auto';
+    audio.loop = false;
+    audio.volume = BGM_VOLUME.normal;
+    audio.playsInline = true;
+
+    audio.addEventListener('ended', () => {
+      if (!state.bgmWanted) return;
+      state.bgmIndex = pickNextBgmIndex();
+      const next = createBgmAudio(state.bgmIndex);
+      state.bgmAudio = next;
+      if (next) {
+        next.play().catch(() => {});
+      }
+    });
+
+    return audio;
+  }
+
+  function startBgm() {
+    state.bgmWanted = true;
+
+    if (!BGM_TRACKS.length) return;
+    if (!state.bgmAudio) {
+      state.bgmIndex = Math.floor(Math.random() * BGM_TRACKS.length);
+      state.bgmAudio = createBgmAudio(state.bgmIndex);
+    }
+
+    if (!state.bgmAudio) return;
+
+    state.bgmAudio.volume = BGM_VOLUME.normal;
+    state.bgmAudio.play().then(() => {
+      state.bgmUnlocked = true;
+    }).catch(() => {
+      state.bgmUnlocked = false;
+    });
+  }
+
+  function duckBgm() {
+    if (!state.bgmAudio) return;
+    try {
+      state.bgmAudio.volume = BGM_VOLUME.ducked;
+    } catch (error) {}
+  }
+
+  function restoreBgm() {
+    if (!state.bgmAudio) return;
+    try {
+      state.bgmAudio.volume = BGM_VOLUME.normal;
+    } catch (error) {}
+  }
+
+  function stopBgm() {
+    state.bgmWanted = false;
+    if (!state.bgmAudio) return;
+
+    try {
+      state.bgmAudio.pause();
+      state.bgmAudio.currentTime = 0;
+    } catch (error) {}
+  }
+
   function playAudioPath(src) {
     return new Promise(resolve => {
       if (!src) {
@@ -633,6 +734,8 @@
     const maxMs = Number.isFinite(maxWaitMs) ? maxWaitMs : Math.max(1800, minMs);
     const started = Date.now();
 
+    duckBgm();
+
     await Promise.race([
       playBoardVoice(id),
       wait(maxMs)
@@ -642,6 +745,8 @@
     if (elapsed < minMs) {
       await wait(minMs - elapsed);
     }
+
+    restoreBgm();
   }
 
 
@@ -1535,6 +1640,7 @@
 
     initAudio();
     preloadSfx();
+    startBgm();
     playSfx('start', 'start');
     utils.vibrate([25, 30, 25]);
 
@@ -1818,11 +1924,12 @@
     const layer = state.layers.overlay;
     layer.removeChildren();
 
+    duckBgm();
     playSfx('win', 'win');
     utils.vibrate([70, 40, 70, 40, 120]);
     burst(DESIGN_W / 2, DESIGN_H / 2 - 70, ['🏆', '🌈', '⭐', '❤️', '✨'], 180, layer);
     playBoardVoiceThenWait('board.win.arrive', VOICE_WAIT.win.min, VOICE_WAIT.win.max).then(() => {
-      playBoardVoiceThenWait('board.win.family', VOICE_WAIT.win.min, VOICE_WAIT.win.max);
+      playBoardVoiceThenWait('board.win.family', VOICE_WAIT.win.min, VOICE_WAIT.win.max).then(restoreBgm);
     });
 
     const panel = new PIXI.Container();
