@@ -127,7 +127,6 @@
     ducked: 0.08
   };
 
-
   const TILE_PATTERN = [
     'start',
     'gift',
@@ -165,274 +164,67 @@
     { id: 'pawn_dog', icon: '🐶', name: '시현이', fill: 0xFFD166, edge: 0xA86B18 },
     { id: 'pawn_cat', icon: '🐱', name: '엄마', fill: 0xFF8FB3, edge: 0xB84970 },
     { id: 'pawn_rabbit', icon: '🐰', name: '아빠', fill: 0x86D8FF, edge: 0x2A7FA8 },
-    { id: 'pawn_bear', icon: '🐻', name: '곰', fill: 0x8BCB63, edge: 0x4B8D35 }
+    { id: 'pawn_bear', icon: '🐻', name: '가족', fill: 0x8BCB63, edge: 0x4B8D35 }
   ];
 
   const EVENT_CARDS = [
-    {
-      id: 'family_hug',
-      type: 'family',
-      icon: '🫂',
-      title: '꼬옥 안아주기',
-      body: '가족을 꼬옥 안아주세요',
-      voiceId: 'board.card.familyHug'
-    },
-    {
-      id: 'high_five',
-      type: 'family',
-      icon: '✋',
-      title: '하이파이브',
-      body: '손바닥 짝!',
-      voiceId: 'board.card.highFive'
-    },
-    {
-      id: 'dino',
-      type: 'mission',
-      icon: '🦖',
-      title: '공룡 흉내',
-      body: '크아앙!',
-      voiceId: 'board.card.dino'
-    },
-    {
-      id: 'clap',
-      type: 'star',
-      icon: '👏',
-      title: '박수 받기',
-      body: '모두에게 박수 받아요',
-      voiceId: 'board.card.clap'
-    },
-    {
-      id: 'dance',
-      type: 'rainbow',
-      icon: '💃',
-      title: '신나게 춤추기',
-      body: '빙글빙글 춤춰요',
-      voiceId: 'board.card.dance'
-    },
-    {
-      id: 'love',
-      type: 'heart',
-      icon: '❤️',
-      title: '사랑해 말하기',
-      body: '가족에게 사랑해요',
-      voiceId: 'board.card.love'
-    },
-    {
-      id: 'gift',
-      type: 'gift',
-      icon: '🎁',
-      title: '선물 받기',
-      body: '선물을 열어요',
-      voiceId: 'board.card.gift'
-    },
-    {
-      id: 'kiss_mom',
-      type: 'family',
-      icon: '😘',
-      title: '엄마 뽀뽀',
-      body: '엄마한테 뽀뽀 쪽!',
-      voiceId: 'board.card.kissMom'
-    },
-    {
-      id: 'kiss_dad',
-      type: 'family',
-      icon: '😘',
-      title: '아빠 뽀뽀',
-      body: '아빠한테 뽀뽀 쪽!',
-      voiceId: 'board.card.kissDad'
-    },
-    {
-      id: 'hug_mom_dad',
-      type: 'family',
-      icon: '🫂',
-      title: '엄마 아빠 안아줘요',
-      body: '엄마 아빠를 꼭 안아주세요',
-      voiceId: 'board.card.hugMomDad'
-    },
-    {
-      id: 'cheek_heart_mom',
-      type: 'heart',
-      icon: '💗',
-      title: '엄마랑 볼하트',
-      body: '엄마랑 볼하트 해봐요',
-      voiceId: 'board.card.cheekHeartMom'
-    },
-    {
-      id: 'treat_nooni',
-      type: 'family',
-      icon: '🐱',
-      title: '눈이 간식 주기',
-      body: '눈이에게 간식을 주세요',
-      voiceId: 'board.card.treatNooni'
-    },
-    {
-      id: 'treat_reumi',
-      type: 'family',
-      icon: '🐈',
-      title: '름이 간식 주기',
-      body: '름이에게 간식을 주세요',
-      voiceId: 'board.card.treatReumi'
-    },
-    {
-      id: 'meow_like_cat',
-      type: 'mission',
-      icon: '🐾',
-      title: '야옹 해봐요',
-      body: '고양이처럼 야옹!',
-      voiceId: 'board.card.meowLikeCat'
-    },
-    {
-      id: 'get_applause',
-      type: 'star',
-      icon: '👏',
-      title: '박수 받아요',
-      body: '시현이에게 박수!',
-      voiceId: 'board.card.getApplause'
-    },
-    {
-      id: 'drink_water',
-      type: 'cloud',
-      icon: '💧',
-      title: '물 마셔요',
-      body: '물 한 모금 마셔요',
-      voiceId: 'board.card.drinkWater'
-    }
+    { id: 'family_hug', type: 'family', icon: '🫂', title: '꼬옥 안아주기', body: '가족을 꼬옥 안아주세요', voiceId: 'board.card.familyHug' },
+    { id: 'high_five', type: 'family', icon: '✋', title: '하이파이브', body: '손바닥 짝!', voiceId: 'board.card.highFive' },
+    { id: 'dino', type: 'mission', icon: '🦖', title: '공룡 흉내', body: '크아앙!', voiceId: 'board.card.dino' },
+    { id: 'clap', type: 'star', icon: '👏', title: '박수 받기', body: '모두에게 박수 받아요', voiceId: 'board.card.clap' },
+    { id: 'dance', type: 'rainbow', icon: '💃', title: '신나게 춤추기', body: '빙글빙글 춤춰요', voiceId: 'board.card.dance' },
+    { id: 'love', type: 'heart', icon: '❤️', title: '사랑해 말하기', body: '가족에게 사랑해요', voiceId: 'board.card.love' },
+    { id: 'gift', type: 'gift', icon: '🎁', title: '선물 받기', body: '선물을 열어요', voiceId: 'board.card.gift' },
+    { id: 'kiss_mom', type: 'family', icon: '😘', title: '엄마 뽀뽀', body: '엄마한테 뽀뽀 쪽!', voiceId: 'board.card.kissMom' },
+    { id: 'kiss_dad', type: 'family', icon: '😘', title: '아빠 뽀뽀', body: '아빠한테 뽀뽀 쪽!', voiceId: 'board.card.kissDad' },
+    { id: 'hug_mom_dad', type: 'family', icon: '🫂', title: '엄마 아빠 안아줘요', body: '엄마 아빠를 꼭 안아주세요', voiceId: 'board.card.hugMomDad' },
+    { id: 'cheek_heart_mom', type: 'heart', icon: '💗', title: '엄마랑 볼하트', body: '엄마랑 볼하트 해봐요', voiceId: 'board.card.cheekHeartMom' },
+    { id: 'treat_nooni', type: 'family', icon: '🐱', title: '눈이 간식 주기', body: '눈이에게 간식을 주세요', voiceId: 'board.card.treatNooni' },
+    { id: 'treat_reumi', type: 'family', icon: '🐈', title: '름이 간식 주기', body: '름이에게 간식을 주세요', voiceId: 'board.card.treatReumi' },
+    { id: 'meow_like_cat', type: 'mission', icon: '🐾', title: '야옹 해봐요', body: '고양이처럼 야옹!', voiceId: 'board.card.meowLikeCat' },
+    { id: 'get_applause', type: 'star', icon: '👏', title: '박수 받아요', body: '시현이에게 박수!', voiceId: 'board.card.getApplause' },
+    { id: 'drink_water', type: 'cloud', icon: '💧', title: '물 마셔요', body: '물 한 모금 마셔요', voiceId: 'board.card.drinkWater' }
   ];
 
   const ASSET_CANDIDATES = {
-    board_bg: [
-      './assets/board/board-main.webp',
-      './assets/board/board-main.png'
-    ],
-    roulette: [
-      './assets/board/roulette-wheel.webp',
-      './assets/board/roulette-wheel.png',
-      './assets/board/roulette.webp'
-    ],
-    roulette_pointer: [
-      './assets/board/roulette-pointer.webp',
-      './assets/board/roulette-pointer.png'
-    ],
-    dice_1: [
-      './assets/board/dice-1.png',
-      './assets/board/dice-1.webp'
-    ],
-    dice_2: [
-      './assets/board/dice-2.png',
-      './assets/board/dice-2.webp'
-    ],
-    dice_3: [
-      './assets/board/dice-3.png',
-      './assets/board/dice-3.webp'
-    ],
-    dice_4: [
-      './assets/board/dice-4.png',
-      './assets/board/dice-4.webp'
-    ],
-    dice_5: [
-      './assets/board/dice-5.png',
-      './assets/board/dice-5.webp'
-    ],
-    dice_6: [
-      './assets/board/dice-6.png',
-      './assets/board/dice-6.webp'
-    ],
-    card_back: [
-      './assets/boardland/cards/card-back-main.webp',
-      './assets/boardland/events/card-back.webp',
-      './assets/icons/card-back.webp'
-    ],
-    card_front_family_hug: [
-      './assets/boardland/events/card-hug.webp',
-      './assets/boardland/cards/card-family-hug.webp'
-    ],
-    card_front_high_five: [
-      './assets/boardland/events/card-high-five.webp',
-      './assets/boardland/cards/card-high-five.webp'
-    ],
-    card_front_dino: [
-      './assets/boardland/events/card-love.webp',
-      './assets/boardland/events/card-front.webp'
-    ],
-    card_front_gift: [
-      './assets/boardland/events/card-gift.webp'
-    ],
-    card_front_default: [
-      './assets/boardland/events/card-front.webp'
-    ],
-    card_front_clap: [
-      './assets/boardland/events/card-clap.webp'
-    ],
-    card_front_dance: [
-      './assets/boardland/events/card-dance.webp'
-    ],
-    card_front_love: [
-      './assets/boardland/events/card-love.webp'
-    ],
-    card_front_rainbow: [
-      './assets/boardland/events/card-rainbow-jump.webp'
-    ],
-    card_front_forward_two: [
-      './assets/boardland/events/card-forward-two.webp'
-    ],
-    card_front_spin_again: [
-      './assets/boardland/events/card-spin-again.webp'
-    ],
-    card_front_kiss_mom: [
-      './assets/boardland/events/kiss_mom.png'
-    ],
-    card_front_kiss_dad: [
-      './assets/boardland/events/kiss_dad.png'
-    ],
-    card_front_hug_mom_dad: [
-      './assets/boardland/events/hug_mom_dad.png'
-    ],
-    card_front_cheek_heart_mom: [
-      './assets/boardland/events/cheek_heart_mom.png'
-    ],
-    card_front_treat_nooni: [
-      './assets/boardland/events/treat_nooni.png'
-    ],
-    card_front_treat_reumi: [
-      './assets/boardland/events/treat_reumi.png'
-    ],
-    card_front_meow_like_cat: [
-      './assets/boardland/events/meow_like_cat.png'
-    ],
-    card_front_get_applause: [
-      './assets/boardland/events/get_applause.png'
-    ],
-    card_front_drink_water: [
-      './assets/boardland/events/drink_water.png'
-    ],
-    icon_gift: [
-      './assets/rewards/gift-box.webp'
-    ],
-    icon_star: [
-      './assets/rewards/sticker-star.webp'
-    ],
-    icon_heart: [
-      './assets/rewards/sticker-heart.webp'
-    ],
-    icon_rainbow: [
-      './assets/rewards/sticker-rainbow.webp'
-    ],
-    pawn_dog: [
-      './assets/boardland/pawns/dog-pawn.webp',
-      './assets/pawns/dog-pawn.webp'
-    ],
-    pawn_cat: [
-      './assets/boardland/pawns/cat-pawn.webp',
-      './assets/pawns/cat-pawn.webp'
-    ],
-    pawn_rabbit: [
-      './assets/boardland/pawns/rabbit-pawn.webp',
-      './assets/pawns/rabbit-pawn.webp'
-    ],
-    pawn_bear: [
-      './assets/boardland/pawns/bear-pawn.webp',
-      './assets/pawns/bear-pawn.webp'
-    ]
+    board_bg: ['./assets/board/board-main.webp', './assets/board/board-main.png'],
+    roulette: ['./assets/board/roulette-wheel.webp', './assets/board/roulette-wheel.png', './assets/board/roulette.webp'],
+    roulette_pointer: ['./assets/board/roulette-pointer.webp', './assets/board/roulette-pointer.png'],
+    dice_1: ['./assets/board/dice-1.png', './assets/board/dice-1.webp'],
+    dice_2: ['./assets/board/dice-2.png', './assets/board/dice-2.webp'],
+    dice_3: ['./assets/board/dice-3.png', './assets/board/dice-3.webp'],
+    dice_4: ['./assets/board/dice-4.png', './assets/board/dice-4.webp'],
+    dice_5: ['./assets/board/dice-5.png', './assets/board/dice-5.webp'],
+    dice_6: ['./assets/board/dice-6.png', './assets/board/dice-6.webp'],
+    card_back: ['./assets/boardland/cards/card-back-main.webp', './assets/boardland/events/card-back.webp', './assets/icons/card-back.webp'],
+    card_front_default: ['./assets/boardland/events/card-front.webp', './assets/boardland/events/card-front.png'],
+    card_front_family_hug: ['./assets/boardland/events/card-hug.webp', './assets/boardland/cards/card-family-hug.webp'],
+    card_front_high_five: ['./assets/boardland/events/card-high-five.webp', './assets/boardland/cards/card-high-five.webp'],
+    card_front_dino: ['./assets/boardland/events/card-love.webp', './assets/boardland/events/card-front.webp'],
+    card_front_gift: ['./assets/boardland/events/card-gift.webp'],
+    card_front_clap: ['./assets/boardland/events/card-clap.webp'],
+    card_front_dance: ['./assets/boardland/events/card-dance.webp'],
+    card_front_love: ['./assets/boardland/events/card-love.webp'],
+    card_front_rainbow: ['./assets/boardland/events/card-rainbow-jump.webp'],
+    card_front_forward_two: ['./assets/boardland/events/card-forward-two.webp'],
+    card_front_spin_again: ['./assets/boardland/events/card-spin-again.webp'],
+    card_front_kiss_mom: ['./assets/boardland/events/kiss_mom.png'],
+    card_front_kiss_dad: ['./assets/boardland/events/kiss_dad.png'],
+    card_front_hug_mom_dad: ['./assets/boardland/events/hug_mom_dad.png'],
+    card_front_cheek_heart_mom: ['./assets/boardland/events/cheek_heart_mom.png'],
+    card_front_treat_nooni: ['./assets/boardland/events/treat_nooni.png'],
+    card_front_treat_reumi: ['./assets/boardland/events/treat_reumi.png'],
+    card_front_meow_like_cat: ['./assets/boardland/events/meow_like_cat.png'],
+    card_front_get_applause: ['./assets/boardland/events/get_applause.png'],
+    card_front_drink_water: ['./assets/boardland/events/drink_water.png'],
+    icon_gift: ['./assets/rewards/gift-box.webp'],
+    icon_star: ['./assets/rewards/sticker-star.webp'],
+    icon_heart: ['./assets/rewards/sticker-heart.webp'],
+    icon_rainbow: ['./assets/rewards/sticker-rainbow.webp'],
+    pawn_dog: ['./assets/boardland/pawns/dog-pawn.webp', './assets/pawns/dog-pawn.webp'],
+    pawn_cat: ['./assets/boardland/pawns/cat-pawn.webp', './assets/pawns/cat-pawn.webp'],
+    pawn_rabbit: ['./assets/boardland/pawns/rabbit-pawn.webp', './assets/pawns/rabbit-pawn.webp'],
+    pawn_bear: ['./assets/boardland/pawns/bear-pawn.webp', './assets/pawns/bear-pawn.webp']
   };
 
   const state = {
@@ -448,7 +240,6 @@
     isMoving: false,
     waitingEvent: false,
     tickerItems: [],
-    pulseVersion: 0,
     rouletteWheel: null,
     diceBox: null,
     diceFaceSprite: null,
@@ -461,7 +252,6 @@
     sfxAudio: {},
     bgmAudio: null,
     bgmIndex: 0,
-    bgmUnlocked: false,
     bgmWanted: false
   };
 
@@ -477,9 +267,7 @@
     easeInOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2,
     vibrate: pattern => {
       if (!navigator.vibrate) return;
-      try {
-        navigator.vibrate(pattern);
-      } catch (error) {}
+      try { navigator.vibrate(pattern); } catch (error) {}
     }
   };
 
@@ -516,7 +304,6 @@
 
       osc.type = type === 'move' || type === 'dice' ? 'triangle' : 'sine';
       osc.frequency.setValueAtTime(freq, now + i * 0.07);
-
       gain.gain.setValueAtTime(0.001, now + i * 0.07);
       gain.gain.exponentialRampToValueAtTime(type === 'dice' ? 0.16 : 0.13, now + i * 0.07 + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.22);
@@ -528,14 +315,34 @@
     });
   }
 
+  function resolveAssetUrl(src) {
+    const value = String(src || '').trim();
+    if (!value) return '';
+    try { return new URL(value, window.location.href).href; } catch (error) { return value; }
+  }
+
   function normalizeVoicePath(value) {
     const src = String(value || '').trim();
     if (!src) return '';
+    return resolveAssetUrl(src);
+  }
 
-    if (/^https?:\/\//i.test(src)) return src;
-    if (src.startsWith('./')) return src;
-    if (src.startsWith('/')) return `.${src}`;
-    return `./${src}`;
+  function boardVoiceKeyToFileName(id) {
+    return String(id || '')
+      .replace(/^board\./, 'board-')
+      .replace(/\.([a-z])/g, (_, ch) => `-${ch}`)
+      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+      .toLowerCase() + '.mp3';
+  }
+
+  function getVoiceFallbackUrls(id) {
+    const fileName = boardVoiceKeyToFileName(id);
+    if (!fileName || fileName === '.mp3') return [];
+    return [
+      `./assets/voice/games/${fileName}`,
+      `assets/voice/games/${fileName}`,
+      `./voice/games/${fileName}`
+    ].map(resolveAssetUrl);
   }
 
   async function loadVoiceManifest() {
@@ -548,7 +355,7 @@
           if (!res.ok) continue;
 
           const manifest = await res.json();
-          const voices = manifest?.voices && typeof manifest.voices === 'object' ? manifest.voices : manifest;
+          const voices = manifest && manifest.voices && typeof manifest.voices === 'object' ? manifest.voices : manifest;
           if (!voices || typeof voices !== 'object') continue;
 
           Object.keys(voices).forEach(key => {
@@ -599,11 +406,9 @@
 
   function pickNextBgmIndex() {
     if (!BGM_TRACKS.length) return 0;
-    const current = state.bgmIndex;
     if (BGM_TRACKS.length === 1) return 0;
-
     let next = Math.floor(Math.random() * BGM_TRACKS.length);
-    if (next === current) next = (next + 1) % BGM_TRACKS.length;
+    if (next === state.bgmIndex) next = (next + 1) % BGM_TRACKS.length;
     return next;
   }
 
@@ -617,95 +422,86 @@
     audio.loop = false;
     audio.volume = BGM_VOLUME.normal;
     audio.playsInline = true;
-
     audio.addEventListener('ended', () => {
       if (!state.bgmWanted) return;
       state.bgmIndex = pickNextBgmIndex();
-      const next = createBgmAudio(state.bgmIndex);
-      state.bgmAudio = next;
-      if (next) {
-        next.play().catch(() => {});
-      }
+      state.bgmAudio = createBgmAudio(state.bgmIndex);
+      if (state.bgmAudio) state.bgmAudio.play().catch(() => {});
     });
-
     return audio;
   }
 
   function startBgm() {
     state.bgmWanted = true;
-
     if (!BGM_TRACKS.length) return;
+
     if (!state.bgmAudio) {
       state.bgmIndex = Math.floor(Math.random() * BGM_TRACKS.length);
       state.bgmAudio = createBgmAudio(state.bgmIndex);
     }
 
     if (!state.bgmAudio) return;
-
     state.bgmAudio.volume = BGM_VOLUME.normal;
-    state.bgmAudio.play().then(() => {
-      state.bgmUnlocked = true;
-    }).catch(() => {
-      state.bgmUnlocked = false;
+    state.bgmAudio.play().catch(error => {
+      console.warn('[Boardland] bgm start failed:', state.bgmAudio && state.bgmAudio.src, error);
     });
   }
 
   function duckBgm() {
     if (!state.bgmAudio) return;
-    try {
-      state.bgmAudio.volume = BGM_VOLUME.ducked;
-    } catch (error) {}
+    try { state.bgmAudio.volume = BGM_VOLUME.ducked; } catch (error) {}
   }
 
   function restoreBgm() {
     if (!state.bgmAudio) return;
-    try {
-      state.bgmAudio.volume = BGM_VOLUME.normal;
-    } catch (error) {}
+    try { state.bgmAudio.volume = BGM_VOLUME.normal; } catch (error) {}
   }
 
-  function stopBgm() {
-    state.bgmWanted = false;
-    if (!state.bgmAudio) return;
-
-    try {
-      state.bgmAudio.pause();
-      state.bgmAudio.currentTime = 0;
-    } catch (error) {}
-  }
-
-  function playAudioPath(src) {
+  function playAudioPath(srcOrList) {
+    const sources = Array.isArray(srcOrList) ? srcOrList.filter(Boolean) : [srcOrList].filter(Boolean);
     return new Promise(resolve => {
-      if (!src) {
-        resolve(false);
-        return;
-      }
+      if (!sources.length) { resolve(false); return; }
 
+      let index = 0;
       let settled = false;
-      let audio = null;
 
-      const done = ok => {
+      const tryOne = () => {
         if (settled) return;
-        settled = true;
-        resolve(ok);
+        const src = sources[index];
+
+        const fail = () => {
+          index += 1;
+          if (index >= sources.length) {
+            if (!settled) {
+              settled = true;
+              resolve(false);
+            }
+            return;
+          }
+          tryOne();
+        };
+
+        const done = ok => {
+          if (settled) return;
+          settled = true;
+          resolve(ok);
+        };
+
+        try {
+          const audio = new Audio(src);
+          audio.preload = 'auto';
+          audio.volume = 1;
+          audio.playsInline = true;
+          audio.addEventListener('ended', () => done(true), { once: true });
+          audio.addEventListener('error', fail, { once: true });
+          const playPromise = audio.play();
+          if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(fail);
+        } catch (error) {
+          fail();
+        }
       };
 
-      try {
-        audio = new Audio(src);
-        audio.preload = 'auto';
-        audio.volume = 1;
-        audio.playsInline = true;
-
-        audio.addEventListener('ended', () => done(true), { once: true });
-        audio.addEventListener('error', () => done(false), { once: true });
-
-        const playPromise = audio.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(() => done(false));
-        }
-      } catch (error) {
-        done(false);
-      }
+      tryOne();
     });
   }
 
@@ -720,13 +516,16 @@
     }
 
     await loadVoiceManifest();
-    const src = state.voiceMap[id];
-    if (!src) {
-      console.warn('[Boardland] voice key missing:', id);
-      return false;
-    }
 
-    return playAudioPath(src);
+    const sources = [];
+    if (state.voiceMap[id]) sources.push(state.voiceMap[id]);
+    getVoiceFallbackUrls(id).forEach(src => {
+      if (!sources.includes(src)) sources.push(src);
+    });
+
+    const ok = await playAudioPath(sources);
+    if (!ok) console.warn('[Boardland] voice play failed:', id, sources);
+    return ok;
   }
 
   async function playBoardVoiceThenWait(id, minHoldMs, maxWaitMs) {
@@ -742,13 +541,10 @@
     ]);
 
     const elapsed = Date.now() - started;
-    if (elapsed < minMs) {
-      await wait(minMs - elapsed);
-    }
+    if (elapsed < minMs) await wait(minMs - elapsed);
 
     restoreBgm();
   }
-
 
   function addTicker(fn) {
     state.tickerItems.push(fn);
@@ -855,22 +651,11 @@
   function normalizeAssetPath(value) {
     const src = String(value || '').trim();
     if (!src) return '';
-
     if (/^https?:\/\//i.test(src)) return src;
     if (src.startsWith('./')) return src;
-
-    if (src.startsWith('/family-boardland/')) {
-      return `.${src.replace('/family-boardland', '')}`;
-    }
-
-    if (src.startsWith('/assets/')) {
-      return `.${src}`;
-    }
-
-    if (src.startsWith('assets/')) {
-      return `./${src}`;
-    }
-
+    if (src.startsWith('/family-boardland/')) return `.${src.replace('/family-boardland', '')}`;
+    if (src.startsWith('/assets/')) return `.${src}`;
+    if (src.startsWith('assets/')) return `./${src}`;
     return src;
   }
 
@@ -879,18 +664,10 @@
       const img = new Image();
 
       img.onload = () => {
-        try {
-          const texture = PIXI.Texture.from(img);
-          resolve(texture);
-        } catch (error) {
-          reject(error);
-        }
+        try { resolve(PIXI.Texture.from(img)); } catch (error) { reject(error); }
       };
 
-      img.onerror = () => {
-        reject(new Error(`Image load failed: ${src}`));
-      };
-
+      img.onerror = () => reject(new Error(`Image load failed: ${src}`));
       img.src = src;
     });
   }
@@ -908,12 +685,9 @@
           state.assetTextures[alias] = texture;
           return true;
         }
-      } catch (error) {
-        console.warn('[Boardland] asset candidate failed:', alias, src);
-      }
+      } catch (error) {}
     }
 
-    console.warn('[Boardland] asset load failed:', alias, list.map(normalizeAssetPath));
     return false;
   }
 
@@ -922,7 +696,6 @@
       const res = await fetch('./assets/boardland_assets_manifest.json', { cache: 'no-store' });
       if (res.ok) {
         const manifest = await res.json();
-
         const push = (key, value) => {
           if (!value || typeof value !== 'string') return;
           const clean = normalizeAssetPath(value);
@@ -931,16 +704,16 @@
           if (!ASSET_CANDIDATES[key].includes(clean)) ASSET_CANDIDATES[key].unshift(clean);
         };
 
-        push('board_bg', manifest.board_bg || manifest?.board?.main);
-        push('roulette', manifest.roulette || manifest.roulette_wheel || manifest?.board?.roulette);
-        push('roulette_pointer', manifest.roulette_pointer || manifest.pointer || manifest?.board?.roulette_pointer || manifest?.board?.pointer);
+        push('board_bg', manifest.board_bg || (manifest.board && manifest.board.main));
+        push('roulette', manifest.roulette || manifest.roulette_wheel || (manifest.board && manifest.board.roulette));
+        push('roulette_pointer', manifest.roulette_pointer || manifest.pointer || (manifest.board && manifest.board.roulette_pointer));
 
         for (let i = 1; i <= 6; i += 1) {
-          push(`dice_${i}`, manifest[`dice_${i}`] || manifest[`dice-${i}`] || manifest?.dice?.[i]);
+          push(`dice_${i}`, manifest[`dice_${i}`] || manifest[`dice-${i}`] || (manifest.dice && manifest.dice[i]));
         }
 
-        push('card_back', manifest.card_back || manifest?.cards?.back);
-        push('card_front_default', manifest.card_front || manifest?.cards?.front);
+        push('card_back', manifest.card_back || (manifest.cards && manifest.cards.back));
+        push('card_front_default', manifest.card_front || (manifest.cards && manifest.cards.front));
         push('card_front_gift', manifest.card_gift);
         push('card_front_high_five', manifest.card_high_five);
         push('card_front_family_hug', manifest.card_hug || manifest.card_family_hug);
@@ -960,20 +733,18 @@
         push('card_front_get_applause', manifest.card_get_applause);
         push('card_front_drink_water', manifest.card_drink_water);
 
-        push('icon_gift', manifest.icon_gift || manifest?.rewards?.gift);
-        push('icon_star', manifest.icon_star || manifest?.rewards?.star);
-        push('icon_heart', manifest.icon_heart || manifest?.rewards?.heart);
-        push('icon_rainbow', manifest.icon_rainbow || manifest?.rewards?.rainbow);
-        push('pawn_dog', manifest.pawn_dog || manifest?.pawns?.dog);
-        push('pawn_cat', manifest.pawn_cat || manifest?.pawns?.cat);
-        push('pawn_rabbit', manifest.pawn_rabbit || manifest?.pawns?.rabbit);
-        push('pawn_bear', manifest.pawn_bear || manifest?.pawns?.bear);
+        push('icon_gift', manifest.icon_gift || (manifest.rewards && manifest.rewards.gift));
+        push('icon_star', manifest.icon_star || (manifest.rewards && manifest.rewards.star));
+        push('icon_heart', manifest.icon_heart || (manifest.rewards && manifest.rewards.heart));
+        push('icon_rainbow', manifest.icon_rainbow || (manifest.rewards && manifest.rewards.rainbow));
+        push('pawn_dog', manifest.pawn_dog || (manifest.pawns && manifest.pawns.dog));
+        push('pawn_cat', manifest.pawn_cat || (manifest.pawns && manifest.pawns.cat));
+        push('pawn_rabbit', manifest.pawn_rabbit || (manifest.pawns && manifest.pawns.rabbit));
+        push('pawn_bear', manifest.pawn_bear || (manifest.pawns && manifest.pawns.bear));
       }
     } catch (error) {}
 
-    await Promise.all(
-      Object.keys(ASSET_CANDIDATES).map(key => loadOne(key, ASSET_CANDIDATES[key]))
-    );
+    await Promise.all(Object.keys(ASSET_CANDIDATES).map(key => loadOne(key, ASSET_CANDIDATES[key])));
   }
 
   function fitWorld() {
@@ -997,15 +768,12 @@
   function makeSprite(alias, x, y, w, h, anchor = 0.5) {
     const texture = state.assetTextures[alias];
     if (!texture) return null;
-
     const sprite = new PIXI.Sprite(texture);
     sprite.anchor.set(anchor);
     sprite.x = x;
     sprite.y = y;
-
     if (w) sprite.width = w;
     if (h) sprite.height = h;
-
     return sprite;
   }
 
@@ -1043,9 +811,7 @@
   }
 
   function getPawnTarget(player) {
-    if (!player.onBoard) {
-      return PLAYER_SEAT_COORDS[player.order] || START_HOME_COORD;
-    }
+    if (!player.onBoard) return PLAYER_SEAT_COORDS[player.order] || START_HOME_COORD;
 
     const p = TILE_COORDS[player.index];
     const same = state.players.filter(item => item.onBoard && item.index === player.index);
@@ -1058,15 +824,11 @@
     ];
     const off = offsets[idx] || { x: 0, y: 0 };
 
-    return {
-      x: p.x + off.x,
-      y: p.y + off.y - 1
-    };
+    return { x: p.x + off.x, y: p.y + off.y - 1 };
   }
 
   function setPawnPosition(player, instant) {
     if (!player.token) return;
-
     const target = getPawnTarget(player);
     const scale = getPawnScale(target.y);
 
@@ -1109,47 +871,44 @@
 
   function createPlayers() {
     state.layers.token.removeChildren();
-
-    state.players = PAWNS.slice(0, state.setupPlayerCount).map((pawn, order) => {
-      return {
-        order,
-        index: 0,
-        onBoard: false,
-        finished: false,
-        inventory: [],
-        name: pawn.name,
-        icon: pawn.icon,
-        pawnId: pawn.id,
-        fill: pawn.fill,
-        edge: pawn.edge,
-        token: null
-      };
-    });
+    state.players = PAWNS.slice(0, state.setupPlayerCount).map((pawn, order) => ({
+      order,
+      index: 0,
+      onBoard: false,
+      finished: false,
+      inventory: [],
+      name: pawn.name,
+      icon: pawn.icon,
+      pawnId: pawn.id,
+      fill: pawn.fill,
+      edge: pawn.edge,
+      token: null
+    }));
 
     state.players.forEach(drawPawn);
     pulseCurrentPawn();
   }
 
-  async function pulseTile(idx) {
-    const tile = state.tiles[idx];
-    if (!tile) return;
-    tile.scale.set(1);
-  }
-
   function pulseCurrentPawn() {
-    state.pulseVersion += 1;
     const player = state.players[state.currentPlayerIndex];
     if (!player || !player.token) return;
-
     const target = getPawnTarget(player);
-    const base = getPawnScale(target.y);
-    player.token.scale.set(base);
+    player.token.scale.set(getPawnScale(target.y));
+  }
+
+  function pulseTile(idx) {
+    const tile = state.tiles && state.tiles[idx];
+    if (!tile) return;
+    const s = tile.scale.x || 1;
+    animate(180, t => {
+      const p = Math.sin(t * Math.PI);
+      tile.scale.set(s + p * 0.08);
+    });
   }
 
   async function hop(player) {
     const target = getPawnTarget(player);
     const token = player.token;
-
     const sx = token.x;
     const sy = token.y;
     const ss = token.scale.x;
@@ -1165,7 +924,6 @@
     token.x = target.x;
     token.y = target.y;
     token.scale.set(ts);
-
     playSfx('moveStep', 'move');
     utils.vibrate(16);
     pulseTile(player.index);
@@ -1178,9 +936,7 @@
   function getRouletteValueAngle(value) {
     const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS;
     const index = ROULETTE_VALUE_ORDER.indexOf(value);
-
     if (index < 0) return ROULETTE_FIRST_VALUE_ANGLE;
-
     return ROULETTE_FIRST_VALUE_ANGLE + index * segmentAngle;
   }
 
@@ -1189,25 +945,16 @@
     const valueAngle = getRouletteValueAngle(value);
     const targetBase = ROULETTE_POINTER_ANGLE - valueAngle;
     const delta = positiveModulo(targetBase - currentRotation, fullCircle);
-
     return currentRotation + fullCircle * ROULETTE_FULL_TURNS + delta;
   }
 
   function pickEventCard(tileType) {
     let candidates = EVENT_CARDS;
-
-    if (tileType === 'heart') {
-      candidates = EVENT_CARDS.filter(card => card.type === 'heart' || card.type === 'family');
-    } else if (tileType === 'star') {
-      candidates = EVENT_CARDS.filter(card => card.type === 'star' || card.type === 'family' || card.type === 'mission');
-    } else if (tileType === 'rainbow') {
-      candidates = EVENT_CARDS.filter(card => card.type === 'rainbow' || card.type === 'mission');
-    } else if (tileType === 'card') {
-      candidates = EVENT_CARDS.filter(card => card.type !== 'gift');
-    }
-
+    if (tileType === 'heart') candidates = EVENT_CARDS.filter(card => card.type === 'heart' || card.type === 'family');
+    else if (tileType === 'star') candidates = EVENT_CARDS.filter(card => card.type === 'star' || card.type === 'family' || card.type === 'mission');
+    else if (tileType === 'rainbow') candidates = EVENT_CARDS.filter(card => card.type === 'rainbow' || card.type === 'mission');
+    else if (tileType === 'card') candidates = EVENT_CARDS.filter(card => card.type !== 'gift');
     if (!candidates.length) candidates = EVENT_CARDS;
-
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
@@ -1270,7 +1017,6 @@
     g.lineTo(0, 58);
     g.endFill();
     fallback.addChild(g);
-
     parent.addChild(fallback);
   }
 
@@ -1289,11 +1035,8 @@
     state.rouletteWheel = wheel;
 
     const sprite = makeSprite('roulette', 0, 0, ROULETTE_SIZE, ROULETTE_SIZE);
-    if (sprite) {
-      wheel.addChild(sprite);
-    } else {
-      drawRouletteFallback(wheel);
-    }
+    if (sprite) wheel.addChild(sprite);
+    else drawRouletteFallback(wheel);
 
     drawRoulettePointer(layer);
     wheel.on('pointertap', spinRoulette);
@@ -1331,7 +1074,6 @@
 
   function drawDiceFallback(parent, value) {
     parent.removeChildren();
-
     const shadow = new PIXI.Graphics();
     drawG(shadow, 'circle', 0, 92, 0, 0, 116, 0x000000, 0.2);
     shadow.scale.y = 0.22;
@@ -1350,7 +1092,6 @@
   function setDiceFace(value) {
     const alias = `dice_${value}`;
     const texture = state.assetTextures[alias];
-
     if (state.diceFaceSprite && texture) {
       state.diceFaceSprite.texture = texture;
       state.diceFaceSprite.visible = true;
@@ -1358,9 +1099,7 @@
       return;
     }
 
-    if (state.diceBox && !texture) {
-      drawDiceFallback(state.diceBox, value);
-    }
+    if (state.diceBox && !texture) drawDiceFallback(state.diceBox, value);
   }
 
   function drawDice() {
@@ -1392,20 +1131,6 @@
     }
 
     diceBox.on('pointertap', rollDice);
-
-    const hint = createSoftText('톡 눌러요', 34, 0xffffff, '900', 0x7a4a16, 5);
-    hint.anchor.set(0.5);
-    hint.y = 190;
-    hint.alpha = 0.92;
-    diceBox.addChild(hint);
-
-    addTicker(() => {
-      if (state.screen !== 'game' || state.playMode !== PLAY_MODES.dice || state.isDiceRolling || !hint.parent) {
-        return true;
-      }
-      hint.scale.set(1 + Math.sin(performance.now() / 260) * 0.035);
-      return false;
-    });
   }
 
   async function rollDice() {
@@ -1459,17 +1184,7 @@
   }
 
   function makeStartModeCard(options) {
-    const {
-      x,
-      y,
-      mode,
-      spriteAlias,
-      fallbackIcon,
-      accent,
-      accentDark,
-      size = 300
-    } = options;
-
+    const { x, y, mode, spriteAlias, fallbackIcon, accent, accentDark, size = 300 } = options;
     const card = new PIXI.Container();
     card.x = x;
     card.y = y;
@@ -1506,22 +1221,8 @@
       card.addChild(icon);
     }
 
-    card.on('pointerover', () => {
-      card.scale.set(1.05);
-    });
-
-    card.on('pointerout', () => {
-      card.scale.set(1);
-    });
-
-    card.on('pointerdown', () => {
-      card.scale.set(0.92);
-    });
-
-    card.on('pointerupoutside', () => {
-      card.scale.set(1);
-    });
-
+    card.on('pointerdown', () => { card.scale.set(0.92); });
+    card.on('pointerupoutside', () => { card.scale.set(1); });
     card.on('pointertap', () => {
       card.scale.set(1);
       playSfx('select', 'start');
@@ -1564,14 +1265,6 @@
     faceText.anchor.set(0.5);
     faceText.y = -2;
     btn.addChild(faceText);
-
-    if (selected) {
-      const sparkle = createSoftText('✨', 24, 0xffffff, '900', 0x9a4f00, 3);
-      sparkle.anchor.set(0.5);
-      sparkle.x = 42;
-      sparkle.y = -38;
-      btn.addChild(sparkle);
-    }
 
     btn.on('pointertap', () => {
       state.setupPlayerCount = count;
@@ -1661,12 +1354,16 @@
     if (state.playMode === PLAY_MODES.roulette) {
       state.layers.dice.removeChildren();
       drawRoulette();
-      playBoardVoiceThenWait('board.start.rouletteMode', VOICE_WAIT.mode.min, VOICE_WAIT.mode.max);
     } else {
       state.layers.roulette.removeChildren();
       drawDice();
-      playBoardVoiceThenWait('board.start.diceMode', VOICE_WAIT.mode.min, VOICE_WAIT.mode.max);
     }
+
+    playBoardVoiceThenWait(
+      state.playMode === PLAY_MODES.roulette ? 'board.start.rouletteMode' : 'board.start.diceMode',
+      VOICE_WAIT.mode.min,
+      VOICE_WAIT.mode.max
+    );
 
     createPlayers();
     announceCurrentPlayer();
@@ -1706,7 +1403,6 @@
 
   async function handleTileAction(player) {
     const type = TILE_PATTERN[player.index];
-
     const tileVoiceMap = {
       gift: 'board.tile.gift',
       card: 'board.tile.card',
@@ -1738,11 +1434,6 @@
       return;
     }
 
-    if (type === 'jump') {
-      await playJumpFx(player);
-      return;
-    }
-
     await playNormalLandFx(player);
   }
 
@@ -1757,15 +1448,6 @@
     playSfx('giftOpen', 'gift');
     utils.vibrate([20, 30, 20]);
     await wait(900);
-  }
-
-  async function playJumpFx(player) {
-    burst(player.token.x, player.token.y - 40, ['🌈', '✨'], 26, state.layers.fx);
-    await wait(300);
-
-    const next = Math.min(FINISH_INDEX, player.index + 3);
-    player.index = next;
-    await hop(player);
   }
 
   async function playRestFx(player) {
@@ -1819,7 +1501,6 @@
     const star = createText('⭐', 96, 0xffffff);
     star.anchor.set(0.5);
     box.addChild(star);
-
     return box;
   }
 
@@ -1829,7 +1510,6 @@
     if (sprite) return sprite;
 
     const box = new PIXI.Container();
-
     const g = new PIXI.Graphics();
     drawG(g, 'round', -150, -210, 300, 420, 32, 0xfff3cf, 1, 8, 0xffffff, 1);
     box.addChild(g);
@@ -1848,13 +1528,11 @@
     body.anchor.set(0.5);
     body.y = 94;
     box.addChild(body);
-
     return box;
   }
 
   async function showEvent(card) {
     state.waitingEvent = true;
-
     const layer = state.layers.overlay;
     layer.removeChildren();
 
@@ -1878,7 +1556,6 @@
     const back = makeCardBack();
     const front = makeCardFront(card);
     front.visible = false;
-
     cardBox.addChild(back);
     cardBox.addChild(front);
 
@@ -1893,16 +1570,10 @@
       cardBox.rotation = -0.18 + Math.sin(t * Math.PI) * 0.22;
     });
 
-    await animate(170, t => {
-      cardBox.scale.x = 1 - t;
-    });
-
+    await animate(170, t => { cardBox.scale.x = 1 - t; });
     back.visible = false;
     front.visible = true;
-
-    await animate(170, t => {
-      cardBox.scale.x = t;
-    });
+    await animate(170, t => { cardBox.scale.x = t; });
 
     playSfx('cardOpen', 'gift');
     burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨', '💛'] : ['⭐', '❤️', '✨', '🌈'], 86, layer);
@@ -1920,7 +1591,6 @@
 
   async function showWin(player) {
     state.waitingEvent = true;
-
     const layer = state.layers.overlay;
     layer.removeChildren();
 
@@ -1974,7 +1644,6 @@
 
   function burst(x, y, icons, count, layer) {
     const targetLayer = layer || state.layers.fx;
-
     for (let i = 0; i < count; i += 1) {
       const icon = createText(icons[i % icons.length], utils.rand(20, 42), 0xffffff);
       icon.anchor.set(0.5);
@@ -2049,9 +1718,8 @@
 
     createPlayers();
 
-    if (state.playMode === PLAY_MODES.dice) {
-      drawDice();
-    } else {
+    if (state.playMode === PLAY_MODES.dice) drawDice();
+    else {
       state.playMode = PLAY_MODES.roulette;
       drawRoulette();
     }
@@ -2077,6 +1745,20 @@
     drawStartScreen();
   }
 
+  window.BoardlandAudioDebug = function () {
+    return {
+      voiceManifestCandidates: VOICE_MANIFEST_CANDIDATES.map(resolveAssetUrl),
+      voiceKeyCount: Object.keys(state.voiceMap || {}).length,
+      sampleVoiceSources: getVoiceFallbackUrls('board.start.diceMode'),
+      bgmWanted: state.bgmWanted,
+      bgmIndex: state.bgmIndex,
+      bgmSrc: state.bgmAudio ? state.bgmAudio.src : '',
+      bgmTracks: BGM_TRACKS.slice(),
+      currentScreen: state.screen,
+      playMode: state.playMode
+    };
+  };
+
   async function init() {
     const root = getRoot();
     root.innerHTML = '';
@@ -2096,7 +1778,6 @@
 
     state.world = new PIXI.Container();
     state.world.sortableChildren = true;
-
     state.app.stage.addChild(state.world);
     root.appendChild(state.app.view);
 
