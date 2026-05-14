@@ -75,6 +75,38 @@
 
   const PAWN_IMAGE_SIZE = 76;
 
+  const VOICE_MANIFEST_CANDIDATES = [
+    './voice_manifest.json',
+    './assets/voice_manifest.json',
+    './assets/voice/voice_manifest.json'
+  ];
+
+  const VOICE_WAIT = {
+    mode: { min: 850, max: 4200 },
+    tap: { min: 420, max: 2600 },
+    result: { min: 850, max: 3600 },
+    moveStart: { min: 420, max: 2400 },
+    moveArrive: { min: 560, max: 2600 },
+    tile: { min: 760, max: 3600 },
+    card: { min: 3200, max: 8200 },
+    win: { min: 1600, max: 6200 }
+  };
+
+  const SFX_CANDIDATES = {
+    select: './assets/boardland/sfx/select-pop.mp3',
+    start: './assets/boardland/sfx/game-start.mp3',
+    rouletteSpin: './assets/boardland/sfx/roulette-spin.mp3',
+    rouletteStop: './assets/boardland/sfx/roulette-stop.mp3',
+    diceRoll: './assets/boardland/sfx/dice-roll.mp3',
+    diceStop: './assets/boardland/sfx/dice-stop.mp3',
+    moveStep: './assets/boardland/sfx/move-step.mp3',
+    arrive: './assets/boardland/sfx/arrive-pop.mp3',
+    cardOpen: './assets/boardland/sfx/card-open.mp3',
+    giftOpen: './assets/boardland/sfx/gift-open.mp3',
+    win: './assets/boardland/sfx/win-fanfare.mp3'
+  };
+
+
   const TILE_PATTERN = [
     'start',
     'gift',
@@ -175,7 +207,7 @@
     {
       id: 'kiss_mom',
       type: 'family',
-      icon: '💋',
+      icon: '😘',
       title: '엄마 뽀뽀',
       body: '엄마한테 뽀뽀 쪽!',
       voiceId: 'board.card.kissMom'
@@ -183,7 +215,7 @@
     {
       id: 'kiss_dad',
       type: 'family',
-      icon: '💋',
+      icon: '😘',
       title: '아빠 뽀뽀',
       body: '아빠한테 뽀뽀 쪽!',
       voiceId: 'board.card.kissDad'
@@ -199,7 +231,7 @@
     {
       id: 'cheek_heart_mom',
       type: 'heart',
-      icon: '🫶',
+      icon: '💗',
       title: '엄마랑 볼하트',
       body: '엄마랑 볼하트 해봐요',
       voiceId: 'board.card.cheekHeartMom'
@@ -402,7 +434,10 @@
     diceFallbackText: null,
     setupPlayerCount: 3,
     screen: 'start',
-    audioCtx: null
+    audioCtx: null,
+    voiceMap: {},
+    voiceReadyPromise: null,
+    sfxAudio: {}
   };
 
   const utils = {
@@ -468,57 +503,146 @@
     });
   }
 
-  async function playBoardVoice(id, minHoldMs = 0, maxWaitMs = 5200) {
-    if (!id) {
-      if (minHoldMs > 0) await wait(minHoldMs);
+  function normalizeVoicePath(value) {
+    const src = String(value || '').trim();
+    if (!src) return '';
+
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.startsWith('./')) return src;
+    if (src.startsWith('/')) return `.${src}`;
+    return `./${src}`;
+  }
+
+  async function loadVoiceManifest() {
+    if (state.voiceReadyPromise) return state.voiceReadyPromise;
+
+    state.voiceReadyPromise = (async () => {
+      for (const manifestUrl of VOICE_MANIFEST_CANDIDATES) {
+        try {
+          const res = await fetch(manifestUrl, { cache: 'no-store' });
+          if (!res.ok) continue;
+
+          const manifest = await res.json();
+          const voices = manifest?.voices && typeof manifest.voices === 'object' ? manifest.voices : manifest;
+          if (!voices || typeof voices !== 'object') continue;
+
+          Object.keys(voices).forEach(key => {
+            const value = voices[key];
+            if (typeof value === 'string') {
+              state.voiceMap[key] = normalizeVoicePath(value);
+            }
+          });
+
+          if (Object.keys(state.voiceMap).length) return true;
+        } catch (error) {}
+      }
+
       return false;
+    })();
+
+    return state.voiceReadyPromise;
+  }
+
+  function preloadSfx() {
+    Object.keys(SFX_CANDIDATES).forEach(key => {
+      if (state.sfxAudio[key]) return;
+      try {
+        const audio = new Audio(SFX_CANDIDATES[key]);
+        audio.preload = 'auto';
+        audio.volume = 0.86;
+        state.sfxAudio[key] = audio;
+      } catch (error) {}
+    });
+  }
+
+  function playSfx(key, fallbackTone) {
+    const audio = state.sfxAudio[key];
+
+    if (audio) {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.play().catch(() => {
+          if (fallbackTone) playTone(fallbackTone);
+        });
+        return;
+      } catch (error) {}
     }
 
-    const startedAt = performance.now();
-    let played = false;
+    if (fallbackTone) playTone(fallbackTone);
+  }
+
+  function playAudioPath(src) {
+    return new Promise(resolve => {
+      if (!src) {
+        resolve(false);
+        return;
+      }
+
+      let settled = false;
+      let audio = null;
+
+      const done = ok => {
+        if (settled) return;
+        settled = true;
+        resolve(ok);
+      };
+
+      try {
+        audio = new Audio(src);
+        audio.preload = 'auto';
+        audio.volume = 1;
+        audio.playsInline = true;
+
+        audio.addEventListener('ended', () => done(true), { once: true });
+        audio.addEventListener('error', () => done(false), { once: true });
+
+        const playPromise = audio.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => done(false));
+        }
+      } catch (error) {
+        done(false);
+      }
+    });
+  }
+
+  async function playBoardVoice(id) {
+    if (!id) return false;
 
     if (window.SihyeonVoice && typeof window.SihyeonVoice.play === 'function') {
       try {
-        await Promise.race([
-          window.SihyeonVoice.play(id),
-          wait(maxWaitMs)
-        ]);
-        played = true;
-      } catch (error) {
-        played = false;
-      }
+        await window.SihyeonVoice.play(id, '');
+        return true;
+      } catch (error) {}
     }
 
-    const elapsed = performance.now() - startedAt;
-    const rest = Math.max(0, minHoldMs - elapsed);
-    if (rest > 0) await wait(rest);
+    await loadVoiceManifest();
+    const src = state.voiceMap[id];
+    if (!src) {
+      console.warn('[Boardland] voice key missing:', id);
+      return false;
+    }
 
-    return played;
+    return playAudioPath(src);
   }
 
-  async function playBoardVoiceThenWait(id, minHoldMs = 900, maxWaitMs = 5200) {
-    await playBoardVoice(id, minHoldMs, maxWaitMs);
+  async function playBoardVoiceThenWait(id, minHoldMs, maxWaitMs) {
+    const minMs = Number.isFinite(minHoldMs) ? minHoldMs : 600;
+    const maxMs = Number.isFinite(maxWaitMs) ? maxWaitMs : Math.max(1800, minMs);
+    const started = Date.now();
+
+    await Promise.race([
+      playBoardVoice(id),
+      wait(maxMs)
+    ]);
+
+    const elapsed = Date.now() - started;
+    if (elapsed < minMs) {
+      await wait(minMs - elapsed);
+    }
   }
 
-  function getPlayerTurnVoiceId(player) {
-    if (!player) return 'board.move.playerFamily';
-    if (player.order === 0) return 'board.move.playerSihyeon';
-    if (player.order === 1) return 'board.move.playerMom';
-    if (player.order === 2) return 'board.move.playerDad';
-    return 'board.move.playerFamily';
-  }
-
-  function getTileVoiceId(type) {
-    if (type === 'card') return 'board.tile.card';
-    if (type === 'gift') return 'board.tile.gift';
-    if (type === 'heart') return 'board.tile.heart';
-    if (type === 'star') return 'board.tile.star';
-    if (type === 'rainbow') return 'board.tile.rainbow';
-    if (type === 'cloud') return 'board.tile.cloud';
-    if (type === 'pause') return 'board.tile.pause';
-    if (type === 'finish') return 'board.tile.trophy';
-    return '';
-  }
 
   function addTicker(fn) {
     state.tickerItems.push(fn);
@@ -936,7 +1060,7 @@
     token.y = target.y;
     token.scale.set(ts);
 
-    playTone('move');
+    playSfx('moveStep', 'move');
     utils.vibrate(16);
     pulseTile(player.index);
   }
@@ -1077,8 +1201,9 @@
     state.isMoving = true;
 
     initAudio();
+    playSfx('rouletteSpin', 'dice');
     utils.vibrate([20, 20, 20]);
-    playBoardVoice('board.roulette.spin', 0, 2600);
+    await playBoardVoiceThenWait('board.roulette.spin', 520, 2600);
 
     const result = Math.floor(Math.random() * ROULETTE_SEGMENTS) + 1;
     const start = state.rouletteWheel.rotation;
@@ -1089,8 +1214,9 @@
     });
 
     state.rouletteWheel.rotation = stopAt;
-    burst(ROULETTE_COORD.x, ROULETTE_COORD.y - 30, ['⭐', '✨'], 28, state.layers.fx);
-    await playBoardVoiceThenWait('board.roulette.result', 850, 3600);
+    playSfx('rouletteStop', 'gift');
+    burst(ROULETTE_COORD.x, ROULETTE_COORD.y - 24, ['✨', '⭐'], 34, state.layers.fx);
+    await playBoardVoiceThenWait('board.roulette.result', VOICE_WAIT.result.min, VOICE_WAIT.result.max);
 
     state.isSpinning = false;
     await moveCurrentPlayer(result);
@@ -1184,9 +1310,9 @@
     state.isMoving = true;
 
     initAudio();
+    playSfx('diceRoll', 'dice');
     utils.vibrate([20, 20, 35]);
-    playTone('dice');
-    playBoardVoice('board.dice.roll', 0, 2600);
+    await playBoardVoiceThenWait('board.dice.roll', 520, 2600);
 
     const result = Math.floor(Math.random() * 6) + 1;
     const box = state.diceBox;
@@ -1216,8 +1342,10 @@
     box.rotation = 0;
     box.scale.set(1);
     box.y = DICE_COORD.y;
-    burst(DICE_COORD.x, DICE_COORD.y - 30, ['🎲', '⭐', '✨'], 32, state.layers.fx);
-    await playBoardVoiceThenWait('board.dice.result', 850, 3600);
+
+    playSfx('diceStop', 'gift');
+    burst(DICE_COORD.x, DICE_COORD.y - 18, ['🎲', '⭐', '✨'], 42, state.layers.fx);
+    await playBoardVoiceThenWait('board.dice.result', VOICE_WAIT.result.min, VOICE_WAIT.result.max);
 
     state.isDiceRolling = false;
     await moveCurrentPlayer(result);
@@ -1290,6 +1418,7 @@
 
     card.on('pointertap', () => {
       card.scale.set(1);
+      playSfx('select', 'start');
       startGameMode(mode);
     });
 
@@ -1302,6 +1431,58 @@
     });
 
     return card;
+  }
+
+  function makePlayerCountButton(count, x, y) {
+    const btn = new PIXI.Container();
+    btn.x = x;
+    btn.y = y;
+    btn.zIndex = 60;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Circle(0, 0, 58);
+
+    const selected = state.setupPlayerCount === count;
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 30, 0, 0, 50, 0x000000, selected ? 0.2 : 0.14);
+    shadow.scale.y = 0.24;
+    btn.addChild(shadow);
+
+    const outer = new PIXI.Graphics();
+    drawG(outer, 'circle', 0, 0, 0, 0, selected ? 58 : 52, selected ? 0xfff3c0 : 0xffffff, 0.94, selected ? 8 : 5, selected ? 0xffc44d : 0xffffff, 0.95);
+    btn.addChild(outer);
+
+    const faces = PAWNS.slice(0, count).map(pawn => pawn.icon).join('');
+    const faceText = createSoftText(faces, count === 4 ? 28 : 34, 0xffffff, '900', 0x7a4a16, 4);
+    faceText.anchor.set(0.5);
+    faceText.y = -2;
+    btn.addChild(faceText);
+
+    if (selected) {
+      const sparkle = createSoftText('✨', 24, 0xffffff, '900', 0x9a4f00, 3);
+      sparkle.anchor.set(0.5);
+      sparkle.x = 42;
+      sparkle.y = -38;
+      btn.addChild(sparkle);
+    }
+
+    btn.on('pointertap', () => {
+      state.setupPlayerCount = count;
+      playSfx('select', 'start');
+      utils.vibrate(18);
+      drawStartScreen();
+    });
+
+    return btn;
+  }
+
+  function drawPlayerCountSelector(layer) {
+    const y = DESIGN_H / 2 + 274;
+    const gap = 150;
+    [2, 3, 4].forEach((count, idx) => {
+      layer.addChild(makePlayerCountButton(count, DESIGN_W / 2 + (idx - 1) * gap, y));
+    });
   }
 
   function drawStartScreen() {
@@ -1344,6 +1525,7 @@
 
     layer.addChild(rouletteCard);
     layer.addChild(diceCard);
+    drawPlayerCountSelector(layer);
   }
 
   async function startGameMode(mode) {
@@ -1351,14 +1533,18 @@
     if (mode !== PLAY_MODES.roulette && mode !== PLAY_MODES.dice) return;
 
     initAudio();
-    playTone('start');
+    preloadSfx();
+    playSfx('start', 'start');
     utils.vibrate([25, 30, 25]);
-
-    const modeVoiceId = mode === PLAY_MODES.dice ? 'board.start.diceMode' : 'board.start.rouletteMode';
-    await playBoardVoiceThenWait(modeVoiceId, 850, 4200);
 
     state.playMode = mode;
     state.screen = 'game';
+
+    await playBoardVoiceThenWait(
+      mode === PLAY_MODES.roulette ? 'board.start.rouletteMode' : 'board.start.diceMode',
+      VOICE_WAIT.mode.min,
+      VOICE_WAIT.mode.max
+    );
 
     await animate(220, t => {
       state.layers.start.alpha = 1 - t;
@@ -1380,14 +1566,14 @@
     }
 
     createPlayers();
+    await announceCurrentPlayer();
   }
 
   async function moveCurrentPlayer(steps) {
     const player = state.players[state.currentPlayerIndex];
     if (!player) return;
 
-    await playBoardVoiceThenWait(getPlayerTurnVoiceId(player), 520, 3000);
-    await playBoardVoiceThenWait('board.move.start', 420, 2600);
+    await playBoardVoiceThenWait('board.move.start', VOICE_WAIT.moveStart.min, VOICE_WAIT.moveStart.max);
 
     if (!player.onBoard) {
       player.onBoard = true;
@@ -1399,10 +1585,11 @@
       if (player.index >= FINISH_INDEX) break;
       player.index += 1;
       await hop(player);
-      await wait(40);
+      await wait(70);
     }
 
-    await playBoardVoiceThenWait('board.move.arrive', 560, 2600);
+    playSfx('arrive', 'gift');
+    await playBoardVoiceThenWait('board.move.arrive', VOICE_WAIT.moveArrive.min, VOICE_WAIT.moveArrive.max);
 
     if (player.index >= FINISH_INDEX || TILE_PATTERN[player.index] === 'finish') {
       player.finished = true;
@@ -1416,8 +1603,21 @@
 
   async function handleTileAction(player) {
     const type = TILE_PATTERN[player.index];
-    const tileVoiceId = getTileVoiceId(type);
-    if (tileVoiceId) await playBoardVoiceThenWait(tileVoiceId, 760, 3600);
+
+    const tileVoiceMap = {
+      gift: 'board.tile.gift',
+      card: 'board.tile.card',
+      heart: 'board.tile.heart',
+      star: 'board.tile.star',
+      rainbow: 'board.tile.rainbow',
+      pause: 'board.tile.pause',
+      cloud: 'board.tile.cloud',
+      finish: 'board.tile.trophy'
+    };
+
+    if (tileVoiceMap[type]) {
+      await playBoardVoiceThenWait(tileVoiceMap[type], VOICE_WAIT.tile.min, VOICE_WAIT.tile.max);
+    }
 
     if (type === 'gift') {
       await playGiftFx(player);
@@ -1450,10 +1650,10 @@
   }
 
   async function playGiftFx(player) {
-    burst(GIFT_COORD.x, GIFT_COORD.y - 20, ['🎁', '⭐', '✨'], 34, state.layers.fx);
-    playTone('gift');
+    burst(GIFT_COORD.x, GIFT_COORD.y - 20, ['🎁', '⭐', '✨', '💛'], 64, state.layers.fx);
+    playSfx('giftOpen', 'gift');
     utils.vibrate([20, 30, 20]);
-    await wait(650);
+    await wait(900);
   }
 
   async function playJumpFx(player) {
@@ -1601,8 +1801,9 @@
       cardBox.scale.x = t;
     });
 
-    burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨'] : ['⭐', '❤️', '✨'], 64, layer);
-    await playBoardVoiceThenWait(card.voiceId, 2600, 7000);
+    playSfx('cardOpen', 'gift');
+    burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨', '💛'] : ['⭐', '❤️', '✨', '🌈'], 86, layer);
+    await playBoardVoiceThenWait(card.voiceId, VOICE_WAIT.card.min, VOICE_WAIT.card.max);
 
     await animate(300, t => {
       root.alpha = 1 - t;
@@ -1620,10 +1821,12 @@
     const layer = state.layers.overlay;
     layer.removeChildren();
 
-    playTone('win');
-    playBoardVoice('board.win.family', 0, 5200);
+    playSfx('win', 'win');
     utils.vibrate([70, 40, 70, 40, 120]);
     burst(DESIGN_W / 2, DESIGN_H / 2 - 70, ['🏆', '🌈', '⭐', '❤️', '✨'], 180, layer);
+    playBoardVoiceThenWait('board.win.arrive', VOICE_WAIT.win.min, VOICE_WAIT.win.max).then(() => {
+      playBoardVoiceThenWait('board.win.family', VOICE_WAIT.win.min, VOICE_WAIT.win.max);
+    });
 
     const panel = new PIXI.Container();
     panel.x = DESIGN_W / 2;
@@ -1693,6 +1896,20 @@
     }
   }
 
+  function getCurrentPlayerVoiceId(player) {
+    if (!player) return '';
+    if (player.order === 0) return 'board.move.playerSihyeon';
+    if (player.order === 1) return 'board.move.playerMom';
+    if (player.order === 2) return 'board.move.playerDad';
+    return 'board.move.playerFamily';
+  }
+
+  async function announceCurrentPlayer() {
+    const player = state.players[state.currentPlayerIndex];
+    const voiceId = getCurrentPlayerVoiceId(player);
+    await playBoardVoiceThenWait(voiceId, 520, 2600);
+  }
+
   function nextTurn() {
     for (let i = 1; i <= state.players.length; i += 1) {
       const idx = (state.currentPlayerIndex + i) % state.players.length;
@@ -1703,6 +1920,7 @@
     }
 
     pulseCurrentPawn();
+    announceCurrentPlayer();
   }
 
   function resetGame() {
@@ -1781,7 +1999,8 @@
     state.app.ticker.add(runTicker);
     window.addEventListener('resize', fitWorld);
 
-    await loadAssets();
+    await Promise.all([loadAssets(), loadVoiceManifest()]);
+    preloadSfx();
     buildScene();
     fitWorld();
 
