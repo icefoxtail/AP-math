@@ -245,7 +245,8 @@
     diceFaceSprite: null,
     diceFallbackText: null,
     setupPlayerCount: 3,
-    screen: 'start',
+    screen: 'audio_gate',
+    audioGatePassed: false,
     audioCtx: null,
     audioUnlocked: false,
     voiceAudio: null,
@@ -290,21 +291,16 @@
     state.audioUnlocked = true;
 
     const ctx = initAudio();
-
-    if (ctx) {
-      try {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const now = ctx.currentTime;
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
-        osc.frequency.setValueAtTime(440, now);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.04);
-      } catch (error) {}
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
+
+    try {
+      const silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      silent.volume = 0.001;
+      silent.playsInline = true;
+      silent.play().catch(() => {});
+    } catch (error) {}
 
     if (!state.voiceAudio) {
       state.voiceAudio = new Audio();
@@ -320,13 +316,6 @@
       state.bgmAudio.volume = BGM_VOLUME.normal;
       state.bgmAudio.playsInline = true;
     }
-
-    try {
-      const silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-      silent.volume = 0.001;
-      silent.playsInline = true;
-      silent.play().catch(() => {});
-    } catch (error) {}
   }
 
   function playTone(type) {
@@ -491,7 +480,6 @@
   }
 
   function startBgm() {
-    unlockAudio();
     state.bgmWanted = true;
     if (!BGM_TRACKS.length) return;
 
@@ -1370,6 +1358,95 @@
     });
   }
 
+  function drawAudioStartGate() {
+    const layer = state.layers.start;
+    layer.removeChildren();
+    state.screen = 'audio_gate';
+    state.playMode = null;
+
+    const dim = new PIXI.Graphics();
+    drawG(dim, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x2d160b, 0.38);
+    layer.addChild(dim);
+
+    const centerLight = new PIXI.Graphics();
+    centerLight.beginFill(0xffffff, 0.14);
+    centerLight.drawEllipse(DESIGN_W / 2, DESIGN_H / 2, 520, 260);
+    centerLight.endFill();
+    layer.addChild(centerLight);
+
+    const button = new PIXI.Container();
+    button.x = DESIGN_W / 2;
+    button.y = DESIGN_H / 2 + 18;
+    button.zIndex = 80;
+    button.eventMode = 'static';
+    button.cursor = 'pointer';
+    button.hitArea = new PIXI.Circle(0, 0, 190);
+    layer.addChild(button);
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 110, 0, 0, 168, 0x000000, 0.24);
+    shadow.scale.y = 0.25;
+    button.addChild(shadow);
+
+    const glow = new PIXI.Graphics();
+    drawG(glow, 'circle', 0, 0, 0, 0, 190, 0xffc44d, 0.22);
+    button.addChild(glow);
+
+    const outer = new PIXI.Graphics();
+    drawG(outer, 'circle', 0, 0, 0, 0, 172, 0xffffff, 0.9, 8, 0xffffff, 0.92);
+    button.addChild(outer);
+
+    const inner = new PIXI.Graphics();
+    drawG(inner, 'circle', 0, 0, 0, 0, 146, 0xffcf6e, 0.38, 8, 0xe9a85d, 0.85);
+    button.addChild(inner);
+
+    const icon = createSoftText('▶', 112, 0xffffff, '900', 0x9a4f00, 8);
+    icon.anchor.set(0.5);
+    icon.x = 10;
+    icon.y = -4;
+    button.addChild(icon);
+
+    const sound = createSoftText('🔊', 48, 0xffffff, '900', 0x9a4f00, 5);
+    sound.anchor.set(0.5);
+    sound.x = 92;
+    sound.y = -96;
+    button.addChild(sound);
+
+    button.on('pointerdown', () => {
+      button.scale.set(0.92);
+      unlockAudio();
+    });
+
+    button.on('pointerupoutside', () => {
+      button.scale.set(1);
+    });
+
+    button.on('pointertap', async () => {
+      button.scale.set(1);
+      unlockAudio();
+      state.audioGatePassed = true;
+      startBgm();
+      playSfx('start', 'start');
+      utils.vibrate([25, 30, 25]);
+
+      await animate(220, t => {
+        layer.alpha = 1 - t;
+        button.scale.set(1 + t * 0.14);
+      });
+
+      layer.alpha = 1;
+      drawStartScreen();
+    });
+
+    addTicker(() => {
+      if (state.screen !== 'audio_gate' || !button.parent) return true;
+      const tick = performance.now() / 1000;
+      glow.scale.set(1 + Math.sin(tick * 2.1) * 0.05);
+      button.y = DESIGN_H / 2 + 18 + Math.sin(tick * 1.4) * 5;
+      return false;
+    });
+  }
+
   function drawStartScreen() {
     const layer = state.layers.start;
     layer.removeChildren();
@@ -1417,12 +1494,16 @@
     if (state.screen !== 'start') return;
     if (mode !== PLAY_MODES.roulette && mode !== PLAY_MODES.dice) return;
 
-    unlockAudio();
     initAudio();
     preloadSfx();
-    startBgm();
-    playSfx('start', 'start');
-    utils.vibrate([25, 30, 25]);
+    playSfx('select', 'start');
+    utils.vibrate([18, 20, 18]);
+
+    if (!state.audioGatePassed) {
+      unlockAudio();
+      state.audioGatePassed = true;
+      startBgm();
+    }
 
     state.playMode = mode;
     state.screen = 'game';
@@ -1829,7 +1910,7 @@
     state.world.removeChildren();
     createLayers();
     drawBoard();
-    drawStartScreen();
+    drawAudioStartGate();
   }
 
   window.BoardlandAudioDebug = function () {
@@ -1838,6 +1919,7 @@
       voiceKeyCount: Object.keys(state.voiceMap || {}).length,
       sampleVoiceSources: getVoiceFallbackUrls('board.start.diceMode'),
       audioUnlocked: state.audioUnlocked,
+      audioGatePassed: state.audioGatePassed,
       voiceAudioSrc: state.voiceAudio ? state.voiceAudio.src : '',
       bgmWanted: state.bgmWanted,
       bgmIndex: state.bgmIndex,
@@ -1870,9 +1952,16 @@
     state.app.stage.addChild(state.world);
     root.appendChild(state.app.view);
 
-    window.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
-    window.addEventListener('touchstart', unlockAudio, { once: true, capture: true, passive: true });
-    window.addEventListener('click', unlockAudio, { once: true, capture: true });
+    const handleFirstInteraction = () => {
+      document.removeEventListener('touchstart', handleFirstInteraction, true);
+      document.removeEventListener('mousedown', handleFirstInteraction, true);
+      document.removeEventListener('pointerdown', handleFirstInteraction, true);
+      unlockAudio();
+    };
+
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true, passive: true, capture: true });
+    document.addEventListener('mousedown', handleFirstInteraction, { once: true, capture: true });
+    document.addEventListener('pointerdown', handleFirstInteraction, { once: true, capture: true });
 
     state.app.ticker.add(runTicker);
     window.addEventListener('resize', fitWorld);
