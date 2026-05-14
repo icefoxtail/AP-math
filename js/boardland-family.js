@@ -1540,12 +1540,6 @@
     state.playMode = mode;
     state.screen = 'game';
 
-    await playBoardVoiceThenWait(
-      mode === PLAY_MODES.roulette ? 'board.start.rouletteMode' : 'board.start.diceMode',
-      VOICE_WAIT.mode.min,
-      VOICE_WAIT.mode.max
-    );
-
     await animate(220, t => {
       state.layers.start.alpha = 1 - t;
       state.layers.start.scale.set(1 + t * 0.03);
@@ -1560,13 +1554,15 @@
     if (state.playMode === PLAY_MODES.roulette) {
       state.layers.dice.removeChildren();
       drawRoulette();
+      playBoardVoiceThenWait('board.start.rouletteMode', VOICE_WAIT.mode.min, VOICE_WAIT.mode.max);
     } else {
       state.layers.roulette.removeChildren();
       drawDice();
+      playBoardVoiceThenWait('board.start.diceMode', VOICE_WAIT.mode.min, VOICE_WAIT.mode.max);
     }
 
     createPlayers();
-    await announceCurrentPlayer();
+    announceCurrentPlayer();
   }
 
   async function moveCurrentPlayer(steps) {
