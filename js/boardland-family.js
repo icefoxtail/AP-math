@@ -74,6 +74,12 @@
   const DICE_ROLL_FRAME_MS = 62;
 
   const PAWN_IMAGE_SIZE = 76;
+  const PAWN_TURN_SCALE_BOOST = 1.22;
+  const PAWN_TURN_PULSE_BOOST = 0.06;
+  const TURN_SPARKLE_INTERVAL_MS = 1150;
+  const TAP_HINT_PULSE_MS = 720;
+
+
 
   const VOICE_MANIFEST_CANDIDATES = [
     './voice_manifest.json',
@@ -126,6 +132,10 @@
     normal: 0.22,
     ducked: 0.08
   };
+
+  const EVENT_CARD_MIN_HOLD_MS = 3200;
+  const EVENT_CARD_READY_PULSE_MS = 900;
+  const TURN_END_DELAY_MS = 950;
 
   const TILE_PATTERN = [
     'start',
@@ -240,6 +250,7 @@
     isMoving: false,
     waitingEvent: false,
     tickerItems: [],
+    currentTurnHighlightVersion: 0,
     rouletteWheel: null,
     diceBox: null,
     diceFaceSprite: null,
@@ -901,15 +912,24 @@
     return { x: p.x + off.x, y: p.y + off.y - 1 };
   }
 
+  function getPawnVisualScale(player, baseScale) {
+    const scale = Number.isFinite(baseScale) ? baseScale : getPawnScale(getPawnTarget(player).y);
+    return player && player.order === state.currentPlayerIndex && !player.finished
+      ? scale * PAWN_TURN_SCALE_BOOST
+      : scale;
+  }
+
   function setPawnPosition(player, instant) {
     if (!player.token) return;
     const target = getPawnTarget(player);
-    const scale = getPawnScale(target.y);
+    const baseScale = getPawnScale(target.y);
+    const scale = getPawnVisualScale(player, baseScale);
 
     if (instant) {
       player.token.x = target.x;
       player.token.y = target.y;
       player.token.scale.set(scale);
+      player.token.zIndex = player.order === state.currentPlayerIndex ? 220 : 100 + player.order;
       return;
     }
 
@@ -922,6 +942,7 @@
       player.token.x = sx + (target.x - sx) * e;
       player.token.y = sy + (target.y - sy) * e;
       player.token.scale.set(ss + (scale - ss) * e);
+      player.token.zIndex = player.order === state.currentPlayerIndex ? 220 : 100 + player.order;
     });
   }
 
@@ -929,6 +950,19 @@
     const c = new PIXI.Container();
     c.zIndex = 100 + player.order;
     player.token = c;
+
+    const ring = new PIXI.Graphics();
+    ring.visible = false;
+    ring.zIndex = -2;
+    ring.lineStyle(8, 0xffffff, 0.92);
+    ring.beginFill(0xffd84d, 0.22);
+    ring.drawCircle(0, 12, 49);
+    ring.endFill();
+    ring.lineStyle(4, 0xfff3a6, 0.95);
+    ring.drawCircle(0, 12, 61);
+    ring.alpha = 0.88;
+    c.addChild(ring);
+    player.turnRing = ring;
 
     const shadow = new PIXI.Graphics();
     drawG(shadow, 'circle', 0, 30, 0, 0, 31, 0x000000, 0.16);
@@ -963,20 +997,85 @@
     pulseCurrentPawn();
   }
 
-  function pulseCurrentPawn() {
-    const player = state.players[state.currentPlayerIndex];
-    if (!player || !player.token) return;
-    const target = getPawnTarget(player);
-    player.token.scale.set(getPawnScale(target.y));
+  function resetPawnTurnScales() {
+    state.players.forEach(player => {
+      if (!player || !player.token) return;
+      const target = getPawnTarget(player);
+      const base = getPawnScale(target.y);
+
+      if (player.turnRing) {
+        player.turnRing.visible = false;
+        player.turnRing.alpha = 0;
+      }
+
+      player.token.zIndex = 100 + player.order;
+      animate(180, t => {
+        const e = utils.easeInOutSine(t);
+        const current = player.token.scale.x;
+        player.token.scale.set(current + (base - current) * e);
+      });
+    });
   }
 
-  function pulseTile(idx) {
-    const tile = state.tiles && state.tiles[idx];
-    if (!tile) return;
-    const s = tile.scale.x || 1;
-    animate(180, t => {
-      const p = Math.sin(t * Math.PI);
-      tile.scale.set(s + p * 0.08);
+  function spawnTurnSparkle(player) {
+    if (!player || !player.token || !state.layers || !state.layers.fx) return;
+    const now = performance.now();
+    if (now - (player.turnSparkleAt || 0) < TURN_SPARKLE_INTERVAL_MS) return;
+    player.turnSparkleAt = now;
+
+    const icons = ['✨', '⭐', '💛'];
+    const x = player.token.x + utils.rand(-20, 20);
+    const y = player.token.y - 24 + utils.rand(-10, 8);
+    burst(x, y, icons, 7, state.layers.fx);
+  }
+
+  function pulseCurrentPawn() {
+    state.currentTurnHighlightVersion += 1;
+    const version = state.currentTurnHighlightVersion;
+
+    resetPawnTurnScales();
+
+    const player = state.players[state.currentPlayerIndex];
+    if (!player || !player.token) return;
+
+    const target = getPawnTarget(player);
+    const base = getPawnScale(target.y);
+    const enlarged = base * PAWN_TURN_SCALE_BOOST;
+
+    player.token.zIndex = 220;
+
+    if (player.turnRing) {
+      player.turnRing.visible = true;
+      player.turnRing.alpha = 0.95;
+      player.turnRing.scale.set(1);
+    }
+
+    burst(player.token.x, player.token.y - 28, ['✨', '⭐', '💛'], 16, state.layers.fx);
+
+    animate(220, t => {
+      const e = utils.easeOutBack(t);
+      player.token.scale.set(base + (enlarged - base) * e);
+    }).then(() => {
+      addTicker(() => {
+        if (version !== state.currentTurnHighlightVersion) return true;
+        if (!player.token || player.finished) return true;
+
+        const tick = performance.now();
+        const pulse = 1 + Math.sin(tick / 360) * PAWN_TURN_PULSE_BOOST;
+        player.token.scale.set(enlarged * pulse);
+        player.token.zIndex = 220;
+
+        if (player.turnRing) {
+          const ringPulse = 1.05 + Math.sin(tick / 410) * 0.11;
+          player.turnRing.visible = true;
+          player.turnRing.scale.set(ringPulse);
+          player.turnRing.alpha = 0.62 + Math.sin(tick / 330) * 0.22;
+          player.turnRing.rotation += 0.012;
+        }
+
+        spawnTurnSparkle(player);
+        return false;
+      });
     });
   }
 
@@ -992,12 +1091,12 @@
       const e = utils.easeInOutSine(t);
       token.x = sx + (target.x - sx) * e;
       token.y = sy + (target.y - sy) * e;
-      token.scale.set(ss + (ts - ss) * e);
+      token.scale.set(ss + (getPawnVisualScale(player, ts) - ss) * e);
     });
 
     token.x = target.x;
     token.y = target.y;
-    token.scale.set(ts);
+    token.scale.set(getPawnVisualScale(player, ts));
     playSfx('moveStep', 'move');
     utils.vibrate(16);
     pulseTile(player.index);
@@ -1094,6 +1193,37 @@
     parent.addChild(fallback);
   }
 
+  function addTapHint(parent, x, y, accentColor, label) {
+    const hint = new PIXI.Container();
+    hint.x = x;
+    hint.y = y;
+    hint.zIndex = 240;
+    parent.addChild(hint);
+
+    const ring = new PIXI.Graphics();
+    ring.lineStyle(8, 0xffffff, 0.8);
+    ring.beginFill(accentColor, 0.16);
+    ring.drawCircle(0, 0, 62);
+    ring.endFill();
+    hint.addChild(ring);
+
+    const icon = createSoftText(label || '👆', 42, 0xffffff, '900', 0x7a4a16, 5);
+    icon.anchor.set(0.5);
+    hint.addChild(icon);
+
+    addTicker(() => {
+      if (!hint.parent) return true;
+      const tick = performance.now();
+      const p = 1 + Math.sin(tick / TAP_HINT_PULSE_MS * Math.PI * 2) * 0.08;
+      hint.scale.set(p);
+      hint.alpha = 0.74 + Math.sin(tick / 520) * 0.18;
+      hint.y = y + Math.sin(tick / 360) * 6;
+      return false;
+    });
+
+    return hint;
+  }
+
   function drawRoulette() {
     const layer = state.layers.roulette;
     layer.removeChildren();
@@ -1113,6 +1243,7 @@
     else drawRouletteFallback(wheel);
 
     drawRoulettePointer(layer);
+    addTapHint(layer, ROULETTE_COORD.x, ROULETTE_COORD.y + 260, 0xffc44d, '👆');
     wheel.on('pointertap', spinRoulette);
   }
 
@@ -1205,6 +1336,7 @@
     }
 
     diceBox.on('pointertap', rollDice);
+    addTapHint(layer, DICE_COORD.x, DICE_COORD.y + 260, 0x62caff, '👆');
   }
 
   async function rollDice() {
@@ -1566,6 +1698,7 @@
     }
 
     await handleTileAction(player);
+    await wait(TURN_END_DELAY_MS);
     nextTurn();
   }
 
@@ -1699,6 +1832,63 @@
     return box;
   }
 
+  function waitForEventCardClose(layer, root) {
+    return new Promise(resolve => {
+      let ready = false;
+      let done = false;
+
+      const close = () => {
+        if (!ready || done) return;
+        done = true;
+        root.eventMode = 'none';
+        layer.eventMode = 'none';
+        resolve();
+      };
+
+      const guide = new PIXI.Container();
+      guide.x = DESIGN_W / 2;
+      guide.y = DESIGN_H - 92;
+      guide.alpha = 0;
+      guide.zIndex = 360;
+      layer.addChild(guide);
+
+      const guideBg = new PIXI.Graphics();
+      drawG(guideBg, 'round', -72, -36, 144, 72, 32, 0xffffff, 0.9, 5, 0xffcf6e, 0.95);
+      guide.addChild(guideBg);
+
+      const guideIcon = createSoftText('✓', 48, 0x23a365, '900', 0xffffff, 4);
+      guideIcon.anchor.set(0.5);
+      guideIcon.y = -2;
+      guide.addChild(guideIcon);
+
+      window.setTimeout(() => {
+        ready = true;
+        root.eventMode = 'static';
+        root.cursor = 'pointer';
+        root.hitArea = new PIXI.Rectangle(-DESIGN_W, -DESIGN_H, DESIGN_W * 2, DESIGN_H * 2);
+
+        layer.eventMode = 'static';
+        layer.cursor = 'pointer';
+        layer.hitArea = new PIXI.Rectangle(0, 0, DESIGN_W, DESIGN_H);
+
+        root.on('pointertap', close);
+        layer.on('pointertap', close);
+
+        animate(220, t => {
+          guide.alpha = t;
+          guide.scale.set(0.82 + t * 0.18);
+        });
+
+        addTicker(() => {
+          if (done || !guide.parent) return true;
+          const pulse = 1 + Math.sin(performance.now() / EVENT_CARD_READY_PULSE_MS * Math.PI * 2) * 0.04;
+          guide.scale.set(pulse);
+          return false;
+        });
+      }, EVENT_CARD_MIN_HOLD_MS);
+    });
+  }
+
   async function showEvent(card) {
     state.waitingEvent = true;
     const layer = state.layers.overlay;
@@ -1745,7 +1935,13 @@
 
     playSfx('cardOpen', 'gift');
     burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨', '💛'] : ['⭐', '❤️', '✨', '🌈'], 86, layer);
-    await playBoardVoiceThenWait(card.voiceId, VOICE_WAIT.card.min, VOICE_WAIT.card.max);
+
+    await Promise.all([
+      playBoardVoiceThenWait(card.voiceId, VOICE_WAIT.card.min, VOICE_WAIT.card.max),
+      wait(EVENT_CARD_MIN_HOLD_MS)
+    ]);
+
+    await waitForEventCardClose(layer, root);
 
     await animate(300, t => {
       root.alpha = 1 - t;
@@ -1765,7 +1961,7 @@
     duckBgm();
     playSfx('win', 'win');
     utils.vibrate([70, 40, 70, 40, 120]);
-    burst(DESIGN_W / 2, DESIGN_H / 2 - 70, ['🏆', '🌈', '⭐', '❤️', '✨'], 180, layer);
+    burst(DESIGN_W / 2, DESIGN_H / 2 - 70, ['🏆', '🌈', '⭐', '❤️', '✨', '🎉', '💛'], 240, layer);
     playBoardVoiceThenWait('board.win.arrive', VOICE_WAIT.win.min, VOICE_WAIT.win.max).then(() => {
       playBoardVoiceThenWait('board.win.family', VOICE_WAIT.win.min, VOICE_WAIT.win.max).then(restoreBgm);
     });
@@ -1874,6 +2070,7 @@
     if (state.layers.dice) state.layers.dice.removeChildren();
 
     state.currentPlayerIndex = 0;
+    state.currentTurnHighlightVersion += 1;
     state.isSpinning = false;
     state.isDiceRolling = false;
     state.isMoving = false;
