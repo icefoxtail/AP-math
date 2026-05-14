@@ -247,6 +247,8 @@
     setupPlayerCount: 3,
     screen: 'start',
     audioCtx: null,
+    audioUnlocked: false,
+    voiceAudio: null,
     voiceMap: {},
     voiceReadyPromise: null,
     sfxAudio: {},
@@ -281,6 +283,50 @@
     if (!state.audioCtx) state.audioCtx = new AudioContext();
     if (state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
     return state.audioCtx;
+  }
+
+  function unlockAudio() {
+    if (state.audioUnlocked) return;
+    state.audioUnlocked = true;
+
+    const ctx = initAudio();
+
+    if (ctx) {
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const now = ctx.currentTime;
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
+        osc.frequency.setValueAtTime(440, now);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+      } catch (error) {}
+    }
+
+    if (!state.voiceAudio) {
+      state.voiceAudio = new Audio();
+      state.voiceAudio.preload = 'auto';
+      state.voiceAudio.volume = 1;
+      state.voiceAudio.playsInline = true;
+    }
+
+    if (!state.bgmAudio) {
+      state.bgmAudio = new Audio();
+      state.bgmAudio.preload = 'auto';
+      state.bgmAudio.loop = false;
+      state.bgmAudio.volume = BGM_VOLUME.normal;
+      state.bgmAudio.playsInline = true;
+    }
+
+    try {
+      const silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      silent.volume = 0.001;
+      silent.playsInline = true;
+      silent.play().catch(() => {});
+    } catch (error) {}
   }
 
   function playTone(type) {
@@ -417,33 +463,48 @@
     const src = BGM_TRACKS[safeIndex];
     if (!src) return null;
 
-    const audio = new Audio(src);
-    audio.preload = 'auto';
-    audio.loop = false;
-    audio.volume = BGM_VOLUME.normal;
-    audio.playsInline = true;
-    audio.addEventListener('ended', () => {
+    if (!state.bgmAudio) state.bgmAudio = new Audio();
+
+    state.bgmAudio.pause();
+    state.bgmAudio.src = resolveAssetUrl(src);
+    state.bgmAudio.preload = 'auto';
+    state.bgmAudio.loop = false;
+    state.bgmAudio.volume = BGM_VOLUME.normal;
+    state.bgmAudio.playsInline = true;
+
+    state.bgmAudio.onended = () => {
       if (!state.bgmWanted) return;
       state.bgmIndex = pickNextBgmIndex();
-      state.bgmAudio = createBgmAudio(state.bgmIndex);
-      if (state.bgmAudio) state.bgmAudio.play().catch(() => {});
-    });
-    return audio;
+      createBgmAudio(state.bgmIndex);
+      if (state.bgmAudio) {
+        state.bgmAudio.play().catch(error => {
+          console.error('[BGM] 다음 곡 재생 실패 - 파일 경로 확인:', state.bgmAudio.src, error.name, error.message);
+        });
+      }
+    };
+
+    state.bgmAudio.onerror = () => {
+      console.error('[BGM] 로드 실패 - 파일 경로 확인:', state.bgmAudio.src);
+    };
+
+    return state.bgmAudio;
   }
 
   function startBgm() {
+    unlockAudio();
     state.bgmWanted = true;
     if (!BGM_TRACKS.length) return;
 
-    if (!state.bgmAudio) {
+    if (!state.bgmAudio || !state.bgmAudio.src) {
       state.bgmIndex = Math.floor(Math.random() * BGM_TRACKS.length);
-      state.bgmAudio = createBgmAudio(state.bgmIndex);
+      createBgmAudio(state.bgmIndex);
     }
 
     if (!state.bgmAudio) return;
+
     state.bgmAudio.volume = BGM_VOLUME.normal;
     state.bgmAudio.play().catch(error => {
-      console.warn('[Boardland] bgm start failed:', state.bgmAudio && state.bgmAudio.src, error);
+      console.error('[BGM] 재생 실패 - 파일 경로 확인:', state.bgmAudio.src, error.name, error.message);
     });
   }
 
@@ -459,45 +520,70 @@
 
   function playAudioPath(srcOrList) {
     const sources = Array.isArray(srcOrList) ? srcOrList.filter(Boolean) : [srcOrList].filter(Boolean);
+
     return new Promise(resolve => {
-      if (!sources.length) { resolve(false); return; }
+      if (!sources.length) {
+        resolve(false);
+        return;
+      }
 
       let index = 0;
       let settled = false;
 
+      if (!state.voiceAudio) {
+        state.voiceAudio = new Audio();
+        state.voiceAudio.preload = 'auto';
+        state.voiceAudio.volume = 1;
+        state.voiceAudio.playsInline = true;
+      }
+
+      const fail = src => {
+        console.warn('[Voice] 로드/재생 실패:', src);
+        index += 1;
+
+        if (index >= sources.length) {
+          if (!settled) {
+            settled = true;
+            resolve(false);
+          }
+          return;
+        }
+
+        tryOne();
+      };
+
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        resolve(true);
+      };
+
       const tryOne = () => {
         if (settled) return;
+
         const src = sources[index];
-
-        const fail = () => {
-          index += 1;
-          if (index >= sources.length) {
-            if (!settled) {
-              settled = true;
-              resolve(false);
-            }
-            return;
-          }
-          tryOne();
-        };
-
-        const done = ok => {
-          if (settled) return;
-          settled = true;
-          resolve(ok);
-        };
+        if (!src) {
+          fail(src);
+          return;
+        }
 
         try {
-          const audio = new Audio(src);
+          const audio = state.voiceAudio;
+          audio.pause();
+          audio.currentTime = 0;
+          audio.src = resolveAssetUrl(src);
           audio.preload = 'auto';
           audio.volume = 1;
           audio.playsInline = true;
-          audio.addEventListener('ended', () => done(true), { once: true });
-          audio.addEventListener('error', fail, { once: true });
+          audio.onended = done;
+          audio.onerror = () => fail(audio.src || src);
+
           const playPromise = audio.play();
-          if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(fail);
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => fail(audio.src || src));
+          }
         } catch (error) {
-          fail();
+          fail(src);
         }
       };
 
@@ -1331,6 +1417,7 @@
     if (state.screen !== 'start') return;
     if (mode !== PLAY_MODES.roulette && mode !== PLAY_MODES.dice) return;
 
+    unlockAudio();
     initAudio();
     preloadSfx();
     startBgm();
@@ -1750,6 +1837,8 @@
       voiceManifestCandidates: VOICE_MANIFEST_CANDIDATES.map(resolveAssetUrl),
       voiceKeyCount: Object.keys(state.voiceMap || {}).length,
       sampleVoiceSources: getVoiceFallbackUrls('board.start.diceMode'),
+      audioUnlocked: state.audioUnlocked,
+      voiceAudioSrc: state.voiceAudio ? state.voiceAudio.src : '',
       bgmWanted: state.bgmWanted,
       bgmIndex: state.bgmIndex,
       bgmSrc: state.bgmAudio ? state.bgmAudio.src : '',
@@ -1780,6 +1869,10 @@
     state.world.sortableChildren = true;
     state.app.stage.addChild(state.world);
     root.appendChild(state.app.view);
+
+    window.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true, capture: true, passive: true });
+    window.addEventListener('click', unlockAudio, { once: true, capture: true });
 
     state.app.ticker.add(runTicker);
     window.addEventListener('resize', fitWorld);
