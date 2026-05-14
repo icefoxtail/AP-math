@@ -7,7 +7,8 @@
   const START_HOME_COORD = { x: 206, y: 679 };
   const CARD_COORD = { x: 557, y: 336 };
   const GIFT_COORD = { x: 870, y: 331 };
-  const ROULETTE_COORD = { x: 1408, y: 369 };
+  const ROULETTE_COORD = { x: 1412, y: 369 };
+  const DICE_COORD = { x: 1412, y: 369 };
 
   const TILE_COORDS = [
     { x: 206, y: 679 },
@@ -43,52 +44,68 @@
   ];
 
   const PLAYER_SEAT_COORDS = [
-    { x: 74, y: 822 },
-    { x: 150, y: 822 },
-    { x: 229, y: 820 },
-    { x: 308, y: 815 }
+    { x: 74, y: 805 },
+    { x: 150, y: 805 },
+    { x: 229, y: 805 },
+    { x: 308, y: 805 }
   ];
 
   const FINISH_INDEX = TILE_COORDS.length - 1;
   const MOVE_STEP_MS = 300;
+
+  const PLAY_MODES = {
+    roulette: 'roulette',
+    dice: 'dice'
+  };
+
   const ROULETTE_SEGMENTS = 5;
-  const ROULETTE_SIZE = 360;
+  const ROULETTE_SIZE = 410;
   const ROULETTE_POINTER_SIZE = 150;
-  const ROULETTE_POINTER_OFFSET_Y = -80;
-  const ROULETTE_HIT_RADIUS = 190;
+  const ROULETTE_POINTER_OFFSET_Y = -26;
+  const ROULETTE_HIT_RADIUS = 200;
+  const ROULETTE_FULL_TURNS = 6;
+  const ROULETTE_POINTER_ANGLE = -Math.PI / 2;
+  const ROULETTE_FIRST_VALUE_ANGLE = -Math.PI / 2;
+  const ROULETTE_VALUE_ORDER = [1, 2, 3, 4, 5];
+
+  const DICE_SIZE = 200;
+  const DICE_HIT_RADIUS = 190;
+  const DICE_ROLL_FRAMES = 16;
+  const DICE_ROLL_FRAME_MS = 62;
+
   const PAWN_IMAGE_SIZE = 76;
 
   const TILE_PATTERN = [
     'start',
     'gift',
-    'normal',
-    'mission',
-    'normal',
-    'family',
-    'normal',
-    'jump',
-    'normal',
+    'card',
+    'star',
+    'cloud',
+    'rainbow',
+    'pause',
     'gift',
-    'normal',
-    'mission',
-    'normal',
-    'rest',
-    'normal',
-    'family',
-    'normal',
+    'heart',
+    'pause',
+    'heart',
+    'cloud',
+    'card',
     'gift',
-    'normal',
-    'jump',
-    'normal',
-    'mission',
-    'normal',
-    'family',
-    'normal',
+    'rainbow',
+    'star',
+    'star',
+    'star',
+    'cloud',
+    'heart',
+    'rainbow',
+    'card',
     'gift',
-    'normal',
-    'rest',
-    'normal',
-    'finish'
+    'finish',
+    'cloud',
+    'heart',
+    'pause',
+    'star',
+    'rainbow',
+    'gift'
   ];
 
   const PAWNS = [
@@ -124,12 +141,108 @@
       voiceId: 'board.card.dino'
     },
     {
+      id: 'clap',
+      type: 'star',
+      icon: '👏',
+      title: '박수 받기',
+      body: '모두에게 박수 받아요',
+      voiceId: 'board.card.clap'
+    },
+    {
+      id: 'dance',
+      type: 'rainbow',
+      icon: '💃',
+      title: '신나게 춤추기',
+      body: '빙글빙글 춤춰요',
+      voiceId: 'board.card.dance'
+    },
+    {
+      id: 'love',
+      type: 'heart',
+      icon: '❤️',
+      title: '사랑해 말하기',
+      body: '가족에게 사랑해요',
+      voiceId: 'board.card.love'
+    },
+    {
       id: 'gift',
       type: 'gift',
       icon: '🎁',
       title: '선물 받기',
       body: '선물을 열어요',
       voiceId: 'board.card.gift'
+    },
+    {
+      id: 'kiss_mom',
+      type: 'family',
+      icon: '💋',
+      title: '엄마 뽀뽀',
+      body: '엄마한테 뽀뽀 쪽!',
+      voiceId: 'board.card.kissMom'
+    },
+    {
+      id: 'kiss_dad',
+      type: 'family',
+      icon: '💋',
+      title: '아빠 뽀뽀',
+      body: '아빠한테 뽀뽀 쪽!',
+      voiceId: 'board.card.kissDad'
+    },
+    {
+      id: 'hug_mom_dad',
+      type: 'family',
+      icon: '🫂',
+      title: '엄마 아빠 안아줘요',
+      body: '엄마 아빠를 꼭 안아주세요',
+      voiceId: 'board.card.hugMomDad'
+    },
+    {
+      id: 'cheek_heart_mom',
+      type: 'heart',
+      icon: '🫶',
+      title: '엄마랑 볼하트',
+      body: '엄마랑 볼하트 해봐요',
+      voiceId: 'board.card.cheekHeartMom'
+    },
+    {
+      id: 'treat_nooni',
+      type: 'family',
+      icon: '🐱',
+      title: '눈이 간식 주기',
+      body: '눈이에게 간식을 주세요',
+      voiceId: 'board.card.treatNooni'
+    },
+    {
+      id: 'treat_reumi',
+      type: 'family',
+      icon: '🐈',
+      title: '름이 간식 주기',
+      body: '름이에게 간식을 주세요',
+      voiceId: 'board.card.treatReumi'
+    },
+    {
+      id: 'meow_like_cat',
+      type: 'mission',
+      icon: '🐾',
+      title: '야옹 해봐요',
+      body: '고양이처럼 야옹!',
+      voiceId: 'board.card.meowLikeCat'
+    },
+    {
+      id: 'get_applause',
+      type: 'star',
+      icon: '👏',
+      title: '박수 받아요',
+      body: '시현이에게 박수!',
+      voiceId: 'board.card.getApplause'
+    },
+    {
+      id: 'drink_water',
+      type: 'cloud',
+      icon: '💧',
+      title: '물 마셔요',
+      body: '물 한 모금 마셔요',
+      voiceId: 'board.card.drinkWater'
     }
   ];
 
@@ -146,6 +259,30 @@
     roulette_pointer: [
       './assets/board/roulette-pointer.webp',
       './assets/board/roulette-pointer.png'
+    ],
+    dice_1: [
+      './assets/board/dice-1.png',
+      './assets/board/dice-1.webp'
+    ],
+    dice_2: [
+      './assets/board/dice-2.png',
+      './assets/board/dice-2.webp'
+    ],
+    dice_3: [
+      './assets/board/dice-3.png',
+      './assets/board/dice-3.webp'
+    ],
+    dice_4: [
+      './assets/board/dice-4.png',
+      './assets/board/dice-4.webp'
+    ],
+    dice_5: [
+      './assets/board/dice-5.png',
+      './assets/board/dice-5.webp'
+    ],
+    dice_6: [
+      './assets/board/dice-6.png',
+      './assets/board/dice-6.webp'
     ],
     card_back: [
       './assets/boardland/cards/card-back-main.webp',
@@ -188,6 +325,33 @@
     card_front_spin_again: [
       './assets/boardland/events/card-spin-again.webp'
     ],
+    card_front_kiss_mom: [
+      './assets/boardland/events/kiss_mom.png'
+    ],
+    card_front_kiss_dad: [
+      './assets/boardland/events/kiss_dad.png'
+    ],
+    card_front_hug_mom_dad: [
+      './assets/boardland/events/hug_mom_dad.png'
+    ],
+    card_front_cheek_heart_mom: [
+      './assets/boardland/events/cheek_heart_mom.png'
+    ],
+    card_front_treat_nooni: [
+      './assets/boardland/events/treat_nooni.png'
+    ],
+    card_front_treat_reumi: [
+      './assets/boardland/events/treat_reumi.png'
+    ],
+    card_front_meow_like_cat: [
+      './assets/boardland/events/meow_like_cat.png'
+    ],
+    card_front_get_applause: [
+      './assets/boardland/events/get_applause.png'
+    ],
+    card_front_drink_water: [
+      './assets/boardland/events/drink_water.png'
+    ],
     icon_gift: [
       './assets/rewards/gift-box.webp'
     ],
@@ -225,14 +389,19 @@
     assetTextures: {},
     players: [],
     currentPlayerIndex: 0,
+    playMode: null,
     isSpinning: false,
+    isDiceRolling: false,
     isMoving: false,
     waitingEvent: false,
     tickerItems: [],
     pulseVersion: 0,
     rouletteWheel: null,
+    diceBox: null,
+    diceFaceSprite: null,
+    diceFallbackText: null,
     setupPlayerCount: 3,
-    screen: 'game',
+    screen: 'start',
     audioCtx: null
   };
 
@@ -273,19 +442,23 @@
     const now = ctx.currentTime;
     const notes = type === 'win'
       ? [523, 659, 784, 1046]
-      : type === 'move'
-        ? [392]
-        : [523, 784];
+      : type === 'dice'
+        ? [392, 523, 659]
+        : type === 'start'
+          ? [523, 784]
+          : type === 'move'
+            ? [392]
+            : [523, 784];
 
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = type === 'move' ? 'triangle' : 'sine';
+      osc.type = type === 'move' || type === 'dice' ? 'triangle' : 'sine';
       osc.frequency.setValueAtTime(freq, now + i * 0.07);
 
       gain.gain.setValueAtTime(0.001, now + i * 0.07);
-      gain.gain.exponentialRampToValueAtTime(0.13, now + i * 0.07 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(type === 'dice' ? 0.16 : 0.13, now + i * 0.07 + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.22);
 
       osc.connect(gain);
@@ -295,11 +468,56 @@
     });
   }
 
-  function playBoardVoice(id) {
-    if (!id) return;
-    if (window.SihyeonVoice && typeof window.SihyeonVoice.play === 'function') {
-      window.SihyeonVoice.play(id).catch(() => {});
+  async function playBoardVoice(id, minHoldMs = 0, maxWaitMs = 5200) {
+    if (!id) {
+      if (minHoldMs > 0) await wait(minHoldMs);
+      return false;
     }
+
+    const startedAt = performance.now();
+    let played = false;
+
+    if (window.SihyeonVoice && typeof window.SihyeonVoice.play === 'function') {
+      try {
+        await Promise.race([
+          window.SihyeonVoice.play(id),
+          wait(maxWaitMs)
+        ]);
+        played = true;
+      } catch (error) {
+        played = false;
+      }
+    }
+
+    const elapsed = performance.now() - startedAt;
+    const rest = Math.max(0, minHoldMs - elapsed);
+    if (rest > 0) await wait(rest);
+
+    return played;
+  }
+
+  async function playBoardVoiceThenWait(id, minHoldMs = 900, maxWaitMs = 5200) {
+    await playBoardVoice(id, minHoldMs, maxWaitMs);
+  }
+
+  function getPlayerTurnVoiceId(player) {
+    if (!player) return 'board.move.playerFamily';
+    if (player.order === 0) return 'board.move.playerSihyeon';
+    if (player.order === 1) return 'board.move.playerMom';
+    if (player.order === 2) return 'board.move.playerDad';
+    return 'board.move.playerFamily';
+  }
+
+  function getTileVoiceId(type) {
+    if (type === 'card') return 'board.tile.card';
+    if (type === 'gift') return 'board.tile.gift';
+    if (type === 'heart') return 'board.tile.heart';
+    if (type === 'star') return 'board.tile.star';
+    if (type === 'rainbow') return 'board.tile.rainbow';
+    if (type === 'cloud') return 'board.tile.cloud';
+    if (type === 'pause') return 'board.tile.pause';
+    if (type === 'finish') return 'board.tile.trophy';
+    return '';
   }
 
   function addTicker(fn) {
@@ -361,13 +579,32 @@
 
   function createText(text, size, fill = 0x53311d, weight = '900') {
     return new PIXI.Text(text, {
-      fontFamily: 'Arial Rounded MT Bold, Jua, sans-serif',
+      fontFamily: 'Arial Rounded MT Bold, Jua, Pretendard, sans-serif',
       fontSize: size,
       fill,
       fontWeight: weight,
       stroke: 0xffffff,
       strokeThickness: Math.max(2, size / 10),
-      align: 'center'
+      align: 'center',
+      lineJoin: 'round'
+    });
+  }
+
+  function createSoftText(text, size, fill = 0xffffff, weight = '900', stroke = 0x5d351d, strokeThickness = 4) {
+    return new PIXI.Text(text, {
+      fontFamily: 'Arial Rounded MT Bold, Jua, Pretendard, sans-serif',
+      fontSize: size,
+      fill,
+      fontWeight: weight,
+      stroke,
+      strokeThickness,
+      align: 'center',
+      lineJoin: 'round',
+      dropShadow: true,
+      dropShadowAlpha: 0.22,
+      dropShadowAngle: Math.PI / 2,
+      dropShadowDistance: 5,
+      dropShadowBlur: 3
     });
   }
 
@@ -467,6 +704,11 @@
         push('board_bg', manifest.board_bg || manifest?.board?.main);
         push('roulette', manifest.roulette || manifest.roulette_wheel || manifest?.board?.roulette);
         push('roulette_pointer', manifest.roulette_pointer || manifest.pointer || manifest?.board?.roulette_pointer || manifest?.board?.pointer);
+
+        for (let i = 1; i <= 6; i += 1) {
+          push(`dice_${i}`, manifest[`dice_${i}`] || manifest[`dice-${i}`] || manifest?.dice?.[i]);
+        }
+
         push('card_back', manifest.card_back || manifest?.cards?.back);
         push('card_front_default', manifest.card_front || manifest?.cards?.front);
         push('card_front_gift', manifest.card_gift);
@@ -478,6 +720,15 @@
         push('card_front_rainbow', manifest.card_rainbow_jump || manifest.card_rainbow);
         push('card_front_forward_two', manifest.card_forward_two);
         push('card_front_spin_again', manifest.card_spin_again || manifest.card_roulette_once);
+        push('card_front_kiss_mom', manifest.card_kiss_mom);
+        push('card_front_kiss_dad', manifest.card_kiss_dad);
+        push('card_front_hug_mom_dad', manifest.card_hug_mom_dad);
+        push('card_front_cheek_heart_mom', manifest.card_cheek_heart_mom);
+        push('card_front_treat_nooni', manifest.card_treat_nooni);
+        push('card_front_treat_reumi', manifest.card_treat_reumi);
+        push('card_front_meow_like_cat', manifest.card_meow_like_cat);
+        push('card_front_get_applause', manifest.card_get_applause);
+        push('card_front_drink_water', manifest.card_drink_water);
 
         push('icon_gift', manifest.icon_gift || manifest?.rewards?.gift);
         push('icon_star', manifest.icon_star || manifest?.rewards?.star);
@@ -570,10 +821,10 @@
     const same = state.players.filter(item => item.onBoard && item.index === player.index);
     const idx = same.indexOf(player);
     const offsets = [
-      { x: -24, y: -16 },
-      { x: 24, y: -16 },
-      { x: -24, y: 22 },
-      { x: 24, y: 22 }
+      { x: -24, y: -22 },
+      { x: 24, y: -22 },
+      { x: -24, y: 16 },
+      { x: 24, y: 16 }
     ];
     const off = offsets[idx] || { x: 0, y: 0 };
 
@@ -690,6 +941,46 @@
     pulseTile(player.index);
   }
 
+  function positiveModulo(value, size) {
+    return ((value % size) + size) % size;
+  }
+
+  function getRouletteValueAngle(value) {
+    const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS;
+    const index = ROULETTE_VALUE_ORDER.indexOf(value);
+
+    if (index < 0) return ROULETTE_FIRST_VALUE_ANGLE;
+
+    return ROULETTE_FIRST_VALUE_ANGLE + index * segmentAngle;
+  }
+
+  function getRouletteTargetRotation(value, currentRotation) {
+    const fullCircle = Math.PI * 2;
+    const valueAngle = getRouletteValueAngle(value);
+    const targetBase = ROULETTE_POINTER_ANGLE - valueAngle;
+    const delta = positiveModulo(targetBase - currentRotation, fullCircle);
+
+    return currentRotation + fullCircle * ROULETTE_FULL_TURNS + delta;
+  }
+
+  function pickEventCard(tileType) {
+    let candidates = EVENT_CARDS;
+
+    if (tileType === 'heart') {
+      candidates = EVENT_CARDS.filter(card => card.type === 'heart' || card.type === 'family');
+    } else if (tileType === 'star') {
+      candidates = EVENT_CARDS.filter(card => card.type === 'star' || card.type === 'family' || card.type === 'mission');
+    } else if (tileType === 'rainbow') {
+      candidates = EVENT_CARDS.filter(card => card.type === 'rainbow' || card.type === 'mission');
+    } else if (tileType === 'card') {
+      candidates = EVENT_CARDS.filter(card => card.type !== 'gift');
+    }
+
+    if (!candidates.length) candidates = EVENT_CARDS;
+
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
   function drawRouletteFallback(parent) {
     const g = new PIXI.Graphics();
     const colors = [0x5bb8ec, 0xff7aa9, 0xffdc66, 0x6ed7b0, 0xb996ff];
@@ -711,8 +1002,8 @@
     g.drawCircle(0, 0, r - 16);
     parent.addChild(g);
 
-    [1, 2, 3, 4, 5].forEach((n, i) => {
-      const a = -Math.PI / 2 + (i + 0.5) * segmentAngle;
+    [1, 2, 3, 4, 5].forEach(n => {
+      const a = getRouletteValueAngle(n);
       const label = createText(String(n), 48, 0xffffff);
       label.anchor.set(0.5);
       label.x = Math.cos(a) * (r * 0.55);
@@ -779,31 +1070,324 @@
   }
 
   async function spinRoulette() {
-    if (state.isSpinning || state.isMoving || state.waitingEvent) return;
+    if (state.playMode !== PLAY_MODES.roulette) return;
+    if (state.isSpinning || state.isDiceRolling || state.isMoving || state.waitingEvent) return;
 
     state.isSpinning = true;
     state.isMoving = true;
 
     initAudio();
     utils.vibrate([20, 20, 20]);
+    playBoardVoice('board.roulette.spin', 0, 2600);
 
     const result = Math.floor(Math.random() * ROULETTE_SEGMENTS) + 1;
     const start = state.rouletteWheel.rotation;
-    const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS;
-    const stopAt = start + Math.PI * 10 + (ROULETTE_SEGMENTS - result) * segmentAngle + Math.random() * 0.12;
+    const stopAt = getRouletteTargetRotation(result, start);
 
     await animate(1550, t => {
       state.rouletteWheel.rotation = start + (stopAt - start) * utils.easeOutCubic(t);
     });
+
+    state.rouletteWheel.rotation = stopAt;
+    burst(ROULETTE_COORD.x, ROULETTE_COORD.y - 30, ['⭐', '✨'], 28, state.layers.fx);
+    await playBoardVoiceThenWait('board.roulette.result', 850, 3600);
 
     state.isSpinning = false;
     await moveCurrentPlayer(result);
     state.isMoving = false;
   }
 
+  function drawDiceFallback(parent, value) {
+    parent.removeChildren();
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 92, 0, 0, 116, 0x000000, 0.2);
+    shadow.scale.y = 0.22;
+    parent.addChild(shadow);
+
+    const body = new PIXI.Graphics();
+    drawG(body, 'round', -125, -125, 250, 250, 46, 0xfff4dc, 1, 8, 0xffffff, 0.92);
+    parent.addChild(body);
+
+    const label = createText(String(value), 108, value === 1 ? 0xe61b1b : 0x111111);
+    label.anchor.set(0.5);
+    parent.addChild(label);
+    state.diceFallbackText = label;
+  }
+
+  function setDiceFace(value) {
+    const alias = `dice_${value}`;
+    const texture = state.assetTextures[alias];
+
+    if (state.diceFaceSprite && texture) {
+      state.diceFaceSprite.texture = texture;
+      state.diceFaceSprite.visible = true;
+      if (state.diceFallbackText) state.diceFallbackText.visible = false;
+      return;
+    }
+
+    if (state.diceBox && !texture) {
+      drawDiceFallback(state.diceBox, value);
+    }
+  }
+
+  function drawDice() {
+    const layer = state.layers.dice;
+    layer.removeChildren();
+
+    const diceBox = new PIXI.Container();
+    diceBox.x = DICE_COORD.x;
+    diceBox.y = DICE_COORD.y;
+    diceBox.zIndex = 125;
+    diceBox.eventMode = 'static';
+    diceBox.cursor = 'pointer';
+    diceBox.hitArea = new PIXI.Circle(0, 0, DICE_HIT_RADIUS);
+    layer.addChild(diceBox);
+    state.diceBox = diceBox;
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 115, 0, 0, 128, 0x000000, 0.18);
+    shadow.scale.y = 0.22;
+    diceBox.addChild(shadow);
+
+    const sprite = makeSprite('dice_6', 0, 0, DICE_SIZE, DICE_SIZE);
+    if (sprite) {
+      sprite.zIndex = 2;
+      diceBox.addChild(sprite);
+      state.diceFaceSprite = sprite;
+    } else {
+      drawDiceFallback(diceBox, 6);
+    }
+
+    diceBox.on('pointertap', rollDice);
+
+    const hint = createSoftText('톡 눌러요', 34, 0xffffff, '900', 0x7a4a16, 5);
+    hint.anchor.set(0.5);
+    hint.y = 190;
+    hint.alpha = 0.92;
+    diceBox.addChild(hint);
+
+    addTicker(() => {
+      if (state.screen !== 'game' || state.playMode !== PLAY_MODES.dice || state.isDiceRolling || !hint.parent) {
+        return true;
+      }
+      hint.scale.set(1 + Math.sin(performance.now() / 260) * 0.035);
+      return false;
+    });
+  }
+
+  async function rollDice() {
+    if (state.playMode !== PLAY_MODES.dice) return;
+    if (state.isSpinning || state.isDiceRolling || state.isMoving || state.waitingEvent) return;
+
+    state.isDiceRolling = true;
+    state.isMoving = true;
+
+    initAudio();
+    utils.vibrate([20, 20, 35]);
+    playTone('dice');
+    playBoardVoice('board.dice.roll', 0, 2600);
+
+    const result = Math.floor(Math.random() * 6) + 1;
+    const box = state.diceBox;
+    const startRotation = box.rotation;
+
+    for (let i = 0; i < DICE_ROLL_FRAMES; i += 1) {
+      const face = i === DICE_ROLL_FRAMES - 1 ? result : Math.floor(Math.random() * 6) + 1;
+      setDiceFace(face);
+
+      await animate(DICE_ROLL_FRAME_MS, t => {
+        const pop = Math.sin(t * Math.PI);
+        box.rotation = startRotation + Math.sin((i + t) * 2.1) * 0.16;
+        box.scale.set(1 + pop * 0.14);
+        box.y = DICE_COORD.y - pop * 34;
+      });
+    }
+
+    setDiceFace(result);
+
+    await animate(220, t => {
+      const e = utils.easeOutBack(t);
+      box.rotation = startRotation * (1 - t);
+      box.scale.set(0.92 + e * 0.08);
+      box.y = DICE_COORD.y;
+    });
+
+    box.rotation = 0;
+    box.scale.set(1);
+    box.y = DICE_COORD.y;
+    burst(DICE_COORD.x, DICE_COORD.y - 30, ['🎲', '⭐', '✨'], 32, state.layers.fx);
+    await playBoardVoiceThenWait('board.dice.result', 850, 3600);
+
+    state.isDiceRolling = false;
+    await moveCurrentPlayer(result);
+    state.isMoving = false;
+  }
+
+  function makeStartModeCard(options) {
+    const {
+      x,
+      y,
+      mode,
+      spriteAlias,
+      fallbackIcon,
+      accent,
+      accentDark,
+      size = 300
+    } = options;
+
+    const card = new PIXI.Container();
+    card.x = x;
+    card.y = y;
+    card.zIndex = 40;
+    card.eventMode = 'static';
+    card.cursor = 'pointer';
+    card.hitArea = new PIXI.Circle(0, 0, 218);
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 116, 0, 0, 168, 0x000000, 0.24);
+    shadow.scale.y = 0.24;
+    card.addChild(shadow);
+
+    const glow = new PIXI.Graphics();
+    drawG(glow, 'circle', 0, 0, 0, 0, 196, accent, 0.2);
+    card.addChild(glow);
+
+    const plateOuter = new PIXI.Graphics();
+    drawG(plateOuter, 'circle', 0, 0, 0, 0, 174, 0xffffff, 0.84, 8, 0xffffff, 0.92);
+    card.addChild(plateOuter);
+
+    const plateInner = new PIXI.Graphics();
+    drawG(plateInner, 'circle', 0, 0, 0, 0, 148, accent, 0.12, 6, accent, 0.5);
+    card.addChild(plateInner);
+
+    const sprite = makeSprite(spriteAlias, 0, 0, size, size);
+    if (sprite) {
+      sprite.zIndex = 5;
+      card.addChild(sprite);
+    } else {
+      const icon = createSoftText(fallbackIcon, 138, 0xffffff, '900', accentDark, 7);
+      icon.anchor.set(0.5);
+      icon.zIndex = 5;
+      card.addChild(icon);
+    }
+
+    card.on('pointerover', () => {
+      card.scale.set(1.05);
+    });
+
+    card.on('pointerout', () => {
+      card.scale.set(1);
+    });
+
+    card.on('pointerdown', () => {
+      card.scale.set(0.92);
+    });
+
+    card.on('pointerupoutside', () => {
+      card.scale.set(1);
+    });
+
+    card.on('pointertap', () => {
+      card.scale.set(1);
+      startGameMode(mode);
+    });
+
+    addTicker(() => {
+      if (state.screen !== 'start' || !card.parent) return true;
+      const tick = performance.now() / 1000;
+      glow.scale.set(1 + Math.sin(tick * 2.1 + x) * 0.04);
+      card.y = y + Math.sin(tick * 1.4 + x * 0.01) * 5;
+      return false;
+    });
+
+    return card;
+  }
+
+  function drawStartScreen() {
+    const layer = state.layers.start;
+    layer.removeChildren();
+    state.screen = 'start';
+    state.playMode = null;
+
+    const dim = new PIXI.Graphics();
+    drawG(dim, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x2d160b, 0.34);
+    layer.addChild(dim);
+
+    const centerLight = new PIXI.Graphics();
+    centerLight.beginFill(0xffffff, 0.12);
+    centerLight.drawEllipse(DESIGN_W / 2, DESIGN_H / 2, 620, 300);
+    centerLight.endFill();
+    layer.addChild(centerLight);
+
+    const rouletteCard = makeStartModeCard({
+      x: DESIGN_W / 2 - 270,
+      y: DESIGN_H / 2 + 8,
+      mode: PLAY_MODES.roulette,
+      spriteAlias: 'roulette',
+      fallbackIcon: '🎡',
+      accent: 0xffc44d,
+      accentDark: 0x9a4f00,
+      size: 270
+    });
+
+    const diceCard = makeStartModeCard({
+      x: DESIGN_W / 2 + 270,
+      y: DESIGN_H / 2 + 8,
+      mode: PLAY_MODES.dice,
+      spriteAlias: 'dice_6',
+      fallbackIcon: '🎲',
+      accent: 0x62caff,
+      accentDark: 0x12699b,
+      size: 250
+    });
+
+    layer.addChild(rouletteCard);
+    layer.addChild(diceCard);
+  }
+
+  async function startGameMode(mode) {
+    if (state.screen !== 'start') return;
+    if (mode !== PLAY_MODES.roulette && mode !== PLAY_MODES.dice) return;
+
+    initAudio();
+    playTone('start');
+    utils.vibrate([25, 30, 25]);
+
+    const modeVoiceId = mode === PLAY_MODES.dice ? 'board.start.diceMode' : 'board.start.rouletteMode';
+    await playBoardVoiceThenWait(modeVoiceId, 850, 4200);
+
+    state.playMode = mode;
+    state.screen = 'game';
+
+    await animate(220, t => {
+      state.layers.start.alpha = 1 - t;
+      state.layers.start.scale.set(1 + t * 0.03);
+    });
+
+    state.layers.start.removeChildren();
+    state.layers.start.alpha = 1;
+    state.layers.start.scale.set(1);
+
+    drawTiles();
+
+    if (state.playMode === PLAY_MODES.roulette) {
+      state.layers.dice.removeChildren();
+      drawRoulette();
+    } else {
+      state.layers.roulette.removeChildren();
+      drawDice();
+    }
+
+    createPlayers();
+  }
+
   async function moveCurrentPlayer(steps) {
     const player = state.players[state.currentPlayerIndex];
     if (!player) return;
+
+    await playBoardVoiceThenWait(getPlayerTurnVoiceId(player), 520, 3000);
+    await playBoardVoiceThenWait('board.move.start', 420, 2600);
 
     if (!player.onBoard) {
       player.onBoard = true;
@@ -818,6 +1402,8 @@
       await wait(40);
     }
 
+    await playBoardVoiceThenWait('board.move.arrive', 560, 2600);
+
     if (player.index >= FINISH_INDEX || TILE_PATTERN[player.index] === 'finish') {
       player.finished = true;
       await showWin(player);
@@ -830,25 +1416,27 @@
 
   async function handleTileAction(player) {
     const type = TILE_PATTERN[player.index];
+    const tileVoiceId = getTileVoiceId(type);
+    if (tileVoiceId) await playBoardVoiceThenWait(tileVoiceId, 760, 3600);
 
     if (type === 'gift') {
       await playGiftFx(player);
       return;
     }
 
-    if (type === 'mission' || type === 'family') {
-      const card = EVENT_CARDS[Math.floor(Math.random() * EVENT_CARDS.length)];
+    if (type === 'card' || type === 'heart' || type === 'star' || type === 'rainbow') {
+      const card = pickEventCard(type);
       await showEvent(card);
+      return;
+    }
+
+    if (type === 'pause' || type === 'cloud') {
+      await playRestFx(player);
       return;
     }
 
     if (type === 'jump') {
       await playJumpFx(player);
-      return;
-    }
-
-    if (type === 'rest') {
-      await playRestFx(player);
       return;
     }
 
@@ -904,6 +1492,15 @@
     if (card.id === 'rainbow_jump') return 'card_front_rainbow';
     if (card.id === 'forward_two') return 'card_front_forward_two';
     if (card.id === 'spin_again') return 'card_front_spin_again';
+    if (card.id === 'kiss_mom') return 'card_front_kiss_mom';
+    if (card.id === 'kiss_dad') return 'card_front_kiss_dad';
+    if (card.id === 'hug_mom_dad') return 'card_front_hug_mom_dad';
+    if (card.id === 'cheek_heart_mom') return 'card_front_cheek_heart_mom';
+    if (card.id === 'treat_nooni') return 'card_front_treat_nooni';
+    if (card.id === 'treat_reumi') return 'card_front_treat_reumi';
+    if (card.id === 'meow_like_cat') return 'card_front_meow_like_cat';
+    if (card.id === 'get_applause') return 'card_front_get_applause';
+    if (card.id === 'drink_water') return 'card_front_drink_water';
     return 'card_front_default';
   }
 
@@ -1004,10 +1601,8 @@
       cardBox.scale.x = t;
     });
 
-    playBoardVoice(card.voiceId);
-    burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨'] : ['⭐', '❤️', '✨'], 48, layer);
-
-    await wait(1400);
+    burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨'] : ['⭐', '❤️', '✨'], 64, layer);
+    await playBoardVoiceThenWait(card.voiceId, 2600, 7000);
 
     await animate(300, t => {
       root.alpha = 1 - t;
@@ -1026,8 +1621,9 @@
     layer.removeChildren();
 
     playTone('win');
+    playBoardVoice('board.win.family', 0, 5200);
     utils.vibrate([70, 40, 70, 40, 120]);
-    burst(DESIGN_W / 2, DESIGN_H / 2 - 70, ['🏆', '🌈', '⭐', '❤️', '✨'], 160, layer);
+    burst(DESIGN_W / 2, DESIGN_H / 2 - 70, ['🏆', '🌈', '⭐', '❤️', '✨'], 180, layer);
 
     const panel = new PIXI.Container();
     panel.x = DESIGN_W / 2;
@@ -1111,14 +1707,32 @@
 
   function resetGame() {
     clearTickerItems();
-    state.layers.overlay.removeChildren();
-    state.layers.fx.removeChildren();
+
+    if (state.layers.overlay) state.layers.overlay.removeChildren();
+    if (state.layers.fx) state.layers.fx.removeChildren();
+    if (state.layers.token) state.layers.token.removeChildren();
+    if (state.layers.roulette) state.layers.roulette.removeChildren();
+    if (state.layers.dice) state.layers.dice.removeChildren();
+
     state.currentPlayerIndex = 0;
     state.isSpinning = false;
+    state.isDiceRolling = false;
     state.isMoving = false;
     state.waitingEvent = false;
+    state.rouletteWheel = null;
+    state.diceBox = null;
+    state.diceFaceSprite = null;
+    state.diceFallbackText = null;
+    state.screen = 'game';
+
     createPlayers();
-    drawRoulette();
+
+    if (state.playMode === PLAY_MODES.dice) {
+      drawDice();
+    } else {
+      state.playMode = PLAY_MODES.roulette;
+      drawRoulette();
+    }
   }
 
   function createLayers() {
@@ -1127,8 +1741,10 @@
       tile: makeContainer(state.world, true),
       token: makeContainer(state.world, true),
       roulette: makeContainer(state.world, true),
+      dice: makeContainer(state.world, true),
       fx: makeContainer(state.world, true),
-      overlay: makeContainer(state.world, true)
+      overlay: makeContainer(state.world, true),
+      start: makeContainer(state.world, true)
     };
   }
 
@@ -1136,9 +1752,7 @@
     state.world.removeChildren();
     createLayers();
     drawBoard();
-    drawTiles();
-    drawRoulette();
-    createPlayers();
+    drawStartScreen();
   }
 
   async function init() {

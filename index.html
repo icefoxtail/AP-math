@@ -27,11 +27,27 @@
       z-index: 10;
     }
     .boot-card {
-      width: min(520px, 84vw); padding: 28px; border-radius: 34px; background: rgba(255,246,218,.92);
-      border: 6px solid rgba(255,255,255,.86); text-align: center; box-shadow: 0 22px 48px rgba(0,0,0,.24);
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: rgba(255,246,218,.88);
+      border: 6px solid rgba(255,255,255,.86);
+      box-shadow: 0 18px 42px rgba(0,0,0,.24);
+      position: relative;
     }
-    .boot-title { margin: 0; font-size: clamp(30px, 7vw, 50px); font-weight: 900; }
-    .boot-sub { margin: 14px 0 0; font-size: clamp(15px, 3.5vw, 22px); font-weight: 800; color: #8A5A2E; }
+    .boot-card::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 7px solid rgba(255,255,255,.9);
+      border-top-color: #E9A85D;
+      border-right-color: #FFCF6E;
+      animation: bootSpin .85s linear infinite;
+    }
+    @keyframes bootSpin {
+      to { transform: rotate(360deg); }
+    }
     .rotate-screen {
       position: fixed; inset: 0; display: none; place-items: center; padding: 24px; z-index: 20;
       background: linear-gradient(180deg, #6ECFFF, #95DD7B); text-align: center;
@@ -45,16 +61,13 @@
 <body>
   <main id="app">
     <div class="boot-screen" id="bootScreen">
-      <div class="boot-card">
-        <h1 class="boot-title">🎲 보드랜드 패밀리</h1>
-        <p class="boot-sub">프리미엄 에셋 로딩 중...</p>
-      </div>
+      <div class="boot-card" aria-label="로딩 중"></div>
     </div>
   </main>
   <section class="rotate-screen">
     <div class="rotate-card">
       <div class="rotate-emoji">↔️</div>
-      <div class="rotate-title">가로로 돌려주세요</div>
+      <div class="rotate-title"></div>
     </div>
   </section>
   <script src="./vendor/pixi.min.js"></script>

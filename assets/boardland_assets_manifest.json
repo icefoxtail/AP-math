@@ -1,5 +1,5 @@
 {
-  "version": "boardland-v2.5.5-integrated-assets-fix",
+  "version": "boardland-v2.5.6-assets-dice-family-cards",
   "board_bg": "./assets/board/board-main.webp",
   "roulette": "./assets/board/roulette-wheel.webp",
   "roulette_pointer": "./assets/board/roulette-pointer.webp",
@@ -21,5 +21,20 @@
   "icon_star": "./assets/rewards/sticker-star.webp",
   "icon_heart": "./assets/rewards/sticker-heart.webp",
   "icon_rainbow": "./assets/rewards/sticker-rainbow.webp",
-  "icon_gift": "./assets/rewards/gift-box.webp"
+  "icon_gift": "./assets/rewards/gift-box.webp",
+  "dice_1": "./assets/board/dice-1.png",
+  "dice_2": "./assets/board/dice-2.png",
+  "dice_3": "./assets/board/dice-3.png",
+  "dice_4": "./assets/board/dice-4.png",
+  "dice_5": "./assets/board/dice-5.png",
+  "dice_6": "./assets/board/dice-6.png",
+  "card_kiss_mom": "./assets/boardland/events/kiss_mom.png",
+  "card_kiss_dad": "./assets/boardland/events/kiss_dad.png",
+  "card_hug_mom_dad": "./assets/boardland/events/hug_mom_dad.png",
+  "card_cheek_heart_mom": "./assets/boardland/events/cheek_heart_mom.png",
+  "card_treat_nooni": "./assets/boardland/events/treat_nooni.png",
+  "card_treat_reumi": "./assets/boardland/events/treat_reumi.png",
+  "card_meow_like_cat": "./assets/boardland/events/meow_like_cat.png",
+  "card_get_applause": "./assets/boardland/events/get_applause.png",
+  "card_drink_water": "./assets/boardland/events/drink_water.png"
 }
