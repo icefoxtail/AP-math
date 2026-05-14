@@ -1913,6 +1913,22 @@
     drawAudioStartGate();
   }
 
+  window.BoardlandNativeStart = async function () {
+    unlockAudio();
+    state.audioGatePassed = true;
+    startBgm();
+    playSfx('start', 'start');
+    utils.vibrate([25, 30, 25]);
+
+    const nativeGate = document.getElementById('nativeStartGate');
+    if (nativeGate) nativeGate.classList.add('native-start-hidden');
+
+    if (state.layers && state.layers.start) {
+      state.layers.start.alpha = 1;
+      drawStartScreen();
+    }
+  };
+
   window.BoardlandAudioDebug = function () {
     return {
       voiceManifestCandidates: VOICE_MANIFEST_CANDIDATES.map(resolveAssetUrl),
