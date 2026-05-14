@@ -78,7 +78,8 @@
   const VOICE_MANIFEST_CANDIDATES = [
     './voice_manifest.json',
     './assets/voice_manifest.json',
-    './assets/voice/voice_manifest.json'
+    './assets/voice/voice_manifest.json',
+    './assets/voice/games/_voice_manifest_boardland_add.json'
   ];
 
   const VOICE_WAIT = {
