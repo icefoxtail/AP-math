@@ -74,6 +74,9 @@
   const DICE_ROLL_FRAME_MS = 62;
 
   const PAWN_IMAGE_SIZE = 76;
+  const PAWN_TURN_SCALE_BOOST = 1.22;
+  const PAWN_TURN_PULSE_BOOST = 0.06;
+
 
   const VOICE_MANIFEST_CANDIDATES = [
     './voice_manifest.json',
@@ -127,6 +130,10 @@
     ducked: 0.08
   };
 
+  const EVENT_CARD_MIN_HOLD_MS = 5200;
+  const EVENT_CARD_READY_PULSE_MS = 900;
+  const TURN_END_DELAY_MS = 950;
+
   const TILE_PATTERN = [
     'start',
     'gift',
@@ -167,6 +174,31 @@
     { id: 'pawn_bear', icon: '🐻', name: '가족', fill: 0x8BCB63, edge: 0x4B8D35 }
   ];
 
+  const PAWN_OPTIONS = [
+    { id: 'pawn_dog', icon: '🐶', name: '시현이', fill: 0xFFD166, edge: 0xA86B18 },
+    { id: 'pawn_cat', icon: '🐱', name: '엄마', fill: 0xFF8FB3, edge: 0xB84970 },
+    { id: 'pawn_rabbit', icon: '🐰', name: '아빠', fill: 0x86D8FF, edge: 0x2A7FA8 },
+    { id: 'pawn_bear', icon: '🐻', name: '가족', fill: 0x8BCB63, edge: 0x4B8D35 },
+    { id: 'pawn_fire_ladder', icon: '🚒', name: '사다리차', fill: 0xFF5A3D, edge: 0x9E2B18 },
+    { id: 'pawn_ambulance', icon: '🚑', name: '구급차', fill: 0x7EE0B8, edge: 0x25805C },
+    { id: 'pawn_police_car', icon: '🚓', name: '경찰차', fill: 0x4A7DFF, edge: 0x1B347A },
+    { id: 'pawn_police_bike', icon: '🏍️', name: '경찰바이크', fill: 0x66C7FF, edge: 0x1F648A },
+    { id: 'pawn_fire_classic', icon: '🚒', name: '소방차', fill: 0xFF884D, edge: 0xA63A14 },
+    { id: 'pawn_rescue_fire_helicopter', icon: '🚁', name: '소방헬기', fill: 0xff4d3d, edge: 0xa42818 },
+    { id: 'pawn_rescue_police_helicopter', icon: '🚁', name: '경찰헬기', fill: 0x2f5bff, edge: 0x152e85 },
+    { id: 'pawn_rescue_air_ambulance_plane', icon: '✈️', name: '에어엠뷸런스', fill: 0x7ee0b8, edge: 0x25805c },
+    { id: 'pawn_construction_excavator', icon: '🚜', name: '굴착기', fill: 0xFFC533, edge: 0xA66300 },
+    { id: 'pawn_construction_bulldozer', icon: '🚜', name: '불도저', fill: 0xFFD24A, edge: 0x9B6500 },
+    { id: 'pawn_construction_dump_truck', icon: '🚚', name: '덤프트럭', fill: 0xFFB84D, edge: 0x9A5B00 },
+    { id: 'pawn_construction_crane_truck', icon: '🏗️', name: '크레인', fill: 0xFFCC33, edge: 0x946400 },
+    { id: 'pawn_construction_cement_mixer', icon: '🚚', name: '믹서트럭', fill: 0xFFB347, edge: 0x8F5A00 },
+    { id: 'pawn_construction_backhoe', icon: '🚜', name: '백호', fill: 0xf7b733, edge: 0x8b4f0a },
+    { id: 'pawn_construction_front_loader', icon: '🚜', name: '로더', fill: 0xffbf3d, edge: 0x92520b },
+    { id: 'pawn_construction_forklift', icon: '🚜', name: '지게차', fill: 0xFFA733, edge: 0x8C4D00 },
+    { id: 'pawn_construction_road_roller', icon: '🚧', name: '로드롤러', fill: 0xFFBC3B, edge: 0x8B5900 },
+    { id: 'pawn_construction_wheel_loader', icon: '🚜', name: '휠로더', fill: 0xFFD04D, edge: 0x9A6700 }
+  ];
+
   const EVENT_CARDS = [
     { id: 'family_hug', type: 'family', icon: '🫂', title: '꼬옥 안아주기', body: '가족을 꼬옥 안아주세요', voiceId: 'board.card.familyHug' },
     { id: 'high_five', type: 'family', icon: '✋', title: '하이파이브', body: '손바닥 짝!', voiceId: 'board.card.highFive' },
@@ -187,15 +219,36 @@
   ];
 
   const ASSET_CANDIDATES = {
-    board_bg: ['./assets/board/board-main.webp', './assets/board/board-main.png'],
+    board_bg: ['./assets/board/board-main.png', './assets/board/board-main.webp'],
+    board_main: ['./assets/board/board-main.png', './assets/board/board-main.webp'],
+    board_rescue1: ['./assets/board/board-main-rescue1.png', './assets/board/board-main-rescue1.webp'],
+    board_rescue2: ['./assets/board/board-main-rescue2.png', './assets/board/board-main-rescue２.png', './assets/board/board-main-rescue2.webp', './assets/board/board-main-rescue２.webp'],
+    board_construction1: ['./assets/board/board-main-construction1.png', './assets/board/board-main-construction1.webp'],
+    board_construction2: ['./assets/board/board-main-construction2.png', './assets/board/board-main-construction2.webp'],
     roulette: ['./assets/board/roulette-wheel.webp', './assets/board/roulette-wheel.png', './assets/board/roulette.webp'],
-    roulette_pointer: ['./assets/board/roulette-pointer.webp', './assets/board/roulette-pointer.png'],
+    roulette_pointer: ['./assets/board/roulette-pointer.png', './assets/board/roulette-pointer.webp'],
+    roulette_rescue_team: ['./assets/board/roulette-wheel-rescue-team.png', './assets/board/roulette-wheel-rescue-team.webp'],
+    roulette_pointer_rescue_team: ['./assets/board/roulette-pointer-rescue-team.png', './assets/board/roulette-pointer-rescue-team.webp'],
+    roulette_construction: ['./assets/board/roulette-wheel-construction.png', './assets/board/roulette-wheel-construction.webp'],
+    roulette_pointer_construction: ['./assets/board/roulette-pointer-construction.png', './assets/board/roulette-pointer-construction.webp'],
     dice_1: ['./assets/board/dice-1.png', './assets/board/dice-1.webp'],
     dice_2: ['./assets/board/dice-2.png', './assets/board/dice-2.webp'],
     dice_3: ['./assets/board/dice-3.png', './assets/board/dice-3.webp'],
     dice_4: ['./assets/board/dice-4.png', './assets/board/dice-4.webp'],
     dice_5: ['./assets/board/dice-5.png', './assets/board/dice-5.webp'],
     dice_6: ['./assets/board/dice-6.png', './assets/board/dice-6.webp'],
+    dice_rescue_1: ['./assets/board/dice-rescue-1.png', './assets/board/dice-rescue-1.webp', './assets/board/dice-rescue-team-1.png', './assets/board/dice-rescue-team-1.webp'],
+    dice_rescue_2: ['./assets/board/dice-rescue-2.png', './assets/board/dice-rescue-2.webp', './assets/board/dice-rescue-team-2.png', './assets/board/dice-rescue-team-2.webp'],
+    dice_rescue_3: ['./assets/board/dice-rescue-3.png', './assets/board/dice-rescue-3.webp', './assets/board/dice-rescue-team-3.png', './assets/board/dice-rescue-team-3.webp'],
+    dice_rescue_4: ['./assets/board/dice-rescue-4.png', './assets/board/dice-rescue-4.webp', './assets/board/dice-rescue-team-4.png', './assets/board/dice-rescue-team-4.webp'],
+    dice_rescue_5: ['./assets/board/dice-rescue-5.png', './assets/board/dice-rescue-5.webp', './assets/board/dice-rescue-team-5.png', './assets/board/dice-rescue-team-5.webp'],
+    dice_rescue_6: ['./assets/board/dice-rescue-6.png', './assets/board/dice-rescue-6.webp', './assets/board/dice-rescue-team-6.png', './assets/board/dice-rescue-team-6.webp'],
+    dice_construction_1: ['./assets/board/dice-construction-1.png', './assets/board/dice-construction-1.webp'],
+    dice_construction_2: ['./assets/board/dice-construction-2.png', './assets/board/dice-construction-2.webp'],
+    dice_construction_3: ['./assets/board/dice-construction-3.png', './assets/board/dice-construction-3.webp'],
+    dice_construction_4: ['./assets/board/dice-construction-4.png', './assets/board/dice-construction-4.webp'],
+    dice_construction_5: ['./assets/board/dice-construction-5.png', './assets/board/dice-construction-5.webp'],
+    dice_construction_6: ['./assets/board/dice-construction-6.png', './assets/board/dice-construction-6.webp'],
     card_back: ['./assets/boardland/cards/card-back-main.webp', './assets/boardland/events/card-back.webp', './assets/icons/card-back.webp'],
     card_front_default: ['./assets/boardland/events/card-front.webp', './assets/boardland/events/card-front.png'],
     card_front_family_hug: ['./assets/boardland/events/card-hug.webp', './assets/boardland/cards/card-family-hug.webp'],
@@ -221,11 +274,217 @@
     icon_star: ['./assets/rewards/sticker-star.webp'],
     icon_heart: ['./assets/rewards/sticker-heart.webp'],
     icon_rainbow: ['./assets/rewards/sticker-rainbow.webp'],
+    pawn_fire_ladder: ['./assets/boardland/pawns/rescue-fire-ladder.png', './assets/boardland/pawns/rescue-fire-ladder.webp'],
+    pawn_ambulance: ['./assets/boardland/pawns/rescue-ambulance.png', './assets/boardland/pawns/rescue-ambulance.webp'],
+    pawn_police_car: ['./assets/boardland/pawns/rescue-police-car.png', './assets/boardland/pawns/rescue-police-car.webp'],
+    pawn_police_bike: ['./assets/boardland/pawns/rescue-police-bike.png', './assets/boardland/pawns/rescue-police-bike.webp'],
+    pawn_fire_classic: ['./assets/boardland/pawns/rescue-fire-classic.png', './assets/boardland/pawns/rescue-fire-classic.webp'],
+    pawn_rescue_fire_helicopter: ['./assets/boardland/pawns/rescue-fire-helicopter.png', './assets/boardland/pawns/rescue-fire-helicopter.webp'],
+    pawn_rescue_police_helicopter: ['./assets/boardland/pawns/rescue-police-helicopter.png', './assets/boardland/pawns/rescue-police-helicopter.webp'],
+    pawn_rescue_air_ambulance_plane: ['./assets/boardland/pawns/rescue-air-ambulance-plane.png', './assets/boardland/pawns/rescue-air-ambulance-plane.webp'],
+    pawn_construction_excavator: ['./assets/boardland/pawns/construction-excavator.png', './assets/boardland/pawns/construction-excavator.webp'],
+    pawn_construction_bulldozer: ['./assets/boardland/pawns/construction-bulldozer.png', './assets/boardland/pawns/construction-bulldozer.webp'],
+    pawn_construction_dump_truck: ['./assets/boardland/pawns/construction-dump-truck.png', './assets/boardland/pawns/construction-dump-truck.webp'],
+    pawn_construction_crane_truck: ['./assets/boardland/pawns/construction-crane-truck.png', './assets/boardland/pawns/construction-crane-truck.webp'],
+    pawn_construction_cement_mixer: ['./assets/boardland/pawns/construction-cement-mixer.png', './assets/boardland/pawns/construction-cement-mixer.webp'],
+    pawn_construction_backhoe: ['./assets/boardland/pawns/construction-backhoe.png', './assets/boardland/pawns/construction-backhoe.webp'],
+    pawn_construction_front_loader: ['./assets/boardland/pawns/construction-front-loader.png', './assets/boardland/pawns/construction-front-loader.webp'],
+    pawn_construction_forklift: ['./assets/boardland/pawns/construction-forklift.png', './assets/boardland/pawns/construction-forklift.webp'],
+    pawn_construction_road_roller: ['./assets/boardland/pawns/construction-road-roller.png', './assets/boardland/pawns/construction-road-roller.webp'],
+    pawn_construction_wheel_loader: ['./assets/boardland/pawns/construction-wheel-loader.png', './assets/boardland/pawns/construction-wheel-loader.webp'],
     pawn_dog: ['./assets/boardland/pawns/dog-pawn.webp', './assets/pawns/dog-pawn.webp'],
     pawn_cat: ['./assets/boardland/pawns/cat-pawn.webp', './assets/pawns/cat-pawn.webp'],
     pawn_rabbit: ['./assets/boardland/pawns/rabbit-pawn.webp', './assets/pawns/rabbit-pawn.webp'],
     pawn_bear: ['./assets/boardland/pawns/bear-pawn.webp', './assets/pawns/bear-pawn.webp']
   };
+
+
+  const BOARD_OPTIONS = [
+    {
+      id: 'main',
+      label: '기본',
+      alias: 'board_main',
+      fallbackAlias: 'board_bg',
+      icon: '🏡',
+      pawnIds: ['pawn_dog', 'pawn_cat', 'pawn_rabbit', 'pawn_bear'],
+      rouletteAlias: 'roulette',
+      roulettePointerAlias: 'roulette_pointer',
+      diceAliases: {
+        1: 'dice_1',
+        2: 'dice_2',
+        3: 'dice_3',
+        4: 'dice_4',
+        5: 'dice_5',
+        6: 'dice_6'
+      }
+    },
+    {
+      id: 'rescue1',
+      label: '레스큐팀 1',
+      alias: 'board_rescue1',
+      fallbackAlias: 'board_bg',
+      icon: '🚒',
+      pawnIds: ['pawn_fire_ladder', 'pawn_ambulance', 'pawn_police_car', 'pawn_fire_classic'],
+      rouletteAlias: 'roulette_rescue_team',
+      roulettePointerAlias: 'roulette_pointer_rescue_team',
+      diceAliases: {
+        1: 'dice_rescue_1',
+        2: 'dice_rescue_2',
+        3: 'dice_rescue_3',
+        4: 'dice_rescue_4',
+        5: 'dice_rescue_5',
+        6: 'dice_rescue_6'
+      }
+    },
+    {
+      id: 'rescue2',
+      label: '레스큐팀 2',
+      alias: 'board_rescue2',
+      fallbackAlias: 'board_bg',
+      icon: '🚑',
+      pawnIds: ['pawn_fire_ladder', 'pawn_ambulance', 'pawn_police_bike', 'pawn_fire_classic'],
+      rouletteAlias: 'roulette_rescue_team',
+      roulettePointerAlias: 'roulette_pointer_rescue_team',
+      diceAliases: {
+        1: 'dice_rescue_1',
+        2: 'dice_rescue_2',
+        3: 'dice_rescue_3',
+        4: 'dice_rescue_4',
+        5: 'dice_rescue_5',
+        6: 'dice_rescue_6'
+      }
+    },
+    {
+      id: 'construction1',
+      label: '중장비 1',
+      alias: 'board_construction1',
+      fallbackAlias: 'board_bg',
+      icon: '🚜',
+      pawnIds: ['pawn_construction_excavator', 'pawn_construction_bulldozer', 'pawn_construction_dump_truck', 'pawn_construction_crane_truck'],
+      rouletteAlias: 'roulette_construction',
+      roulettePointerAlias: 'roulette_pointer_construction',
+      diceAliases: {
+        1: 'dice_construction_1',
+        2: 'dice_construction_2',
+        3: 'dice_construction_3',
+        4: 'dice_construction_4',
+        5: 'dice_construction_5',
+        6: 'dice_construction_6'
+      }
+    },
+    {
+      id: 'construction2',
+      label: '중장비 2',
+      alias: 'board_construction2',
+      fallbackAlias: 'board_bg',
+      icon: '🏗️',
+      pawnIds: ['pawn_construction_cement_mixer', 'pawn_construction_forklift', 'pawn_construction_road_roller', 'pawn_construction_wheel_loader'],
+      rouletteAlias: 'roulette_construction',
+      roulettePointerAlias: 'roulette_pointer_construction',
+      diceAliases: {
+        1: 'dice_construction_1',
+        2: 'dice_construction_2',
+        3: 'dice_construction_3',
+        4: 'dice_construction_4',
+        5: 'dice_construction_5',
+        6: 'dice_construction_6'
+      }
+    }
+  ];
+
+  const THEME_OPTIONS = [
+    {
+      id: 'main',
+      boardAlias: 'board_main',
+      fallbackBoardAlias: 'board_bg',
+      rouletteAlias: 'roulette',
+      pointerAlias: 'roulette_pointer',
+      dicePrefix: 'dice',
+      pawnIds: ['pawn_dog', 'pawn_cat', 'pawn_rabbit', 'pawn_bear']
+    },
+    {
+      id: 'rescue1',
+      boardAlias: 'board_rescue1',
+      fallbackBoardAlias: 'board_bg',
+      rouletteAlias: 'roulette_rescue_team',
+      pointerAlias: 'roulette_pointer_rescue_team',
+      fallbackRouletteAlias: 'roulette',
+      fallbackPointerAlias: 'roulette_pointer',
+      dicePrefix: 'dice_rescue',
+      fallbackDicePrefix: 'dice',
+      pawnIds: [
+        'pawn_fire_ladder',
+        'pawn_ambulance',
+        'pawn_police_car',
+        'pawn_fire_classic',
+        'pawn_rescue_fire_helicopter',
+        'pawn_rescue_police_helicopter',
+        'pawn_rescue_air_ambulance_plane'
+      ]
+    },
+    {
+      id: 'rescue2',
+      boardAlias: 'board_rescue2',
+      fallbackBoardAlias: 'board_bg',
+      rouletteAlias: 'roulette_rescue_team',
+      pointerAlias: 'roulette_pointer_rescue_team',
+      fallbackRouletteAlias: 'roulette',
+      fallbackPointerAlias: 'roulette_pointer',
+      dicePrefix: 'dice_rescue',
+      fallbackDicePrefix: 'dice',
+      pawnIds: [
+        'pawn_fire_ladder',
+        'pawn_ambulance',
+        'pawn_police_bike',
+        'pawn_fire_classic',
+        'pawn_rescue_fire_helicopter',
+        'pawn_rescue_police_helicopter',
+        'pawn_rescue_air_ambulance_plane'
+      ]
+    },
+    {
+      id: 'construction1',
+      boardAlias: 'board_construction1',
+      fallbackBoardAlias: 'board_bg',
+      rouletteAlias: 'roulette_construction',
+      pointerAlias: 'roulette_pointer_construction',
+      fallbackRouletteAlias: 'roulette',
+      fallbackPointerAlias: 'roulette_pointer',
+      dicePrefix: 'dice_construction',
+      fallbackDicePrefix: 'dice',
+      pawnIds: [
+        'pawn_construction_excavator',
+        'pawn_construction_bulldozer',
+        'pawn_construction_dump_truck',
+        'pawn_construction_crane_truck',
+        'pawn_construction_cement_mixer',
+        'pawn_construction_backhoe',
+        'pawn_construction_front_loader',
+        'pawn_construction_forklift'
+      ]
+    },
+    {
+      id: 'construction2',
+      boardAlias: 'board_construction2',
+      fallbackBoardAlias: 'board_bg',
+      rouletteAlias: 'roulette_construction',
+      pointerAlias: 'roulette_pointer_construction',
+      fallbackRouletteAlias: 'roulette',
+      fallbackPointerAlias: 'roulette_pointer',
+      dicePrefix: 'dice_construction',
+      fallbackDicePrefix: 'dice',
+      pawnIds: [
+        'pawn_construction_excavator',
+        'pawn_construction_bulldozer',
+        'pawn_construction_dump_truck',
+        'pawn_construction_crane_truck',
+        'pawn_construction_cement_mixer',
+        'pawn_construction_backhoe',
+        'pawn_construction_front_loader',
+        'pawn_construction_forklift'
+      ]
+    }
+  ];
 
   const state = {
     app: null,
@@ -240,13 +499,20 @@
     isMoving: false,
     waitingEvent: false,
     tickerItems: [],
+    currentTurnHighlightVersion: 0,
     rouletteWheel: null,
     diceBox: null,
     diceFaceSprite: null,
     diceFallbackText: null,
     setupPlayerCount: 3,
-    screen: 'start',
+    selectedThemeId: 'main',
+    selectedBoardId: 'main',
+    selectedPawnIds: ['pawn_dog', 'pawn_cat', 'pawn_rabbit', 'pawn_bear'],
+    screen: 'audio_gate',
+    audioGatePassed: false,
     audioCtx: null,
+    audioUnlocked: false,
+    voiceAudio: null,
     voiceMap: {},
     voiceReadyPromise: null,
     sfxAudio: {},
@@ -281,6 +547,38 @@
     if (!state.audioCtx) state.audioCtx = new AudioContext();
     if (state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
     return state.audioCtx;
+  }
+
+  function unlockAudio() {
+    if (state.audioUnlocked) return;
+    state.audioUnlocked = true;
+
+    const ctx = initAudio();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    try {
+      const silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      silent.volume = 0.001;
+      silent.playsInline = true;
+      silent.play().catch(() => {});
+    } catch (error) {}
+
+    if (!state.voiceAudio) {
+      state.voiceAudio = new Audio();
+      state.voiceAudio.preload = 'auto';
+      state.voiceAudio.volume = 1;
+      state.voiceAudio.playsInline = true;
+    }
+
+    if (!state.bgmAudio) {
+      state.bgmAudio = new Audio();
+      state.bgmAudio.preload = 'auto';
+      state.bgmAudio.loop = false;
+      state.bgmAudio.volume = BGM_VOLUME.normal;
+      state.bgmAudio.playsInline = true;
+    }
   }
 
   function playTone(type) {
@@ -417,33 +715,47 @@
     const src = BGM_TRACKS[safeIndex];
     if (!src) return null;
 
-    const audio = new Audio(src);
-    audio.preload = 'auto';
-    audio.loop = false;
-    audio.volume = BGM_VOLUME.normal;
-    audio.playsInline = true;
-    audio.addEventListener('ended', () => {
+    if (!state.bgmAudio) state.bgmAudio = new Audio();
+
+    state.bgmAudio.pause();
+    state.bgmAudio.src = resolveAssetUrl(src);
+    state.bgmAudio.preload = 'auto';
+    state.bgmAudio.loop = false;
+    state.bgmAudio.volume = BGM_VOLUME.normal;
+    state.bgmAudio.playsInline = true;
+
+    state.bgmAudio.onended = () => {
       if (!state.bgmWanted) return;
       state.bgmIndex = pickNextBgmIndex();
-      state.bgmAudio = createBgmAudio(state.bgmIndex);
-      if (state.bgmAudio) state.bgmAudio.play().catch(() => {});
-    });
-    return audio;
+      createBgmAudio(state.bgmIndex);
+      if (state.bgmAudio) {
+        state.bgmAudio.play().catch(error => {
+          console.error('[BGM] 다음 곡 재생 실패 - 파일 경로 확인:', state.bgmAudio.src, error.name, error.message);
+        });
+      }
+    };
+
+    state.bgmAudio.onerror = () => {
+      console.error('[BGM] 로드 실패 - 파일 경로 확인:', state.bgmAudio.src);
+    };
+
+    return state.bgmAudio;
   }
 
   function startBgm() {
     state.bgmWanted = true;
     if (!BGM_TRACKS.length) return;
 
-    if (!state.bgmAudio) {
+    if (!state.bgmAudio || !state.bgmAudio.src) {
       state.bgmIndex = Math.floor(Math.random() * BGM_TRACKS.length);
-      state.bgmAudio = createBgmAudio(state.bgmIndex);
+      createBgmAudio(state.bgmIndex);
     }
 
     if (!state.bgmAudio) return;
+
     state.bgmAudio.volume = BGM_VOLUME.normal;
     state.bgmAudio.play().catch(error => {
-      console.warn('[Boardland] bgm start failed:', state.bgmAudio && state.bgmAudio.src, error);
+      console.error('[BGM] 재생 실패 - 파일 경로 확인:', state.bgmAudio.src, error.name, error.message);
     });
   }
 
@@ -459,45 +771,70 @@
 
   function playAudioPath(srcOrList) {
     const sources = Array.isArray(srcOrList) ? srcOrList.filter(Boolean) : [srcOrList].filter(Boolean);
+
     return new Promise(resolve => {
-      if (!sources.length) { resolve(false); return; }
+      if (!sources.length) {
+        resolve(false);
+        return;
+      }
 
       let index = 0;
       let settled = false;
 
+      if (!state.voiceAudio) {
+        state.voiceAudio = new Audio();
+        state.voiceAudio.preload = 'auto';
+        state.voiceAudio.volume = 1;
+        state.voiceAudio.playsInline = true;
+      }
+
+      const fail = src => {
+        console.warn('[Voice] 로드/재생 실패:', src);
+        index += 1;
+
+        if (index >= sources.length) {
+          if (!settled) {
+            settled = true;
+            resolve(false);
+          }
+          return;
+        }
+
+        tryOne();
+      };
+
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        resolve(true);
+      };
+
       const tryOne = () => {
         if (settled) return;
+
         const src = sources[index];
-
-        const fail = () => {
-          index += 1;
-          if (index >= sources.length) {
-            if (!settled) {
-              settled = true;
-              resolve(false);
-            }
-            return;
-          }
-          tryOne();
-        };
-
-        const done = ok => {
-          if (settled) return;
-          settled = true;
-          resolve(ok);
-        };
+        if (!src) {
+          fail(src);
+          return;
+        }
 
         try {
-          const audio = new Audio(src);
+          const audio = state.voiceAudio;
+          audio.pause();
+          audio.currentTime = 0;
+          audio.src = resolveAssetUrl(src);
           audio.preload = 'auto';
           audio.volume = 1;
           audio.playsInline = true;
-          audio.addEventListener('ended', () => done(true), { once: true });
-          audio.addEventListener('error', fail, { once: true });
+          audio.onended = done;
+          audio.onerror = () => fail(audio.src || src);
+
           const playPromise = audio.play();
-          if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(fail);
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => fail(audio.src || src));
+          }
         } catch (error) {
-          fail();
+          fail(src);
         }
       };
 
@@ -705,11 +1042,22 @@
         };
 
         push('board_bg', manifest.board_bg || (manifest.board && manifest.board.main));
+        push('board_main', manifest.board_main || (manifest.board && manifest.board.main));
+        push('board_rescue1', manifest.board_rescue1 || (manifest.board && manifest.board.rescue1));
+        push('board_rescue2', manifest.board_rescue2 || (manifest.board && manifest.board.rescue2));
+        push('board_construction1', manifest.board_construction1 || (manifest.board && manifest.board.construction1));
+        push('board_construction2', manifest.board_construction2 || (manifest.board && manifest.board.construction2));
         push('roulette', manifest.roulette || manifest.roulette_wheel || (manifest.board && manifest.board.roulette));
         push('roulette_pointer', manifest.roulette_pointer || manifest.pointer || (manifest.board && manifest.board.roulette_pointer));
+        push('roulette_rescue_team', manifest.roulette_rescue_team || (manifest.roulette_theme && manifest.roulette_theme.rescue));
+        push('roulette_pointer_rescue_team', manifest.roulette_pointer_rescue_team || (manifest.pointer_theme && manifest.pointer_theme.rescue));
+        push('roulette_construction', manifest.roulette_construction || (manifest.roulette_theme && manifest.roulette_theme.construction));
+        push('roulette_pointer_construction', manifest.roulette_pointer_construction || (manifest.pointer_theme && manifest.pointer_theme.construction));
 
         for (let i = 1; i <= 6; i += 1) {
           push(`dice_${i}`, manifest[`dice_${i}`] || manifest[`dice-${i}`] || (manifest.dice && manifest.dice[i]));
+          push(`dice_rescue_${i}`, manifest[`dice_rescue_${i}`] || manifest[`dice-rescue-${i}`] || (manifest.dice_rescue && manifest.dice_rescue[i]));
+          push(`dice_construction_${i}`, manifest[`dice_construction_${i}`] || manifest[`dice-construction-${i}`] || (manifest.dice_construction && manifest.dice_construction[i]));
         }
 
         push('card_back', manifest.card_back || (manifest.cards && manifest.cards.back));
@@ -741,6 +1089,22 @@
         push('pawn_cat', manifest.pawn_cat || (manifest.pawns && manifest.pawns.cat));
         push('pawn_rabbit', manifest.pawn_rabbit || (manifest.pawns && manifest.pawns.rabbit));
         push('pawn_bear', manifest.pawn_bear || (manifest.pawns && manifest.pawns.bear));
+        push('pawn_fire_ladder', manifest.pawn_fire_ladder || (manifest.pawns && manifest.pawns.fire_ladder));
+        push('pawn_ambulance', manifest.pawn_ambulance || (manifest.pawns && manifest.pawns.ambulance));
+        push('pawn_police_car', manifest.pawn_police_car || (manifest.pawns && manifest.pawns.police_car));
+        push('pawn_police_bike', manifest.pawn_police_bike || (manifest.pawns && manifest.pawns.police_bike));
+        push('pawn_fire_classic', manifest.pawn_fire_classic || (manifest.pawns && manifest.pawns.fire_classic));
+        push('pawn_rescue_fire_helicopter', manifest.pawn_rescue_fire_helicopter || (manifest.pawns && manifest.pawns.rescue_fire_helicopter));
+        push('pawn_rescue_police_helicopter', manifest.pawn_rescue_police_helicopter || (manifest.pawns && manifest.pawns.rescue_police_helicopter));
+        push('pawn_rescue_air_ambulance_plane', manifest.pawn_rescue_air_ambulance_plane || (manifest.pawns && manifest.pawns.rescue_air_ambulance_plane));
+        push('pawn_construction_excavator', manifest.pawn_construction_excavator || (manifest.pawns && manifest.pawns.construction_excavator));
+        push('pawn_construction_bulldozer', manifest.pawn_construction_bulldozer || (manifest.pawns && manifest.pawns.construction_bulldozer));
+        push('pawn_construction_dump_truck', manifest.pawn_construction_dump_truck || (manifest.pawns && manifest.pawns.construction_dump_truck));
+        push('pawn_construction_crane_truck', manifest.pawn_construction_crane_truck || (manifest.pawns && manifest.pawns.construction_crane_truck));
+        push('pawn_construction_cement_mixer', manifest.pawn_construction_cement_mixer || (manifest.pawns && manifest.pawns.construction_cement_mixer));
+        push('pawn_construction_backhoe', manifest.pawn_construction_backhoe || (manifest.pawns && manifest.pawns.construction_backhoe));
+        push('pawn_construction_front_loader', manifest.pawn_construction_front_loader || (manifest.pawns && manifest.pawns.construction_front_loader));
+        push('pawn_construction_forklift', manifest.pawn_construction_forklift || (manifest.pawns && manifest.pawns.construction_forklift));
       }
     } catch (error) {}
 
@@ -777,6 +1141,120 @@
     return sprite;
   }
 
+  function getSelectedBoardOption() {
+    return THEME_OPTIONS.find(theme => theme.id === state.selectedThemeId) || THEME_OPTIONS[0];
+  }
+
+  function getSelectedTheme() {
+    return THEME_OPTIONS.find(theme => theme.id === state.selectedThemeId) || THEME_OPTIONS[0];
+  }
+
+  function getTextureAlias(primaryAlias, fallbackAlias) {
+    if (primaryAlias && state.assetTextures[primaryAlias]) return primaryAlias;
+    if (fallbackAlias && state.assetTextures[fallbackAlias]) return fallbackAlias;
+    return primaryAlias || fallbackAlias || '';
+  }
+
+  function getBoardAliasForTheme(theme) {
+    const selected = theme || getSelectedTheme();
+    return getTextureAlias(selected.boardAlias, selected.fallbackBoardAlias || 'board_bg') || 'board_bg';
+  }
+
+  function getRouletteAliasForTheme(theme) {
+    const selected = theme || getSelectedTheme();
+    return getTextureAlias(selected.rouletteAlias, selected.fallbackRouletteAlias || 'roulette') || 'roulette';
+  }
+
+  function getPointerAliasForTheme(theme) {
+    const selected = theme || getSelectedTheme();
+    return getTextureAlias(selected.pointerAlias, selected.fallbackPointerAlias || 'roulette_pointer') || 'roulette_pointer';
+  }
+
+  function getDiceAliasForValue(value, theme) {
+    const selected = theme || getSelectedTheme();
+    const primary = `${selected.dicePrefix || 'dice'}_${value}`;
+    const fallback = `${selected.fallbackDicePrefix || 'dice'}_${value}`;
+    return getTextureAlias(primary, fallback) || `dice_${value}`;
+  }
+
+  function getSelectedBoardAlias() {
+    return getBoardAliasForTheme();
+  }
+
+  function getSelectedRouletteAlias() {
+    return getRouletteAliasForTheme();
+  }
+
+  function getSelectedRoulettePointerAlias() {
+    return getPointerAliasForTheme();
+  }
+
+  function getSelectedDiceAlias(value) {
+    return getDiceAliasForValue(value || 6);
+  }
+
+  function applyBoardTheme(boardId) {
+    const theme = THEME_OPTIONS.find(item => item.id === boardId) || THEME_OPTIONS[0];
+    state.selectedThemeId = theme.id;
+    state.selectedBoardId = theme.id;
+  }
+
+  function getPawnOptionById(id) {
+    return PAWN_OPTIONS.find(pawn => pawn.id === id) || PAWNS.find(pawn => pawn.id === id) || PAWNS[0];
+  }
+
+  function shuffledCopy(items) {
+    const copy = items.slice();
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = tmp;
+    }
+    return copy;
+  }
+
+  function getSelectedPawnOptions() {
+    return getThemePawnOptions();
+  }
+
+  function getThemePawnOptions() {
+    const theme = getSelectedTheme();
+    const ids = Array.isArray(theme.pawnIds) && theme.pawnIds.length ? theme.pawnIds : PAWNS.map(pawn => pawn.id);
+    const count = Math.max(2, Math.min(4, state.setupPlayerCount || 3));
+    const candidates = ids
+      .map(getPawnOptionById)
+      .filter(Boolean)
+      .filter((pawn, index, array) => array.findIndex(item => item.id === pawn.id) === index);
+    const selected = shuffledCopy(candidates).slice(0, count);
+
+    if (selected.length >= count) return selected;
+
+    const fallback = shuffledCopy(PAWNS.filter(pawn => !selected.some(item => item.id === pawn.id)));
+    return selected.concat(fallback).slice(0, count);
+  }
+
+  function togglePawnSelection(pawnId) {
+    const current = Array.isArray(state.selectedPawnIds) ? state.selectedPawnIds.slice() : [];
+    const exists = current.includes(pawnId);
+
+    if (exists) {
+      if (current.length <= 2) return;
+      state.selectedPawnIds = current.filter(id => id !== pawnId);
+    } else {
+      current.push(pawnId);
+      state.selectedPawnIds = current.slice(-4);
+    }
+
+    if (state.setupPlayerCount > state.selectedPawnIds.length) {
+      state.setupPlayerCount = state.selectedPawnIds.length;
+    }
+
+    playSfx('select', 'start');
+    utils.vibrate(18);
+    drawStartScreen();
+  }
+
   function drawBoard() {
     const layer = state.layers.board;
     layer.removeChildren();
@@ -785,7 +1263,9 @@
     drawG(fallback, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x7b421f, 1);
     layer.addChild(fallback);
 
-    const bg = makeSprite('board_bg', DESIGN_W / 2, DESIGN_H / 2, DESIGN_W, DESIGN_H);
+    const bgAlias = getBoardAliasForTheme();
+    const bg = makeSprite(bgAlias, DESIGN_W / 2, DESIGN_H / 2, DESIGN_W, DESIGN_H)
+      || makeSprite('board_bg', DESIGN_W / 2, DESIGN_H / 2, DESIGN_W, DESIGN_H);
     if (bg) layer.addChild(bg);
   }
 
@@ -827,15 +1307,24 @@
     return { x: p.x + off.x, y: p.y + off.y - 1 };
   }
 
+  function getPawnVisualScale(player, baseScale) {
+    const scale = Number.isFinite(baseScale) ? baseScale : getPawnScale(getPawnTarget(player).y);
+    return player && player.order === state.currentPlayerIndex && !player.finished
+      ? scale * PAWN_TURN_SCALE_BOOST
+      : scale;
+  }
+
   function setPawnPosition(player, instant) {
     if (!player.token) return;
     const target = getPawnTarget(player);
-    const scale = getPawnScale(target.y);
+    const baseScale = getPawnScale(target.y);
+    const scale = getPawnVisualScale(player, baseScale);
 
     if (instant) {
       player.token.x = target.x;
       player.token.y = target.y;
       player.token.scale.set(scale);
+      player.token.zIndex = player.order === state.currentPlayerIndex ? 220 : 100 + player.order;
       return;
     }
 
@@ -848,6 +1337,7 @@
       player.token.x = sx + (target.x - sx) * e;
       player.token.y = sy + (target.y - sy) * e;
       player.token.scale.set(ss + (scale - ss) * e);
+      player.token.zIndex = player.order === state.currentPlayerIndex ? 220 : 100 + player.order;
     });
   }
 
@@ -871,7 +1361,8 @@
 
   function createPlayers() {
     state.layers.token.removeChildren();
-    state.players = PAWNS.slice(0, state.setupPlayerCount).map((pawn, order) => ({
+    const selectedPawns = getSelectedPawnOptions();
+    state.players = selectedPawns.map((pawn, order) => ({
       order,
       index: 0,
       onBoard: false,
@@ -889,11 +1380,49 @@
     pulseCurrentPawn();
   }
 
+  function resetPawnTurnScales() {
+    state.players.forEach(player => {
+      if (!player || !player.token) return;
+      const target = getPawnTarget(player);
+      const base = getPawnScale(target.y);
+      player.token.zIndex = 100 + player.order;
+      animate(180, t => {
+        const e = utils.easeInOutSine(t);
+        const current = player.token.scale.x;
+        player.token.scale.set(current + (base - current) * e);
+      });
+    });
+  }
+
   function pulseCurrentPawn() {
+    state.currentTurnHighlightVersion += 1;
+    const version = state.currentTurnHighlightVersion;
+
+    resetPawnTurnScales();
+
     const player = state.players[state.currentPlayerIndex];
     if (!player || !player.token) return;
+
     const target = getPawnTarget(player);
-    player.token.scale.set(getPawnScale(target.y));
+    const base = getPawnScale(target.y);
+    const enlarged = base * PAWN_TURN_SCALE_BOOST;
+
+    player.token.zIndex = 220;
+
+    animate(220, t => {
+      const e = utils.easeOutBack(t);
+      player.token.scale.set(base + (enlarged - base) * e);
+    }).then(() => {
+      addTicker(() => {
+        if (version !== state.currentTurnHighlightVersion) return true;
+        if (!player.token || player.finished) return true;
+
+        const pulse = 1 + Math.sin(performance.now() / 360) * PAWN_TURN_PULSE_BOOST;
+        player.token.scale.set(enlarged * pulse);
+        player.token.zIndex = 220;
+        return false;
+      });
+    });
   }
 
   function pulseTile(idx) {
@@ -918,12 +1447,12 @@
       const e = utils.easeInOutSine(t);
       token.x = sx + (target.x - sx) * e;
       token.y = sy + (target.y - sy) * e;
-      token.scale.set(ss + (ts - ss) * e);
+      token.scale.set(ss + (getPawnVisualScale(player, ts) - ss) * e);
     });
 
     token.x = target.x;
     token.y = target.y;
-    token.scale.set(ts);
+    token.scale.set(getPawnVisualScale(player, ts));
     playSfx('moveStep', 'move');
     utils.vibrate(16);
     pulseTile(player.index);
@@ -996,7 +1525,9 @@
 
   function drawRoulettePointer(parent) {
     const pointerY = ROULETTE_COORD.y + ROULETTE_POINTER_OFFSET_Y;
-    const pointer = makeSprite('roulette_pointer', ROULETTE_COORD.x, pointerY, ROULETTE_POINTER_SIZE, ROULETTE_POINTER_SIZE);
+    const pointerAlias = getPointerAliasForTheme();
+    const pointer = makeSprite(pointerAlias, ROULETTE_COORD.x, pointerY, ROULETTE_POINTER_SIZE, ROULETTE_POINTER_SIZE)
+      || makeSprite('roulette_pointer', ROULETTE_COORD.x, pointerY, ROULETTE_POINTER_SIZE, ROULETTE_POINTER_SIZE);
     if (pointer) {
       pointer.zIndex = 130;
       parent.addChild(pointer);
@@ -1034,7 +1565,9 @@
     layer.addChild(wheel);
     state.rouletteWheel = wheel;
 
-    const sprite = makeSprite('roulette', 0, 0, ROULETTE_SIZE, ROULETTE_SIZE);
+    const rouletteAlias = getRouletteAliasForTheme();
+    const sprite = makeSprite(rouletteAlias, 0, 0, ROULETTE_SIZE, ROULETTE_SIZE)
+      || makeSprite('roulette', 0, 0, ROULETTE_SIZE, ROULETTE_SIZE);
     if (sprite) wheel.addChild(sprite);
     else drawRouletteFallback(wheel);
 
@@ -1090,8 +1623,8 @@
   }
 
   function setDiceFace(value) {
-    const alias = `dice_${value}`;
-    const texture = state.assetTextures[alias];
+    const alias = getDiceAliasForValue(value);
+    const texture = state.assetTextures[alias] || state.assetTextures[`dice_${value}`];
     if (state.diceFaceSprite && texture) {
       state.diceFaceSprite.texture = texture;
       state.diceFaceSprite.visible = true;
@@ -1121,7 +1654,9 @@
     shadow.scale.y = 0.22;
     diceBox.addChild(shadow);
 
-    const sprite = makeSprite('dice_6', 0, 0, DICE_SIZE, DICE_SIZE);
+    const diceAlias = getDiceAliasForValue(6);
+    const sprite = makeSprite(diceAlias, 0, 0, DICE_SIZE, DICE_SIZE)
+      || makeSprite('dice_6', 0, 0, DICE_SIZE, DICE_SIZE);
     if (sprite) {
       sprite.zIndex = 2;
       diceBox.addChild(sprite);
@@ -1246,10 +1781,11 @@
     btn.y = y;
     btn.zIndex = 60;
     btn.eventMode = 'static';
-    btn.cursor = 'pointer';
     btn.hitArea = new PIXI.Circle(0, 0, 58);
 
+    const disabled = false;
     const selected = state.setupPlayerCount === count;
+    btn.cursor = 'pointer';
 
     const shadow = new PIXI.Graphics();
     drawG(shadow, 'circle', 0, 30, 0, 0, 50, 0x000000, selected ? 0.2 : 0.14);
@@ -1260,13 +1796,18 @@
     drawG(outer, 'circle', 0, 0, 0, 0, selected ? 58 : 52, selected ? 0xfff3c0 : 0xffffff, 0.94, selected ? 8 : 5, selected ? 0xffc44d : 0xffffff, 0.95);
     btn.addChild(outer);
 
-    const faces = PAWNS.slice(0, count).map(pawn => pawn.icon).join('');
+    const theme = getSelectedTheme();
+    const ids = Array.isArray(theme.pawnIds) && theme.pawnIds.length ? theme.pawnIds : PAWNS.map(pawn => pawn.id);
+    const faces = ids.slice(0, count).map(id => getPawnOptionById(id).icon).join('');
     const faceText = createSoftText(faces, count === 4 ? 28 : 34, 0xffffff, '900', 0x7a4a16, 4);
     faceText.anchor.set(0.5);
     faceText.y = -2;
     btn.addChild(faceText);
 
+    if (disabled) btn.alpha = 0.38;
+
     btn.on('pointertap', () => {
+      if (disabled) return;
       state.setupPlayerCount = count;
       playSfx('select', 'start');
       utils.vibrate(18);
@@ -1281,6 +1822,335 @@
     const gap = 150;
     [2, 3, 4].forEach((count, idx) => {
       layer.addChild(makePlayerCountButton(count, DESIGN_W / 2 + (idx - 1) * gap, y));
+    });
+  }
+
+  function drawAudioStartGate() {
+    const layer = state.layers.start;
+    layer.removeChildren();
+    state.screen = 'audio_gate';
+    state.playMode = null;
+
+    const dim = new PIXI.Graphics();
+    drawG(dim, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x2d160b, 0.38);
+    layer.addChild(dim);
+
+    const centerLight = new PIXI.Graphics();
+    centerLight.beginFill(0xffffff, 0.14);
+    centerLight.drawEllipse(DESIGN_W / 2, DESIGN_H / 2, 520, 260);
+    centerLight.endFill();
+    layer.addChild(centerLight);
+
+    const button = new PIXI.Container();
+    button.x = DESIGN_W / 2;
+    button.y = DESIGN_H / 2 + 18;
+    button.zIndex = 80;
+    button.eventMode = 'static';
+    button.cursor = 'pointer';
+    button.hitArea = new PIXI.Circle(0, 0, 190);
+    layer.addChild(button);
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 110, 0, 0, 168, 0x000000, 0.24);
+    shadow.scale.y = 0.25;
+    button.addChild(shadow);
+
+    const glow = new PIXI.Graphics();
+    drawG(glow, 'circle', 0, 0, 0, 0, 190, 0xffc44d, 0.22);
+    button.addChild(glow);
+
+    const outer = new PIXI.Graphics();
+    drawG(outer, 'circle', 0, 0, 0, 0, 172, 0xffffff, 0.9, 8, 0xffffff, 0.92);
+    button.addChild(outer);
+
+    const inner = new PIXI.Graphics();
+    drawG(inner, 'circle', 0, 0, 0, 0, 146, 0xffcf6e, 0.38, 8, 0xe9a85d, 0.85);
+    button.addChild(inner);
+
+    const icon = createSoftText('▶', 112, 0xffffff, '900', 0x9a4f00, 8);
+    icon.anchor.set(0.5);
+    icon.x = 10;
+    icon.y = -4;
+    button.addChild(icon);
+
+    const sound = createSoftText('🔊', 48, 0xffffff, '900', 0x9a4f00, 5);
+    sound.anchor.set(0.5);
+    sound.x = 92;
+    sound.y = -96;
+    button.addChild(sound);
+
+    button.on('pointerdown', () => {
+      button.scale.set(0.92);
+      unlockAudio();
+    });
+
+    button.on('pointerupoutside', () => {
+      button.scale.set(1);
+    });
+
+    button.on('pointertap', async () => {
+      button.scale.set(1);
+      unlockAudio();
+      state.audioGatePassed = true;
+      startBgm();
+      playSfx('start', 'start');
+      utils.vibrate([25, 30, 25]);
+
+      await animate(220, t => {
+        layer.alpha = 1 - t;
+        button.scale.set(1 + t * 0.14);
+      });
+
+      layer.alpha = 1;
+      drawStartScreen();
+    });
+
+    addTicker(() => {
+      if (state.screen !== 'audio_gate' || !button.parent) return true;
+      const tick = performance.now() / 1000;
+      glow.scale.set(1 + Math.sin(tick * 2.1) * 0.05);
+      button.y = DESIGN_H / 2 + 18 + Math.sin(tick * 1.4) * 5;
+      return false;
+    });
+  }
+
+  function makeBoardPreviewSprite(board, selected) {
+    const alias = board && board.alias && state.assetTextures[board.alias]
+      ? board.alias
+      : board && board.fallbackAlias && state.assetTextures[board.fallbackAlias]
+        ? board.fallbackAlias
+        : 'board_bg';
+
+    const sprite = makeSprite(alias, 0, 0, selected ? 112 : 100, selected ? 63 : 56);
+    if (sprite) {
+      sprite.anchor.set(0.5);
+      return sprite;
+    }
+
+    const icon = createSoftText(board.icon || '🎲', selected ? 38 : 34, 0xffffff, '900', 0x7a4a16, 4);
+    icon.anchor.set(0.5);
+    icon.y = -1;
+    return icon;
+  }
+
+  function makeBoardSelectButton(board, x, y) {
+    const btn = new PIXI.Container();
+    btn.x = x;
+    btn.y = y;
+    btn.zIndex = 62;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.RoundedRectangle(-72, -46, 144, 92, 22);
+
+    const selected = state.selectedBoardId === board.id;
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'round', -68, -36, 136, 82, 22, 0x000000, selected ? 0.2 : 0.12);
+    shadow.y = 10;
+    btn.addChild(shadow);
+
+    const outer = new PIXI.Graphics();
+    drawG(
+      outer,
+      'round',
+      selected ? -74 : -68,
+      selected ? -48 : -42,
+      selected ? 148 : 136,
+      selected ? 96 : 84,
+      24,
+      selected ? 0xfff3c0 : 0xffffff,
+      0.94,
+      selected ? 8 : 5,
+      selected ? 0xffc44d : 0xffffff,
+      0.95
+    );
+    btn.addChild(outer);
+
+    const previewMask = new PIXI.Graphics();
+    drawG(previewMask, 'round', selected ? -62 : -56, selected ? -37 : -33, selected ? 124 : 112, selected ? 74 : 66, 18, 0xffffff, 1);
+    btn.addChild(previewMask);
+
+    const preview = makeBoardPreviewSprite(board, selected);
+    preview.mask = previewMask;
+    btn.addChild(preview);
+
+    if (selected) {
+      const check = createSoftText('✓', 24, 0x23a365, '900', 0xffffff, 3);
+      check.anchor.set(0.5);
+      check.x = 62;
+      check.y = -38;
+      btn.addChild(check);
+    }
+
+    btn.on('pointertap', () => {
+      applyBoardTheme(board.id);
+      playSfx('select', 'start');
+      utils.vibrate(18);
+      drawBoard();
+      drawStartScreen();
+    });
+
+    return btn;
+  }
+
+  function drawBoardSelector(layer) {
+    const y = DESIGN_H / 2 - 250;
+    const gap = 156;
+    BOARD_OPTIONS.forEach((board, idx) => {
+      layer.addChild(makeBoardSelectButton(
+        board,
+        DESIGN_W / 2 + (idx - (BOARD_OPTIONS.length - 1) / 2) * gap,
+        y
+      ));
+    });
+  }
+
+  function makePawnSelectButton(pawn, x, y) {
+    const btn = new PIXI.Container();
+    btn.x = x;
+    btn.y = y;
+    btn.zIndex = 64;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Circle(0, 0, 46);
+
+    const selected = (state.selectedPawnIds || []).includes(pawn.id);
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'circle', 0, 24, 0, 0, 40, 0x000000, selected ? 0.2 : 0.11);
+    shadow.scale.y = 0.24;
+    btn.addChild(shadow);
+
+    const outer = new PIXI.Graphics();
+    drawG(
+      outer,
+      'circle',
+      0,
+      0,
+      0,
+      0,
+      selected ? 48 : 42,
+      selected ? 0xfff3c0 : 0xffffff,
+      0.94,
+      selected ? 7 : 4,
+      selected ? 0xffc44d : 0xffffff,
+      0.95
+    );
+    btn.addChild(outer);
+
+    const sprite = makeSprite(pawn.id, 0, -2, selected ? 66 : 58, selected ? 66 : 58);
+    if (sprite) {
+      sprite.anchor.set(0.5);
+      btn.addChild(sprite);
+    } else {
+      const icon = createSoftText(pawn.icon || '🐾', selected ? 34 : 30, 0xffffff, '900', pawn.edge || 0x7a4a16, 4);
+      icon.anchor.set(0.5);
+      icon.y = -1;
+      btn.addChild(icon);
+    }
+
+    if (selected) {
+      const check = createSoftText('✓', 22, 0x23a365, '900', 0xffffff, 3);
+      check.anchor.set(0.5);
+      check.x = 32;
+      check.y = -32;
+      btn.addChild(check);
+    }
+
+    btn.on('pointertap', () => {
+      togglePawnSelection(pawn.id);
+    });
+
+    return btn;
+  }
+
+  function drawPawnSelector(layer) {
+    const y = DESIGN_H / 2 + 190;
+    const gap = 92;
+    PAWN_OPTIONS.forEach((pawn, idx) => {
+      layer.addChild(makePawnSelectButton(
+        pawn,
+        DESIGN_W / 2 + (idx - (PAWN_OPTIONS.length - 1) / 2) * gap,
+        y
+      ));
+    });
+  }
+
+  function makeThemeSelectButton(theme, x, y) {
+    const btn = new PIXI.Container();
+    btn.x = x;
+    btn.y = y;
+    btn.zIndex = 62;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.RoundedRectangle(-102, -64, 204, 128, 24);
+
+    const selected = state.selectedThemeId === theme.id;
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'round', -98, -50, 196, 112, 24, 0x000000, selected ? 0.22 : 0.13);
+    shadow.y = 12;
+    btn.addChild(shadow);
+
+    const outer = new PIXI.Graphics();
+    drawG(
+      outer,
+      'round',
+      selected ? -108 : -100,
+      selected ? -70 : -62,
+      selected ? 216 : 200,
+      selected ? 140 : 124,
+      28,
+      selected ? 0xfff3c0 : 0xffffff,
+      0.94,
+      selected ? 8 : 5,
+      selected ? 0xffc44d : 0xffffff,
+      0.95
+    );
+    btn.addChild(outer);
+
+    const previewMask = new PIXI.Graphics();
+    drawG(previewMask, 'round', -92, -52, 184, 104, 20, 0xffffff, 1);
+    btn.addChild(previewMask);
+
+    const alias = getBoardAliasForTheme(theme);
+    const preview = makeSprite(alias, 0, 0, 184, 104)
+      || makeSprite('board_bg', 0, 0, 184, 104);
+
+    if (preview) {
+      preview.mask = previewMask;
+      btn.addChild(preview);
+    }
+
+    if (selected) {
+      const check = createSoftText('✓', 26, 0x23a365, '900', 0xffffff, 3);
+      check.anchor.set(0.5);
+      check.x = 86;
+      check.y = -54;
+      btn.addChild(check);
+    }
+
+    btn.on('pointertap', () => {
+      state.selectedThemeId = theme.id;
+      state.selectedBoardId = theme.id;
+      playSfx('select', 'start');
+      utils.vibrate(18);
+      drawBoard();
+      drawStartScreen();
+    });
+
+    return btn;
+  }
+
+  function drawThemeSelector(layer) {
+    const y = DESIGN_H / 2 - 260;
+    const gap = 218;
+    THEME_OPTIONS.forEach((theme, idx) => {
+      layer.addChild(makeThemeSelectButton(
+        theme,
+        DESIGN_W / 2 + (idx - (THEME_OPTIONS.length - 1) / 2) * gap,
+        y
+      ));
     });
   }
 
@@ -1300,11 +2170,13 @@
     centerLight.endFill();
     layer.addChild(centerLight);
 
+    drawThemeSelector(layer);
+
     const rouletteCard = makeStartModeCard({
       x: DESIGN_W / 2 - 270,
       y: DESIGN_H / 2 + 8,
       mode: PLAY_MODES.roulette,
-      spriteAlias: 'roulette',
+      spriteAlias: getRouletteAliasForTheme(),
       fallbackIcon: '🎡',
       accent: 0xffc44d,
       accentDark: 0x9a4f00,
@@ -1315,7 +2187,7 @@
       x: DESIGN_W / 2 + 270,
       y: DESIGN_H / 2 + 8,
       mode: PLAY_MODES.dice,
-      spriteAlias: 'dice_6',
+      spriteAlias: getDiceAliasForValue(6),
       fallbackIcon: '🎲',
       accent: 0x62caff,
       accentDark: 0x12699b,
@@ -1333,9 +2205,14 @@
 
     initAudio();
     preloadSfx();
-    startBgm();
-    playSfx('start', 'start');
-    utils.vibrate([25, 30, 25]);
+    playSfx('select', 'start');
+    utils.vibrate([18, 20, 18]);
+
+    if (!state.audioGatePassed) {
+      unlockAudio();
+      state.audioGatePassed = true;
+      startBgm();
+    }
 
     state.playMode = mode;
     state.screen = 'game';
@@ -1398,6 +2275,7 @@
     }
 
     await handleTileAction(player);
+    await wait(TURN_END_DELAY_MS);
     nextTurn();
   }
 
@@ -1531,6 +2409,63 @@
     return box;
   }
 
+  function waitForEventCardClose(layer, root) {
+    return new Promise(resolve => {
+      let ready = false;
+      let done = false;
+
+      const close = () => {
+        if (!ready || done) return;
+        done = true;
+        root.eventMode = 'none';
+        layer.eventMode = 'none';
+        resolve();
+      };
+
+      const guide = new PIXI.Container();
+      guide.x = DESIGN_W / 2;
+      guide.y = DESIGN_H - 92;
+      guide.alpha = 0;
+      guide.zIndex = 360;
+      layer.addChild(guide);
+
+      const guideBg = new PIXI.Graphics();
+      drawG(guideBg, 'round', -72, -36, 144, 72, 32, 0xffffff, 0.9, 5, 0xffcf6e, 0.95);
+      guide.addChild(guideBg);
+
+      const guideIcon = createSoftText('✓', 48, 0x23a365, '900', 0xffffff, 4);
+      guideIcon.anchor.set(0.5);
+      guideIcon.y = -2;
+      guide.addChild(guideIcon);
+
+      window.setTimeout(() => {
+        ready = true;
+        root.eventMode = 'static';
+        root.cursor = 'pointer';
+        root.hitArea = new PIXI.Rectangle(-DESIGN_W, -DESIGN_H, DESIGN_W * 2, DESIGN_H * 2);
+
+        layer.eventMode = 'static';
+        layer.cursor = 'pointer';
+        layer.hitArea = new PIXI.Rectangle(0, 0, DESIGN_W, DESIGN_H);
+
+        root.on('pointertap', close);
+        layer.on('pointertap', close);
+
+        animate(220, t => {
+          guide.alpha = t;
+          guide.scale.set(0.82 + t * 0.18);
+        });
+
+        addTicker(() => {
+          if (done || !guide.parent) return true;
+          const pulse = 1 + Math.sin(performance.now() / EVENT_CARD_READY_PULSE_MS * Math.PI * 2) * 0.04;
+          guide.scale.set(pulse);
+          return false;
+        });
+      }, EVENT_CARD_MIN_HOLD_MS);
+    });
+  }
+
   async function showEvent(card) {
     state.waitingEvent = true;
     const layer = state.layers.overlay;
@@ -1577,7 +2512,13 @@
 
     playSfx('cardOpen', 'gift');
     burst(DESIGN_W / 2, DESIGN_H / 2, card.type === 'gift' ? ['🎁', '⭐', '✨', '💛'] : ['⭐', '❤️', '✨', '🌈'], 86, layer);
-    await playBoardVoiceThenWait(card.voiceId, VOICE_WAIT.card.min, VOICE_WAIT.card.max);
+
+    await Promise.all([
+      playBoardVoiceThenWait(card.voiceId, VOICE_WAIT.card.min, VOICE_WAIT.card.max),
+      wait(EVENT_CARD_MIN_HOLD_MS)
+    ]);
+
+    await waitForEventCardClose(layer, root);
 
     await animate(300, t => {
       root.alpha = 1 - t;
@@ -1706,6 +2647,7 @@
     if (state.layers.dice) state.layers.dice.removeChildren();
 
     state.currentPlayerIndex = 0;
+    state.currentTurnHighlightVersion += 1;
     state.isSpinning = false;
     state.isDiceRolling = false;
     state.isMoving = false;
@@ -1742,14 +2684,33 @@
     state.world.removeChildren();
     createLayers();
     drawBoard();
-    drawStartScreen();
+    drawAudioStartGate();
   }
+
+  window.BoardlandNativeStart = async function () {
+    unlockAudio();
+    state.audioGatePassed = true;
+    startBgm();
+    playSfx('start', 'start');
+    utils.vibrate([25, 30, 25]);
+
+    const nativeGate = document.getElementById('nativeStartGate');
+    if (nativeGate) nativeGate.classList.add('native-start-hidden');
+
+    if (state.layers && state.layers.start) {
+      state.layers.start.alpha = 1;
+      drawStartScreen();
+    }
+  };
 
   window.BoardlandAudioDebug = function () {
     return {
       voiceManifestCandidates: VOICE_MANIFEST_CANDIDATES.map(resolveAssetUrl),
       voiceKeyCount: Object.keys(state.voiceMap || {}).length,
       sampleVoiceSources: getVoiceFallbackUrls('board.start.diceMode'),
+      audioUnlocked: state.audioUnlocked,
+      audioGatePassed: state.audioGatePassed,
+      voiceAudioSrc: state.voiceAudio ? state.voiceAudio.src : '',
       bgmWanted: state.bgmWanted,
       bgmIndex: state.bgmIndex,
       bgmSrc: state.bgmAudio ? state.bgmAudio.src : '',
@@ -1780,6 +2741,17 @@
     state.world.sortableChildren = true;
     state.app.stage.addChild(state.world);
     root.appendChild(state.app.view);
+
+    const handleFirstInteraction = () => {
+      document.removeEventListener('touchstart', handleFirstInteraction, true);
+      document.removeEventListener('mousedown', handleFirstInteraction, true);
+      document.removeEventListener('pointerdown', handleFirstInteraction, true);
+      unlockAudio();
+    };
+
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true, passive: true, capture: true });
+    document.addEventListener('mousedown', handleFirstInteraction, { once: true, capture: true });
+    document.addEventListener('pointerdown', handleFirstInteraction, { once: true, capture: true });
 
     state.app.ticker.add(runTicker);
     window.addEventListener('resize', fitWorld);

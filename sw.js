@@ -1,4 +1,4 @@
-const CACHE = 'boardland-v2.5-3d-edition';
+const CACHE = 'boardland-v2.6-theme-select';
 const ASSETS = [
   './',
   './index.html',
