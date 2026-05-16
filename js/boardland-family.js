@@ -1719,41 +1719,88 @@
   }
 
   function makeStartModeCard(options) {
-    const { x, y, mode, spriteAlias, fallbackIcon, accent, accentDark, size = 300 } = options;
+    const {
+      x,
+      y,
+      mode,
+      spriteAlias,
+      fallbackIcon,
+      accent,
+      accentDark,
+      size = 300,
+      compact = false
+    } = options;
     const card = new PIXI.Container();
     card.x = x;
     card.y = y;
-    card.zIndex = 40;
+    card.zIndex = 70;
     card.eventMode = 'static';
     card.cursor = 'pointer';
-    card.hitArea = new PIXI.Circle(0, 0, 218);
 
-    const shadow = new PIXI.Graphics();
-    drawG(shadow, 'circle', 0, 116, 0, 0, 168, 0x000000, 0.24);
-    shadow.scale.y = 0.24;
-    card.addChild(shadow);
+    if (compact) {
+      card.hitArea = new PIXI.RoundedRectangle(-62, -46, 124, 92, 24);
 
-    const glow = new PIXI.Graphics();
-    drawG(glow, 'circle', 0, 0, 0, 0, 196, accent, 0.2);
-    card.addChild(glow);
+      const shadow = new PIXI.Graphics();
+      drawG(shadow, 'round', -54, -30, 108, 72, 22, 0x000000, 0.18);
+      shadow.y = 10;
+      card.addChild(shadow);
 
-    const plateOuter = new PIXI.Graphics();
-    drawG(plateOuter, 'circle', 0, 0, 0, 0, 174, 0xffffff, 0.84, 8, 0xffffff, 0.92);
-    card.addChild(plateOuter);
+      const plateOuter = new PIXI.Graphics();
+      drawG(plateOuter, 'round', -62, -46, 124, 92, 26, 0xffffff, 0.88, 6, accent, 0.72);
+      card.addChild(plateOuter);
 
-    const plateInner = new PIXI.Graphics();
-    drawG(plateInner, 'circle', 0, 0, 0, 0, 148, accent, 0.12, 6, accent, 0.5);
-    card.addChild(plateInner);
+      const plateInner = new PIXI.Graphics();
+      drawG(plateInner, 'round', -50, -36, 100, 72, 22, accent, 0.13, 4, 0xffffff, 0.68);
+      card.addChild(plateInner);
 
-    const sprite = makeSprite(spriteAlias, 0, 0, size, size);
-    if (sprite) {
-      sprite.zIndex = 5;
-      card.addChild(sprite);
+      const sprite = makeSprite(spriteAlias, 0, 0, size, size);
+      if (sprite) {
+        sprite.zIndex = 5;
+        card.addChild(sprite);
+      } else {
+        const icon = createSoftText(fallbackIcon, Math.max(46, size * 0.58), 0xffffff, '900', accentDark, 5);
+        icon.anchor.set(0.5);
+        icon.zIndex = 5;
+        card.addChild(icon);
+      }
     } else {
-      const icon = createSoftText(fallbackIcon, 138, 0xffffff, '900', accentDark, 7);
-      icon.anchor.set(0.5);
-      icon.zIndex = 5;
-      card.addChild(icon);
+      card.hitArea = new PIXI.Circle(0, 0, 218);
+
+      const shadow = new PIXI.Graphics();
+      drawG(shadow, 'circle', 0, 116, 0, 0, 168, 0x000000, 0.24);
+      shadow.scale.y = 0.24;
+      card.addChild(shadow);
+
+      const glow = new PIXI.Graphics();
+      drawG(glow, 'circle', 0, 0, 0, 0, 196, accent, 0.2);
+      card.addChild(glow);
+
+      const plateOuter = new PIXI.Graphics();
+      drawG(plateOuter, 'circle', 0, 0, 0, 0, 174, 0xffffff, 0.84, 8, 0xffffff, 0.92);
+      card.addChild(plateOuter);
+
+      const plateInner = new PIXI.Graphics();
+      drawG(plateInner, 'circle', 0, 0, 0, 0, 148, accent, 0.12, 6, accent, 0.5);
+      card.addChild(plateInner);
+
+      const sprite = makeSprite(spriteAlias, 0, 0, size, size);
+      if (sprite) {
+        sprite.zIndex = 5;
+        card.addChild(sprite);
+      } else {
+        const icon = createSoftText(fallbackIcon, 138, 0xffffff, '900', accentDark, 7);
+        icon.anchor.set(0.5);
+        icon.zIndex = 5;
+        card.addChild(icon);
+      }
+
+      addTicker(() => {
+        if (state.screen !== 'start' || !card.parent) return true;
+        const tick = performance.now() / 1000;
+        glow.scale.set(1 + Math.sin(tick * 2.1 + x) * 0.04);
+        card.y = y + Math.sin(tick * 1.4 + x * 0.01) * 5;
+        return false;
+      });
     }
 
     card.on('pointerdown', () => { card.scale.set(0.92); });
@@ -1764,14 +1811,6 @@
       startGameMode(mode);
     });
 
-    addTicker(() => {
-      if (state.screen !== 'start' || !card.parent) return true;
-      const tick = performance.now() / 1000;
-      glow.scale.set(1 + Math.sin(tick * 2.1 + x) * 0.04);
-      card.y = y + Math.sin(tick * 1.4 + x * 0.01) * 5;
-      return false;
-    });
-
     return card;
   }
 
@@ -1779,29 +1818,26 @@
     const btn = new PIXI.Container();
     btn.x = x;
     btn.y = y;
-    btn.zIndex = 60;
+    btn.zIndex = 70;
     btn.eventMode = 'static';
-    btn.hitArea = new PIXI.Circle(0, 0, 58);
+    btn.hitArea = new PIXI.Circle(0, 0, 46);
 
     const disabled = false;
     const selected = state.setupPlayerCount === count;
     btn.cursor = 'pointer';
 
     const shadow = new PIXI.Graphics();
-    drawG(shadow, 'circle', 0, 30, 0, 0, 50, 0x000000, selected ? 0.2 : 0.14);
+    drawG(shadow, 'circle', 0, 24, 0, 0, 39, 0x000000, selected ? 0.2 : 0.12);
     shadow.scale.y = 0.24;
     btn.addChild(shadow);
 
     const outer = new PIXI.Graphics();
-    drawG(outer, 'circle', 0, 0, 0, 0, selected ? 58 : 52, selected ? 0xfff3c0 : 0xffffff, 0.94, selected ? 8 : 5, selected ? 0xffc44d : 0xffffff, 0.95);
+    drawG(outer, 'circle', 0, 0, 0, 0, selected ? 44 : 39, selected ? 0xfff3c0 : 0xffffff, 0.94, selected ? 7 : 4, selected ? 0xffc44d : 0xffffff, 0.95);
     btn.addChild(outer);
 
-    const theme = getSelectedTheme();
-    const ids = Array.isArray(theme.pawnIds) && theme.pawnIds.length ? theme.pawnIds : PAWNS.map(pawn => pawn.id);
-    const faces = ids.slice(0, count).map(id => getPawnOptionById(id).icon).join('');
-    const faceText = createSoftText(faces, count === 4 ? 28 : 34, 0xffffff, '900', 0x7a4a16, 4);
+    const faceText = createSoftText(`${count}명`, 28, 0xffffff, '900', 0x7a4a16, 4);
     faceText.anchor.set(0.5);
-    faceText.y = -2;
+    faceText.y = -1;
     btn.addChild(faceText);
 
     if (disabled) btn.alpha = 0.38;
@@ -1818,10 +1854,11 @@
   }
 
   function drawPlayerCountSelector(layer) {
-    const y = DESIGN_H / 2 + 274;
-    const gap = 150;
+    const y = 814;
+    const startX = 1210;
+    const gap = 122;
     [2, 3, 4].forEach((count, idx) => {
-      layer.addChild(makePlayerCountButton(count, DESIGN_W / 2 + (idx - 1) * gap, y));
+      layer.addChild(makePlayerCountButton(count, startX + idx * gap, y));
     });
   }
 
@@ -2076,46 +2113,49 @@
     });
   }
 
-  function makeThemeSelectButton(theme, x, y) {
+  function makeThemeSelectButton(theme, x, y, w = 440, h = 248) {
     const btn = new PIXI.Container();
     btn.x = x;
     btn.y = y;
     btn.zIndex = 62;
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.hitArea = new PIXI.RoundedRectangle(-102, -64, 204, 128, 24);
+    btn.hitArea = new PIXI.RoundedRectangle(-w / 2 - 8, -h / 2 - 8, w + 16, h + 16, 30);
 
     const selected = state.selectedThemeId === theme.id;
+    const outerW = selected ? w + 22 : w + 10;
+    const outerH = selected ? h + 22 : h + 10;
+    const maskW = w - 24;
+    const maskH = h - 24;
 
     const shadow = new PIXI.Graphics();
-    drawG(shadow, 'round', -98, -50, 196, 112, 24, 0x000000, selected ? 0.22 : 0.13);
-    shadow.y = 12;
+    drawG(shadow, 'round', -outerW / 2 + 4, -outerH / 2 + 14, outerW - 8, outerH - 8, 34, 0x000000, selected ? 0.24 : 0.15);
     btn.addChild(shadow);
 
     const outer = new PIXI.Graphics();
     drawG(
       outer,
       'round',
-      selected ? -108 : -100,
-      selected ? -70 : -62,
-      selected ? 216 : 200,
-      selected ? 140 : 124,
-      28,
+      -outerW / 2,
+      -outerH / 2,
+      outerW,
+      outerH,
+      34,
       selected ? 0xfff3c0 : 0xffffff,
       0.94,
-      selected ? 8 : 5,
+      selected ? 9 : 5,
       selected ? 0xffc44d : 0xffffff,
       0.95
     );
     btn.addChild(outer);
 
     const previewMask = new PIXI.Graphics();
-    drawG(previewMask, 'round', -92, -52, 184, 104, 20, 0xffffff, 1);
+    drawG(previewMask, 'round', -maskW / 2, -maskH / 2, maskW, maskH, 24, 0xffffff, 1);
     btn.addChild(previewMask);
 
     const alias = getBoardAliasForTheme(theme);
-    const preview = makeSprite(alias, 0, 0, 184, 104)
-      || makeSprite('board_bg', 0, 0, 184, 104);
+    const preview = makeSprite(alias, 0, 0, maskW, maskH)
+      || makeSprite('board_bg', 0, 0, maskW, maskH);
 
     if (preview) {
       preview.mask = previewMask;
@@ -2123,10 +2163,14 @@
     }
 
     if (selected) {
-      const check = createSoftText('✓', 26, 0x23a365, '900', 0xffffff, 3);
+      const checkBg = new PIXI.Graphics();
+      drawG(checkBg, 'circle', w / 2 - 30, -h / 2 + 30, 0, 0, 24, 0xffffff, 0.96, 4, 0xffc44d, 0.95);
+      btn.addChild(checkBg);
+
+      const check = createSoftText('✓', 27, 0x23a365, '900', 0xffffff, 3);
       check.anchor.set(0.5);
-      check.x = 86;
-      check.y = -54;
+      check.x = w / 2 - 30;
+      check.y = -h / 2 + 27;
       btn.addChild(check);
     }
 
@@ -2143,14 +2187,21 @@
   }
 
   function drawThemeSelector(layer) {
-    const y = DESIGN_H / 2 - 260;
-    const gap = 218;
-    THEME_OPTIONS.forEach((theme, idx) => {
-      layer.addChild(makeThemeSelectButton(
-        theme,
-        DESIGN_W / 2 + (idx - (THEME_OPTIONS.length - 1) / 2) * gap,
-        y
-      ));
+    const cardW = 440;
+    const cardH = 248;
+    const topY = 226;
+    const bottomY = 520;
+    const topXs = [318, 800, 1282];
+    const bottomXs = [560, 1040];
+    const topThemes = THEME_OPTIONS.slice(0, 3);
+    const bottomThemes = THEME_OPTIONS.slice(3, 5);
+
+    topThemes.forEach((theme, idx) => {
+      layer.addChild(makeThemeSelectButton(theme, topXs[idx], topY, cardW, cardH));
+    });
+
+    bottomThemes.forEach((theme, idx) => {
+      layer.addChild(makeThemeSelectButton(theme, bottomXs[idx], bottomY, cardW, cardH));
     });
   }
 
@@ -2164,34 +2215,40 @@
     drawG(dim, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x2d160b, 0.34);
     layer.addChild(dim);
 
-    const centerLight = new PIXI.Graphics();
-    centerLight.beginFill(0xffffff, 0.12);
-    centerLight.drawEllipse(DESIGN_W / 2, DESIGN_H / 2, 620, 300);
-    centerLight.endFill();
-    layer.addChild(centerLight);
+    const boardGlow = new PIXI.Graphics();
+    boardGlow.beginFill(0xffffff, 0.13);
+    boardGlow.drawEllipse(DESIGN_W / 2, 382, 720, 330);
+    boardGlow.endFill();
+    layer.addChild(boardGlow);
+
+    const bottomDock = new PIXI.Graphics();
+    drawG(bottomDock, 'round', 62, 736, 1476, 128, 44, 0x000000, 0.18, 4, 0xffffff, 0.18);
+    layer.addChild(bottomDock);
 
     drawThemeSelector(layer);
 
     const rouletteCard = makeStartModeCard({
-      x: DESIGN_W / 2 - 270,
-      y: DESIGN_H / 2 + 8,
+      x: 160,
+      y: 814,
       mode: PLAY_MODES.roulette,
       spriteAlias: getRouletteAliasForTheme(),
       fallbackIcon: '🎡',
       accent: 0xffc44d,
       accentDark: 0x9a4f00,
-      size: 270
+      size: 92,
+      compact: true
     });
 
     const diceCard = makeStartModeCard({
-      x: DESIGN_W / 2 + 270,
-      y: DESIGN_H / 2 + 8,
+      x: 305,
+      y: 814,
       mode: PLAY_MODES.dice,
       spriteAlias: getDiceAliasForValue(6),
       fallbackIcon: '🎲',
       accent: 0x62caff,
       accentDark: 0x12699b,
-      size: 250
+      size: 86,
+      compact: true
     });
 
     layer.addChild(rouletteCard);
