@@ -1203,6 +1203,17 @@
     return PAWN_OPTIONS.find(pawn => pawn.id === id) || PAWNS.find(pawn => pawn.id === id) || PAWNS[0];
   }
 
+  function shuffledCopy(items) {
+    const copy = items.slice();
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = tmp;
+    }
+    return copy;
+  }
+
   function getSelectedPawnOptions() {
     return getThemePawnOptions();
   }
@@ -1210,9 +1221,17 @@
   function getThemePawnOptions() {
     const theme = getSelectedTheme();
     const ids = Array.isArray(theme.pawnIds) && theme.pawnIds.length ? theme.pawnIds : PAWNS.map(pawn => pawn.id);
-    const selected = ids.map(getPawnOptionById).filter(Boolean);
     const count = Math.max(2, Math.min(4, state.setupPlayerCount || 3));
-    return selected.slice(0, count);
+    const candidates = ids
+      .map(getPawnOptionById)
+      .filter(Boolean)
+      .filter((pawn, index, array) => array.findIndex(item => item.id === pawn.id) === index);
+    const selected = shuffledCopy(candidates).slice(0, count);
+
+    if (selected.length >= count) return selected;
+
+    const fallback = shuffledCopy(PAWNS.filter(pawn => !selected.some(item => item.id === pawn.id)));
+    return selected.concat(fallback).slice(0, count);
   }
 
   function togglePawnSelection(pawnId) {
