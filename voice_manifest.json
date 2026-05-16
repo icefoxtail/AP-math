@@ -2,5 +2,22 @@
   "version": "boardland-family-voice-v2.1",
   "format": "mp3",
   "basePath": "./assets/voice/",
-  "voices": {}
+  "voices": {
+    "board.card.familyHug": "./assets/voice/games/board-card-family-hug.mp3",
+    "board.card.highFive": "./assets/voice/games/board-card-high-five.mp3",
+    "board.card.dino": "./assets/voice/games/board-card-dino.mp3",
+    "board.card.clap": "./assets/voice/games/board-card-clap.mp3",
+    "board.card.dance": "./assets/voice/games/board-card-dance.mp3",
+    "board.card.love": "./assets/voice/games/board-card-love.mp3",
+    "board.card.gift": "./assets/voice/games/board-card-gift.mp3",
+    "board.card.kissMom": "./assets/voice/games/board-card-kiss-mom.mp3",
+    "board.card.kissDad": "./assets/voice/games/board-card-kiss-dad.mp3",
+    "board.card.hugMomDad": "./assets/voice/games/board-card-hug-mom-dad.mp3",
+    "board.card.cheekHeartMom": "./assets/voice/games/board-card-cheek-heart-mom.mp3",
+    "board.card.treatNooni": "./assets/voice/games/board-card-treat-nooni.mp3",
+    "board.card.treatReumi": "./assets/voice/games/board-card-treat-reumi.mp3",
+    "board.card.meowLikeCat": "./assets/voice/games/board-card-meow-like-cat.mp3",
+    "board.card.getApplause": "./assets/voice/games/board-card-get-applause.mp3",
+    "board.card.drinkWater": "./assets/voice/games/board-card-drink-water.mp3"
+  }
 }
