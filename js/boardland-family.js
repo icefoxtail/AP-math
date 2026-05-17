@@ -77,6 +77,26 @@
   const PAWN_TURN_SCALE_BOOST = 1.22;
   const PAWN_TURN_PULSE_BOOST = 0.06;
 
+  const HUD_PROGRESS_PANEL = {
+    x: 32,
+    y: 20,
+    width: 360,
+    height: 82
+  };
+
+  const HUD_PAUSE_BUTTON = {
+    x: 1538,
+    y: 54,
+    size: 62
+  };
+
+  const HUD_PAUSE_MODAL = {
+    x: 800,
+    y: 450,
+    width: 420,
+    height: 230
+  };
+
 
   const VOICE_MANIFEST_CANDIDATES = [
     './voice_manifest.json',
@@ -166,7 +186,6 @@
     'gift',
     'cloud'
   ];
-
   const PAWNS = [
     { id: 'pawn_dog', icon: '🐶', name: '시현이', fill: 0xFFD166, edge: 0xA86B18 },
     { id: 'pawn_cat', icon: '🐱', name: '엄마', fill: 0xFF8FB3, edge: 0xB84970 },
@@ -231,7 +250,13 @@
     pawn_dog: ['./assets/boardland/pawns/dog-pawn.webp', './assets/pawns/dog-pawn.webp'],
     pawn_cat: ['./assets/boardland/pawns/cat-pawn.webp', './assets/pawns/cat-pawn.webp'],
     pawn_rabbit: ['./assets/boardland/pawns/rabbit-pawn.webp', './assets/pawns/rabbit-pawn.webp'],
-    pawn_bear: ['./assets/boardland/pawns/bear-pawn.webp', './assets/pawns/bear-pawn.webp']
+    pawn_bear: ['./assets/boardland/pawns/bear-pawn.webp', './assets/pawns/bear-pawn.webp'],
+    hud_pause_button: ['./assets/board/hud-pause-button.png'],
+    hud_play_button: ['./assets/board/hud-play-button.png'],
+    hud_restart_button: ['./assets/board/hud-restart-button.png'],
+    hud_modal_panel: ['./assets/board/hud-modal-panel.png'],
+    hud_progress_track: ['./assets/board/hud-progress-track.png'],
+    hud_finish_badge: ['./assets/board/hud-finish-badge.png']
   };
 
   const state = {
@@ -246,6 +271,7 @@
     isDiceRolling: false,
     isMoving: false,
     waitingEvent: false,
+    paused: false,
     eventCardDeck: [],
     tickerItems: [],
     currentTurnHighlightVersion: 0,
@@ -280,6 +306,23 @@
     vibrate: pattern => {
       if (!navigator.vibrate) return;
       try { navigator.vibrate(pattern); } catch (error) {}
+    },
+    clearLayer: layer => {
+      if (!layer) return;
+      const children = layer.removeChildren();
+      children.forEach(child => {
+        if (!child || typeof child.destroy !== 'function') return;
+        try {
+          child.destroy({ children: true, texture: false, baseTexture: false });
+        } catch (error) {}
+      });
+    },
+    destroyDisplayObject: (obj, options) => {
+      if (!obj || obj.destroyed || typeof obj.destroy !== 'function') return;
+      try {
+        if (obj.parent) obj.parent.removeChild(obj);
+        obj.destroy(options || { children: true, texture: false, baseTexture: false });
+      } catch (error) {}
     }
   };
 
@@ -862,7 +905,7 @@
 
   function drawBoard() {
     const layer = state.layers.board;
-    layer.removeChildren();
+    utils.clearLayer(layer);
 
     const fallback = new PIXI.Graphics();
     drawG(fallback, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x7b421f, 1);
@@ -873,7 +916,7 @@
   }
 
   function drawTiles() {
-    state.layers.tile.removeChildren();
+    utils.clearLayer(state.layers.tile);
     state.tiles = [];
 
     TILE_COORDS.forEach((p, idx) => {
@@ -1064,6 +1107,17 @@
     return ((value % size) + size) % size;
   }
 
+  function shuffledCopy(items) {
+    const arr = Array.isArray(items) ? items.slice() : [];
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+    return arr;
+  }
+
   function getRouletteValueAngle(value) {
     const segmentAngle = Math.PI * 2 / ROULETTE_SEGMENTS;
     const index = ROULETTE_VALUE_ORDER.indexOf(value);
@@ -1164,7 +1218,7 @@
 
   function drawRoulette() {
     const layer = state.layers.roulette;
-    layer.removeChildren();
+    utils.clearLayer(layer);
 
     const wheel = new PIXI.Container();
     wheel.x = ROULETTE_COORD.x;
@@ -1186,7 +1240,7 @@
 
   async function spinRoulette() {
     if (state.playMode !== PLAY_MODES.roulette) return;
-    if (state.isSpinning || state.isDiceRolling || state.isMoving || state.waitingEvent) return;
+    if (state.paused || state.isSpinning || state.isDiceRolling || state.isMoving || state.waitingEvent) return;
 
     state.isSpinning = true;
     state.isMoving = true;
@@ -1215,7 +1269,7 @@
   }
 
   function drawDiceFallback(parent, value) {
-    parent.removeChildren();
+    utils.clearLayer(parent);
     const shadow = new PIXI.Graphics();
     drawG(shadow, 'circle', 0, 92, 0, 0, 116, 0x000000, 0.2);
     shadow.scale.y = 0.22;
@@ -1246,7 +1300,7 @@
 
   function drawDice() {
     const layer = state.layers.dice;
-    layer.removeChildren();
+    utils.clearLayer(layer);
 
     const diceBox = new PIXI.Container();
     diceBox.x = DICE_COORD.x;
@@ -1277,7 +1331,7 @@
 
   async function rollDice() {
     if (state.playMode !== PLAY_MODES.dice) return;
-    if (state.isSpinning || state.isDiceRolling || state.isMoving || state.waitingEvent) return;
+    if (state.paused || state.isSpinning || state.isDiceRolling || state.isMoving || state.waitingEvent) return;
 
     state.isDiceRolling = true;
     state.isMoving = true;
@@ -1428,7 +1482,7 @@
 
   function drawAudioStartGate() {
     const layer = state.layers.start;
-    layer.removeChildren();
+    utils.clearLayer(layer);
     state.screen = 'audio_gate';
     state.playMode = null;
 
@@ -1517,7 +1571,7 @@
 
   function drawStartScreen() {
     const layer = state.layers.start;
-    layer.removeChildren();
+    utils.clearLayer(layer);
     state.screen = 'start';
     state.playMode = null;
 
@@ -1575,6 +1629,7 @@
 
     state.playMode = mode;
     state.screen = 'game';
+    state.paused = false;
     refillEventCardDeck();
 
     await animate(220, t => {
@@ -1582,17 +1637,17 @@
       state.layers.start.scale.set(1 + t * 0.03);
     });
 
-    state.layers.start.removeChildren();
+    utils.clearLayer(state.layers.start);
     state.layers.start.alpha = 1;
     state.layers.start.scale.set(1);
 
     drawTiles();
 
     if (state.playMode === PLAY_MODES.roulette) {
-      state.layers.dice.removeChildren();
+      utils.clearLayer(state.layers.dice);
       drawRoulette();
     } else {
-      state.layers.roulette.removeChildren();
+      utils.clearLayer(state.layers.roulette);
       drawDice();
     }
 
@@ -1603,6 +1658,7 @@
     );
 
     createPlayers();
+    drawHud();
     announceCurrentPlayer();
   }
 
@@ -1616,12 +1672,14 @@
       player.onBoard = true;
       player.index = 0;
       await hop(player);
+      drawHud();
     }
 
     for (let i = 0; i < steps; i += 1) {
       if (player.index >= FINISH_INDEX) {
         player.index = 0;
         await hop(player);
+        drawHud();
 
         playSfx('arrive', 'gift');
         await playBoardVoiceThenWait('board.move.arrive', VOICE_WAIT.moveArrive.min, VOICE_WAIT.moveArrive.max);
@@ -1633,6 +1691,7 @@
 
       player.index += 1;
       await hop(player);
+      drawHud();
       await wait(70);
     }
 
@@ -1740,8 +1799,8 @@
       glow.scale.set(1.35 + t * 0.6);
     });
 
-    if (giftBox.parent) giftBox.parent.removeChild(giftBox);
-    if (glow.parent) glow.parent.removeChild(glow);
+    utils.destroyDisplayObject(giftBox, { children: true, texture: true, baseTexture: true });
+    utils.destroyDisplayObject(glow, { children: true, texture: false, baseTexture: false });
 
     await wait(250);
   }
@@ -1759,7 +1818,7 @@
       cloud.rotation = Math.sin(t * Math.PI * 2) * 0.12;
     });
 
-    if (cloud.parent) cloud.parent.removeChild(cloud);
+    utils.destroyDisplayObject(cloud, { children: true, texture: true, baseTexture: true });
   }
 
   function getCardFrontAlias(card) {
@@ -1887,7 +1946,7 @@
   async function showEvent(card) {
     state.waitingEvent = true;
     const layer = state.layers.overlay;
-    layer.removeChildren();
+    utils.clearLayer(layer);
 
     const root = new PIXI.Container();
     root.x = CARD_COORD.x;
@@ -1944,14 +2003,14 @@
       root.y -= t * 70;
     });
 
-    layer.removeChildren();
+    utils.clearLayer(layer);
     state.waitingEvent = false;
   }
 
   async function showWin(player) {
     state.waitingEvent = true;
     const layer = state.layers.overlay;
-    layer.removeChildren();
+    utils.clearLayer(layer);
 
     duckBgm();
     playSfx('win', 'win');
@@ -2023,9 +2082,273 @@
         icon.alpha = 1 - t;
         icon.scale.set(1 + Math.sin(t * Math.PI) * 0.25);
       }).then(() => {
-        if (icon.parent) icon.parent.removeChild(icon);
+        utils.destroyDisplayObject(icon, { children: true, texture: true, baseTexture: true });
       });
     }
+  }
+
+
+  function canOpenPauseModal() {
+    return state.screen === 'game'
+      && !state.paused
+      && !state.isSpinning
+      && !state.isDiceRolling
+      && !state.isMoving
+      && !state.waitingEvent;
+  }
+
+  function drawHud() {
+    const layer = state.layers.hud;
+    if (!layer) return;
+    utils.clearLayer(layer);
+    if (state.screen !== 'game') return;
+
+    drawProgressHud(layer);
+    drawPauseButton(layer);
+  }
+
+  function drawProgressHud(layer) {
+    const cfg = HUD_PROGRESS_PANEL;
+    const panel = new PIXI.Container();
+    panel.x = cfg.x;
+    panel.y = cfg.y;
+    panel.zIndex = 500;
+    layer.addChild(panel);
+
+    const shadow = new PIXI.Graphics();
+    drawG(shadow, 'round', 7, 9, cfg.width, cfg.height, 24, 0x000000, 0.16);
+    panel.addChild(shadow);
+
+    const bg = new PIXI.Graphics();
+    drawG(bg, 'round', 0, 0, cfg.width, cfg.height, 24, 0xfff6dc, 0.72, 4, 0xffffff, 0.82);
+    panel.addChild(bg);
+
+    const shine = new PIXI.Graphics();
+    shine.beginFill(0xffffff, 0.18);
+    shine.drawRoundedRect(15, 9, cfg.width - 30, 18, 9);
+    shine.endFill();
+    panel.addChild(shine);
+
+    const players = state.players || [];
+    const rowCount = Math.max(1, players.length || state.setupPlayerCount || 1);
+    const rowGap = rowCount >= 4 ? 17 : rowCount === 3 ? 21 : 27;
+    const startY = rowCount >= 4 ? 16 : rowCount === 3 ? 20 : 25;
+
+    players.forEach((player, idx) => {
+      const y = startY + idx * rowGap;
+      const icon = createIcon(player.icon, rowCount >= 4 ? 22 : 26, player.pawnId);
+      icon.x = 30;
+      icon.y = y;
+      panel.addChild(icon);
+
+      const trackX = 58;
+      const trackY = y - 5;
+      const trackW = 245;
+      const trackH = rowCount >= 4 ? 8 : 10;
+      const progress = player.finished ? 1 : utils.clamp((player.index || 0) / FINISH_INDEX, 0, 1);
+
+      const track = new PIXI.Graphics();
+      drawG(track, 'round', trackX, trackY, trackW, trackH, trackH / 2, 0x5c3b1f, 0.18, 2, 0xffffff, 0.42);
+      panel.addChild(track);
+
+      const fill = new PIXI.Graphics();
+      drawG(fill, 'round', trackX, trackY, Math.max(trackH, trackW * progress), trackH, trackH / 2, player.fill || 0xffcf6e, 0.9, 0, 0xffffff, 0);
+      panel.addChild(fill);
+
+      const dot = new PIXI.Graphics();
+      drawG(dot, 'circle', trackX + trackW * progress, y, 0, 0, rowCount >= 4 ? 8 : 10, player.fill || 0xffcf6e, 1, 3, 0xffffff, 0.95);
+      panel.addChild(dot);
+
+      const flag = createSoftText('🏁', rowCount >= 4 ? 17 : 20, 0xffffff, '900', 0x5c3b1f, 2);
+      flag.anchor.set(0.5);
+      flag.x = 326;
+      flag.y = y;
+      panel.addChild(flag);
+    });
+  }
+
+  function drawPauseButton(layer) {
+    const cfg = HUD_PAUSE_BUTTON;
+    const btn = new PIXI.Container();
+    btn.x = cfg.x;
+    btn.y = cfg.y;
+    btn.zIndex = 520;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Circle(0, 0, cfg.size * 0.62);
+    layer.addChild(btn);
+
+    const sprite = makeSprite('hud_pause_button', 0, 0, cfg.size, cfg.size);
+    if (sprite) {
+      btn.addChild(sprite);
+    } else {
+      const shadow = new PIXI.Graphics();
+      drawG(shadow, 'circle', 0, 10, 0, 0, cfg.size * 0.42, 0x000000, 0.18);
+      shadow.scale.y = 0.32;
+      btn.addChild(shadow);
+
+      const outer = new PIXI.Graphics();
+      drawG(outer, 'circle', 0, 0, 0, 0, cfg.size * 0.43, 0xfff3c0, 0.95, 5, 0xffffff, 0.9);
+      btn.addChild(outer);
+
+      const icon = createSoftText('⏸', 30, 0xffffff, '900', 0x9a4f00, 4);
+      icon.anchor.set(0.5);
+      icon.y = -1;
+      btn.addChild(icon);
+    }
+
+    btn.on('pointerdown', () => { btn.scale.set(0.92); });
+    btn.on('pointerupoutside', () => { btn.scale.set(1); });
+    btn.on('pointertap', () => {
+      btn.scale.set(1);
+      if (!canOpenPauseModal()) return;
+      playSfx('select', 'start');
+      utils.vibrate(18);
+      showPauseModal();
+    });
+  }
+
+  function showPauseModal() {
+    if (!state.layers.pauseOverlay || state.paused) return;
+    state.paused = true;
+
+    const layer = state.layers.pauseOverlay;
+    utils.clearLayer(layer);
+    layer.zIndex = 700;
+
+    const dim = new PIXI.Graphics();
+    drawG(dim, 'round', 0, 0, DESIGN_W, DESIGN_H, 0, 0x000000, 0.28);
+    layer.addChild(dim);
+
+    const panel = new PIXI.Container();
+    panel.x = HUD_PAUSE_MODAL.x;
+    panel.y = HUD_PAUSE_MODAL.y;
+    panel.scale.set(0.86);
+    panel.alpha = 0;
+    panel.zIndex = 710;
+    layer.addChild(panel);
+
+    const panelSprite = makeSprite('hud_modal_panel', 0, 0, HUD_PAUSE_MODAL.width, HUD_PAUSE_MODAL.height);
+    if (panelSprite) {
+      panel.addChild(panelSprite);
+    } else {
+      const shadow = new PIXI.Graphics();
+      drawG(shadow, 'round', -HUD_PAUSE_MODAL.width / 2 + 10, -HUD_PAUSE_MODAL.height / 2 + 16, HUD_PAUSE_MODAL.width, HUD_PAUSE_MODAL.height, 44, 0x000000, 0.18);
+      panel.addChild(shadow);
+
+      const card = new PIXI.Graphics();
+      drawG(card, 'round', -HUD_PAUSE_MODAL.width / 2, -HUD_PAUSE_MODAL.height / 2, HUD_PAUSE_MODAL.width, HUD_PAUSE_MODAL.height, 44, 0xfff3cf, 0.96, 8, 0xffffff, 0.95);
+      panel.addChild(card);
+    }
+
+    const playButton = makePauseModalButton({
+      x: -92,
+      y: 12,
+      alias: 'hud_play_button',
+      fallbackIcon: '▶',
+      accent: 0x39c97c,
+      onTap: hidePauseModal
+    });
+
+    const homeButton = makePauseModalButton({
+      x: 92,
+      y: 12,
+      alias: 'hud_restart_button',
+      fallbackIcon: '↻',
+      accent: 0xffb23f,
+      onTap: returnToStartScreen
+    });
+
+    panel.addChild(playButton);
+    panel.addChild(homeButton);
+
+    animate(220, t => {
+      const e = utils.easeOutBack(t);
+      panel.alpha = t;
+      panel.scale.set(0.86 + e * 0.14);
+    });
+  }
+
+  function makePauseModalButton(options) {
+    const { x, y, alias, fallbackIcon, accent, onTap } = options;
+    const btn = new PIXI.Container();
+    btn.x = x;
+    btn.y = y;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Circle(0, 0, 70);
+
+    const sprite = makeSprite(alias, 0, 0, 116, 116);
+    if (sprite) {
+      btn.addChild(sprite);
+    } else {
+      const shadow = new PIXI.Graphics();
+      drawG(shadow, 'circle', 0, 18, 0, 0, 58, 0x000000, 0.18);
+      shadow.scale.y = 0.3;
+      btn.addChild(shadow);
+
+      const outer = new PIXI.Graphics();
+      drawG(outer, 'circle', 0, 0, 0, 0, 60, 0xffffff, 0.96, 6, 0xffe2a0, 1);
+      btn.addChild(outer);
+
+      const inner = new PIXI.Graphics();
+      drawG(inner, 'circle', 0, 0, 0, 0, 48, accent || 0xffc44d, 0.92, 3, 0xffffff, 0.85);
+      btn.addChild(inner);
+
+      const icon = createSoftText(fallbackIcon, 48, 0xffffff, '900', 0x6b3a16, 5);
+      icon.anchor.set(0.5);
+      icon.x = fallbackIcon === '▶' ? 4 : 0;
+      icon.y = -1;
+      btn.addChild(icon);
+    }
+
+    btn.on('pointerdown', () => { btn.scale.set(0.92); });
+    btn.on('pointerupoutside', () => { btn.scale.set(1); });
+    btn.on('pointertap', () => {
+      btn.scale.set(1);
+      playSfx('select', 'start');
+      utils.vibrate(20);
+      if (typeof onTap === 'function') onTap();
+    });
+
+    return btn;
+  }
+
+  function hidePauseModal() {
+    state.paused = false;
+    if (state.layers.pauseOverlay) utils.clearLayer(state.layers.pauseOverlay);
+    drawHud();
+  }
+
+  function returnToStartScreen() {
+    clearTickerItems();
+
+    if (state.layers.pauseOverlay) utils.clearLayer(state.layers.pauseOverlay);
+    if (state.layers.overlay) utils.clearLayer(state.layers.overlay);
+    if (state.layers.fx) utils.clearLayer(state.layers.fx);
+    if (state.layers.token) state.layers.token.removeChildren();
+    if (state.layers.roulette) utils.clearLayer(state.layers.roulette);
+    if (state.layers.dice) utils.clearLayer(state.layers.dice);
+    if (state.layers.hud) utils.clearLayer(state.layers.hud);
+    if (state.layers.tile) utils.clearLayer(state.layers.tile);
+
+    state.players = [];
+    state.currentPlayerIndex = 0;
+    state.currentTurnHighlightVersion += 1;
+    state.isSpinning = false;
+    state.isDiceRolling = false;
+    state.isMoving = false;
+    state.waitingEvent = false;
+    state.paused = false;
+    state.eventCardDeck = [];
+    state.rouletteWheel = null;
+    state.diceBox = null;
+    state.diceFaceSprite = null;
+    state.diceFallbackText = null;
+    state.screen = 'start';
+    state.playMode = null;
+
+    drawStartScreen();
   }
 
   function getCurrentPlayerVoiceId(player) {
@@ -2052,32 +2375,40 @@
     }
 
     pulseCurrentPawn();
+    drawHud();
     announceCurrentPlayer();
   }
 
   function resetGame() {
     clearTickerItems();
 
-    if (state.layers.overlay) state.layers.overlay.removeChildren();
-    if (state.layers.fx) state.layers.fx.removeChildren();
+    if (state.layers.pauseOverlay) utils.clearLayer(state.layers.pauseOverlay);
+    if (state.layers.overlay) utils.clearLayer(state.layers.overlay);
+    if (state.layers.fx) utils.clearLayer(state.layers.fx);
+    if (state.layers.hud) utils.clearLayer(state.layers.hud);
+    if (state.layers.tile) utils.clearLayer(state.layers.tile);
     if (state.layers.token) state.layers.token.removeChildren();
-    if (state.layers.roulette) state.layers.roulette.removeChildren();
-    if (state.layers.dice) state.layers.dice.removeChildren();
+    if (state.layers.roulette) utils.clearLayer(state.layers.roulette);
+    if (state.layers.dice) utils.clearLayer(state.layers.dice);
 
+    state.players = [];
     state.currentPlayerIndex = 0;
     state.currentTurnHighlightVersion += 1;
     state.isSpinning = false;
     state.isDiceRolling = false;
     state.isMoving = false;
     state.waitingEvent = false;
+    state.paused = false;
+    state.eventCardDeck = [];
     state.rouletteWheel = null;
     state.diceBox = null;
     state.diceFaceSprite = null;
     state.diceFallbackText = null;
     state.screen = 'game';
-    state.eventCardDeck = [];
 
+    drawTiles();
     createPlayers();
+    drawHud();
 
     if (state.playMode === PLAY_MODES.dice) drawDice();
     else {
@@ -2093,8 +2424,10 @@
       token: makeContainer(state.world, true),
       roulette: makeContainer(state.world, true),
       dice: makeContainer(state.world, true),
+      hud: makeContainer(state.world, true),
       fx: makeContainer(state.world, true),
       overlay: makeContainer(state.world, true),
+      pauseOverlay: makeContainer(state.world, true),
       start: makeContainer(state.world, true)
     };
   }
